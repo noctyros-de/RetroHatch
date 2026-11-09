@@ -1,7 +1,5 @@
-//! Platform-independent CPU components for future device machines.
-//!
-//! The partial CPU core is not yet connected to the user interface.
-//! Do not introduce dependencies on windows, egui, or native audio output.
-//! The planned contract is described in `docs/ARCHITECTURE.md`.
-
+//! Deterministic emulation; no UI, filesystem, host clock, or native audio dependencies.
 pub mod cpu;
+pub mod device;
+pub mod mcu;
+pub mod p1;

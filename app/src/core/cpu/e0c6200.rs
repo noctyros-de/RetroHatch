@@ -1,9 +1,11 @@
 //! E0C6200 instruction interpreter based on BrickEmuPy (CC0).
 //!
 //! Source: references/BrickEmuPy-main/cores/E0C6200.py.
-//! Instruction semantics only; no MCU timers, interrupt execution, or host time.
+//! Instruction execution with optional P1 I/O; MCU timing/IRQ scheduling live in core/mcu.
 //! Errors leave the state unchanged. See docs/E0C6200.md.
 
+use crate::core::mcu::io::Io;
+use std::cell::{Ref, RefCell};
 use std::fmt;
 
 pub const PROGRAM_WORDS: usize = 0x2000;
@@ -431,6 +433,7 @@ pub struct Cpu {
     program: Box<[u16]>,
     ram: [u8; RAM_NIBBLES],
     lcd: [u8; LCD_NIBBLES],
+    io: Option<RefCell<Io>>,
 }
 
 impl Cpu {
@@ -450,7 +453,46 @@ impl Cpu {
             program: program.into(),
             ram: [0; RAM_NIBBLES],
             lcd: [0; LCD_NIBBLES],
+            io: None,
         })
+    }
+
+    pub(crate) fn reset_mcu(&mut self) {
+        self.state = CpuState::default();
+        self.ram.fill(0);
+        self.lcd.fill(0);
+        self.attach_io();
+    }
+
+    pub(crate) fn attach_io(&mut self) {
+        self.io = Some(RefCell::new(Io::default()));
+    }
+
+    pub(crate) fn io(&self) -> Ref<'_, Io> {
+        self.io.as_ref().expect("MCU mode requires I/O").borrow()
+    }
+
+    pub(crate) fn with_io<T>(&self, action: impl FnOnce(&mut Io) -> T) -> T {
+        action(
+            &mut self
+                .io
+                .as_ref()
+                .expect("MCU mode requires I/O")
+                .borrow_mut(),
+        )
+    }
+
+    pub(crate) fn enter_interrupt(&mut self, vector: u8) {
+        let pc = self.state.pc;
+        let sp = self.state.sp;
+        self.ram[sp.wrapping_sub(1) as usize] = ((pc >> 8) & 15) as u8;
+        self.ram[sp.wrapping_sub(2) as usize] = ((pc >> 4) & 15) as u8;
+        self.state.sp = sp.wrapping_sub(3);
+        self.ram[self.state.sp as usize] = (pc & 15) as u8;
+        self.state.interrupt_enable = false;
+        self.state.halted = false;
+        self.state.pc = (self.state.npc & 0x1000) | 0x100 | u16::from(vector);
+        self.state.npc = self.state.pc;
     }
 
     pub fn state(&self) -> &CpuState {
@@ -470,6 +512,9 @@ impl Cpu {
             0x000..=0x2FF => Ok(self.ram[address as usize]),
             0xE00..=0xE4F => Ok(self.lcd[(address - 0xE00) as usize]),
             0xE80..=0xECF => Ok(self.lcd[(address - 0xE80 + 0x50) as usize]),
+            0xF00..=0xF7E if self.io.is_some() && Io::supports(address) => {
+                Ok(self.with_io(|io| io.read(address)))
+            }
             _ => Err(CpuError::UnsupportedAddress(address)),
         }
     }
@@ -480,6 +525,9 @@ impl Cpu {
             0x000..=0x2FF => self.ram[address as usize] = value,
             0xE00..=0xE4F => self.lcd[(address - 0xE00) as usize] = value,
             0xE80..=0xECF => self.lcd[(address - 0xE80 + 0x50) as usize] = value,
+            0xF00..=0xF7E if self.io.is_some() && Io::supports(address) => {
+                self.with_io(|io| io.write(address, value))
+            }
             _ => return Err(CpuError::UnsupportedAddress(address)),
         }
         Ok(())
@@ -541,12 +589,21 @@ impl Cpu {
     /// Validate every destination before committing any of these ordinary memory writes.
     fn write_memory_batch(&mut self, writes: &[(u16, u8)]) -> Result<(), CpuError> {
         for &(address, _) in writes {
-            self.read_memory(address)?;
+            self.validate_write_address(address)?;
         }
         for &(address, value) in writes {
             self.write_memory(address, value)?;
         }
         Ok(())
+    }
+
+    fn validate_write_address(&self, address: u16) -> Result<(), CpuError> {
+        // Validation must not acknowledge a read-to-clear interrupt register.
+        match address {
+            0..=0x2FF | 0xE00..=0xE4F | 0xE80..=0xECF => Ok(()),
+            0xF00..=0xF7E if self.io.is_some() && Io::supports(address) => Ok(()),
+            _ => Err(CpuError::UnsupportedAddress(address)),
+        }
     }
 
     fn write_byte_post_x(&mut self, value: u8) -> Result<(), CpuError> {
@@ -576,13 +633,31 @@ impl Cpu {
     /// Executes one instruction; a halted CPU returns Halted without fetching or advancing.
     /// MCU idle cycles, interrupt wake-up, and timers are outside this instruction API.
     pub fn step(&mut self) -> Result<Step, CpuError> {
+        // CPU writes already commit atomically. Also roll back any read-to-clear
+        // I/O effects when a later operand or destination is invalid.
+        let saved_io = self.io.as_ref().map(|io| io.borrow().clone());
+        let result = self.step_instruction();
+        if result.is_err()
+            && let Some(saved) = saved_io
+        {
+            self.with_io(|io| *io = saved);
+        }
+        result
+    }
+
+    fn step_instruction(&mut self) -> Result<Step, CpuError> {
         if self.state.halted {
             return Err(CpuError::Halted { pc: self.state.pc });
         }
         let pc = self.state.pc;
+        let fetch = if self.io.is_some() && !self.program.is_empty() {
+            usize::from(pc) % self.program.len()
+        } else {
+            usize::from(pc)
+        };
         let opcode = *self
             .program
-            .get(pc as usize)
+            .get(fetch)
             .ok_or(CpuError::MissingInstruction { pc })?;
         let instruction =
             Instruction::decode(opcode).ok_or(CpuError::UnsupportedOpcode { pc, opcode })?;

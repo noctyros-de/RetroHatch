@@ -2,7 +2,7 @@
 name = "retrohatch"
 version = "0.1.0"
 edition = "2024"
-description = "Native Windows interface for the planned RetroHatch emulator"
+description = "Native Windows Tamagotchi P1 emulator with a deterministic Rust core"
 
 [[bin]]
 name = "RetroHatch"
@@ -10,3 +10,6 @@ path = "src/main.rs"
 
 [dependencies]
 eframe = { version = "0.37", default-features = false, features = ["default_fonts", "glow"] }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Media_Audio", "Win32_UI_Controls_Dialogs"] }

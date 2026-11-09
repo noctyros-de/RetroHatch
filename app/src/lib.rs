@@ -1,5 +1,3 @@
-//! Platform-independent boundary for future device emulation.
-//!
-//! Contains a partial CPU core, but not yet a runnable device machine.
-
+//! Deterministic RetroHatch device core and host execution services.
 pub mod core;
+pub mod host;
