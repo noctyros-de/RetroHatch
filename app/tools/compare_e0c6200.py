@@ -123,12 +123,21 @@ def decoder_inventory(namespace, tables, source):
         "_acpx_mx_r", "_acpy_my_r", "_scpx_mx_r", "_scpy_my_r",
         "_rlc_r", "_rrc_r",
         "_inc_mn", "_dec_mn", "_inc_sp", "_dec_sp",
-        "_set_f_i", "_rst_f_i",
+        "_set_f_i", "_rst_f_i", "_halt",
+        "_call_s", "_calz_s", "_ret", "_rets", "_retd_l",
+        "_push_r", "_push_xp", "_push_xh", "_push_xl", "_push_yp", "_push_yh", "_push_yl", "_push_f",
+        "_pop_r", "_pop_xp", "_pop_xh", "_pop_xl", "_pop_yp", "_pop_yh", "_pop_yl", "_pop_f",
+        "_jp_c_s", "_jp_nc_s", "_jp_z_s", "_jp_nz_s", "_jpba",
+        "_lbpx_mx_l", "_ld_xp_r", "_ld_xh_r", "_ld_xl_r",
+        "_ld_yp_r", "_ld_yh_r", "_ld_yl_r", "_ld_r_xp", "_ld_r_xh",
+        "_ld_r_xl", "_ld_r_yp", "_ld_r_yh", "_ld_r_yl",
+        "_ldpx_r_q", "_ldpy_r_q", "_ld_mn_a", "_ld_mn_b", "_ld_a_mn", "_ld_b_mn",
+        "_ld_sph_r", "_ld_r_sph", "_ld_spl_r", "_ld_r_spl",
     }
     cpu = machine(namespace, tables, [0x100, 0x100, 0, 0, 0, 0, 0, 0])
     handlers = [handler.__name__ for handler in cpu._execute]
     assert len(handlers) == 4096
-    assert supported <= set(handlers)
+    assert supported == set(handlers) - {"_dummy"}
     lines = ["# E0C6200.py SHA256 " + hashlib.sha256(source).hexdigest(),
              "# first|last|original_handler|supported (hex)"]
     start = 0
@@ -471,6 +480,187 @@ def flag_control_matrix(namespace, tables, source):
     return lines, cases
 
 
+def extension_state(cpu):
+    return [cpu._PC, cpu._NPC, cpu._A, cpu._B, cpu._IX, cpu._IY,
+            cpu._SP, flags(cpu), int(cpu._if_delay), cpu._HALT]
+
+
+def extension_case(cpu, group, opcode, initial, seed, ram_patch=None):
+    """Run the original handler and encode the full state plus complete memory differences."""
+    for name, value in zip(("_PC", "_NPC", "_A", "_B", "_IX", "_IY", "_SP"), initial[:7]):
+        setattr(cpu, name, value)
+    cpu._CF, cpu._ZF, cpu._DF, cpu._IF = (bool(initial[7] & (1 << bit)) for bit in range(4))
+    cpu._if_delay, cpu._HALT = bool(initial[8]), initial[9]
+    cpu._RAM = [(i * 3 + seed) & 15 for i in range(0x300)]
+    cpu._VRAM = [(i + seed + 4) & 15 for i in range(0xA0)]
+    ram_patch = ram_patch or {}
+    for address, value in ram_patch.items():
+        cpu._RAM[address] = value
+    before_ram, before_lcd = cpu._RAM.copy(), cpu._VRAM.copy()
+    assert not cpu._HALT
+    assert cpu._execute[opcode].__name__ != "_dummy"
+    # Match clock() instruction dispatch, excluding IRQ acceptance and MCU clocks.
+    cpu._if_delay = False
+    cycles = cpu._execute[opcode](cpu, opcode)
+
+    def values(items):
+        return ",".join(f"{int(v):X}" for v in items)
+
+    def differences(before, after):
+        return ",".join(f"{i:X}:{b:X}" for i, (a, b) in enumerate(zip(before, after)) if a != b)
+
+    return "|".join([group, f"{opcode:X}", f"{seed:X}", values(initial),
+                     ",".join(f"{i:X}:{v:X}" for i, v in sorted(ram_patch.items())),
+                     f"{cycles:X}", values(extension_state(cpu)),
+                     differences(before_ram, cpu._RAM), differences(before_lcd, cpu._VRAM)])
+
+
+def extension_header(source):
+    return ["# E0C6200.py SHA256 " + hashlib.sha256(source).hexdigest(),
+            "# group|opcode|seed|initial_state|initial_ram_patch|cycles|final_state|ram_changes|lcd_changes",
+            "# state: pc,npc,a,b,ix,iy,sp,flags,delay,halt (hex); memory changes include zero values"]
+
+
+def load_matrix(namespace, tables, source):
+    cpu = machine(namespace, tables, [0x100, 0x100, 0, 0, 0, 0, 0, 0])
+    lines = extension_header(source)
+    starts = (0x100, 0xFFF, 0x1FFF, 0x10FF)
+    for opcode in range(0x900, 0xA00):
+        for initial_flags in range(16):
+            for ix in (0, 0xFF, 0x2FE, 0x2FF, 0xE00, 0xE4E, 0xE80, 0xECE):
+                state = [starts[initial_flags & 3], 0x1A00, 3, 5, ix, 0x21,
+                         0xA5, initial_flags, 1, 0]
+                lines.append(extension_case(cpu, "loads", opcode, state, initial_flags))
+    opcodes = [*range(0xE80, 0xE8C), *range(0xE90, 0xE9C),
+               *range(0xEA0, 0xEAC), *range(0xEB0, 0xEBC),
+               *range(0xEE0, 0xF00), *range(0xF80, 0xFC0),
+               *range(0xFE0, 0xFE8), *range(0xFF0, 0xFF8)]
+    inputs = [(f, v) for f in (0, 15) for v in range(16)]
+    inputs += [(f, 0) for f in range(1, 15)]
+    for opcode in opcodes:
+        for initial_flags, seed in inputs:
+            for ix, iy in ((0x20, 0x21), (0x20, 0x20), (0x2FF, 0x1FF),
+                           (0xE4F, 0xECF), (0xE80, 0xE80), (0, 0xFF)):
+                state = [starts[(seed + initial_flags) & 3], 0x1A00, seed, 15 - seed,
+                         ix, iy, (seed << 4) | (15 - seed), initial_flags, 1, 0]
+                lines.append(extension_case(cpu, "loads", opcode, state, seed))
+    assert len(lines) - 3 == 76928
+    return lines
+
+
+def branch_matrix(namespace, tables, source):
+    cpu = machine(namespace, tables, [0x100, 0x100, 0, 0, 0, 0, 0, 0])
+    lines = extension_header(source)
+    contexts = ((0x100, 0x100), (0xFFF, 0x1F00), (0x1FFF, 0), (0x10FF, 0x1A55))
+    for base in (0, 0x200, 0x300, 0x600, 0x700):
+        for target in range(256):
+            for initial_flags in range(16):
+                for pc, npc in contexts:
+                    state = [pc, npc, 3, 5, 0xF00, 0xE50, 0xA5, initial_flags, 1, 0]
+                    lines.append(extension_case(cpu, "branches", base | target, state, initial_flags))
+    for a in range(16):
+        for b in range(16):
+            for initial_flags in range(16):
+                for pc, npc in contexts:
+                    state = [pc, npc, a, b, 0xF00, 0xE50, 0xA5, initial_flags, 1, 0]
+                    lines.append(extension_case(cpu, "branches", 0xFE8, state, initial_flags))
+    assert len(lines) - 3 == 98304
+    return lines
+
+
+def stack_matrix(namespace, tables, source):
+    cpu = machine(namespace, tables, [0x100, 0x100, 0, 0, 0, 0, 0, 0])
+    lines = extension_header(source)
+    starts = (0x100, 0xFFF, 0x1FFF, 0x10FF)
+    for opcode in (*range(0xFC0, 0xFCB), *range(0xFD0, 0xFDB)):
+        for sp in range(256):
+            for initial_flags in (0, 15):
+                seed = sp & 15
+                state = [starts[sp & 3], 0x1A55, seed, 15 - seed, 0x20, 0x21,
+                         sp, initial_flags, 1, 0]
+                lines.append(extension_case(cpu, "stack", opcode, state, seed))
+        for sp in (0, 1, 2, 0xFD, 0xFE, 0xFF):
+            for initial_flags in range(16):
+                for seed in range(16):
+                    alias = ((sp - 1) & 255) if opcode < 0xFD0 else sp
+                    for layout, (ix, iy) in enumerate(((0x20, 0x21), (alias, alias), (0xE4F, 0xECF))):
+                        # Register-only variants can exercise every nibble without memory access.
+                        if layout == 0 and 4 <= (opcode & 15) <= 9:
+                            ix, iy = seed * 0x111, (15 - seed) * 0x111
+                        state = [starts[(seed + initial_flags) & 3], 0x1A55,
+                                 seed, 15 - seed, ix, iy, sp, initial_flags, 1, 0]
+                        lines.append(extension_case(cpu, "stack", opcode, state, seed))
+    assert len(lines) - 3 == 112640
+    return lines
+
+
+def subroutine_matrix(namespace, tables, source):
+    cpu = machine(namespace, tables, [0x100, 0x100, 0, 0, 0, 0, 0, 0])
+    lines = extension_header(source)
+    contexts = ((0x100, 0x100), (0xFFF, 0x1F00), (0x1FFF, 0), (0x10FF, 0x1A55))
+    boundaries = (0, 1, 2, 0xFD, 0xFE, 0xFF)
+    for base in (0x400, 0x500):
+        for target in range(256):
+            for pc, npc in contexts:
+                for sp in boundaries:
+                    for initial_flags in (0, 15):
+                        state = [pc, npc, 3, 5, 0x20, 0x21, sp, initial_flags, 1, 0]
+                        lines.append(extension_case(cpu, "subroutines", base | target, state, target & 15))
+        for target in (0, 255):
+            for sp in range(256):
+                for initial_flags in range(16):
+                    pc, npc = contexts[sp & 3]
+                    state = [pc, npc, 3, 5, 0x20, 0x21, sp, initial_flags, 1, 0]
+                    lines.append(extension_case(cpu, "subroutines", base | target, state, sp & 15))
+    for opcode in (0xFDE, 0xFDF):
+        for address in range(0x1000):
+            sp = address & 255
+            patch = {sp: address & 15, sp + 1: (address >> 4) & 15, sp + 2: address >> 8}
+            for bank in (0, 0x1000):
+                for initial_flags in (0, 15):
+                    state = [bank | 0x100, 0x1A55, 3, 5, 0x20, 0x21, sp, initial_flags, 1, 0]
+                    lines.append(extension_case(cpu, "subroutines", opcode, state, address & 15, patch))
+    for value in range(256):
+        for sp in boundaries:
+            for ix in (0x2FF, 0xE4E, sp, sp + 1):
+                for initial_flags in (0, 15):
+                    pc, npc = contexts[value & 3]
+                    patch = {sp: value & 15, sp + 1: (value >> 4) & 15, sp + 2: (value * 7) & 15}
+                    state = [pc, npc, 3, 5, ix, 0x21, sp, initial_flags, 1, 0]
+                    lines.append(extension_case(cpu, "subroutines", 0x100 | value, state, value & 15, patch))
+    for initial_flags in range(16):
+        for seed in range(16):
+            for sp in boundaries:
+                for ix in (0xFF, 0xECE, sp, sp + 1):
+                    pc, npc = contexts[seed & 3]
+                    patch = {sp: seed, sp + 1: (seed + 1) & 15, sp + 2: (seed + 2) & 15}
+                    state = [pc, npc, 3, 5, ix, 0x21, sp, initial_flags, 1, 0]
+                    lines.append(extension_case(cpu, "subroutines", 0x1AB, state, seed, patch))
+    assert len(lines) - 3 == 92160
+    return lines
+
+
+def control_matrix(namespace, tables, source):
+    cpu = machine(namespace, tables, [0x100, 0x100, 0, 0, 0, 0, 0, 0])
+    lines = extension_header(source)
+    starts = (0x100, 0xFFF, 0x1FFF, 0x10FF)
+    for opcode in (0xFF8, 0xFFB, 0xFFF):
+        for initial_flags in range(16):
+            for pc in starts:
+                for delay in range(2):
+                    for ix, iy in ((0xF00, 0xE50), (0x2FF, 0xECF)):
+                        state = [pc, 0x1A55, 3, 5, ix, iy, 0xFF, initial_flags, delay, 0]
+                        lines.append(extension_case(cpu, "control", opcode, state, initial_flags))
+    for opcode in range(0xE40, 0xE60):
+        for initial_flags in range(16):
+            for pc in starts:
+                for delay in range(2):
+                    state = [pc, 0x1A55, 3, 5, 0xF00, 0xE50, 0xFF, initial_flags, delay, 0]
+                    lines.append(extension_case(cpu, "control", opcode, state, initial_flags))
+    assert len(lines) - 3 == 4864
+    return lines
+
+
 def emit(name, lines, check):
     path = DATA / name
     content = "\n".join(lines) + "\n"
@@ -499,6 +689,7 @@ def main():
         program = dict(tuple(int(v, 16) for v in pair.split(":"))
                        for pair in fields[10].split(","))
         for step in range(int(fields[9])):
+            assert not cpu._HALT, f"Synthetic program {fields[0]} attempts dispatch after HALT"
             opcode = program[cpu._PC]
             # Same instruction dispatch and delay reset as clock(), without MCU clocks/IRQs.
             cpu._if_delay = False
@@ -536,6 +727,12 @@ def main():
     emit("e0c6200_inc_dec_reference.txt", inc_dec, args.check)
     flag_control, flag_cases = flag_control_matrix(namespace, tables, source)
     emit("e0c6200_flag_reference.txt", flag_control, args.check)
+    extensions = (("loads", load_matrix), ("branches", branch_matrix), ("stack", stack_matrix),
+                  ("subroutines", subroutine_matrix), ("control", control_matrix))
+    for name, generate in extensions:
+        rows = generate(namespace, tables, source)
+        emit(f"e0c6200_{name}_reference.txt", rows, args.check)
+        print(f"{'Verified' if args.check else 'Generated'} {len(rows) - 3} direct {name} cases.")
     action = "Verified" if args.check else "Generated"
     print(f"{action} {count} instruction snapshots from {programs} synthetic programs, "
           "512 legacy ADD cases, 131072 direct immediate ALU cases and "

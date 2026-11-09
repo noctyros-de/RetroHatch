@@ -120,7 +120,7 @@ fn interrupt_delay_tracks_new_enable_transitions_and_expires_without_dispatch() 
 
 #[test]
 fn errors_after_enabling_interrupts_preserve_the_entire_state_and_delay() {
-    for opcode in [0xFCA, 0xFDA, 0xFF8, 0xE2F] {
+    for opcode in [0xFCC, 0xFDC, 0xFF9, 0xE2F] {
         let mut cpu = program(&[0xF48, opcode]);
         cpu.state.ix = 0xF00;
         cpu.state.iy = 0xE50;

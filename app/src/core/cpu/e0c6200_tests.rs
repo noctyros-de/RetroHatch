@@ -106,7 +106,7 @@ fn synthetic_programs_match_python_after_every_instruction() {
             comparisons += 1;
         }
     }
-    assert_eq!(comparisons, 303);
+    assert_eq!(comparisons, 439);
 }
 
 #[test]
@@ -235,10 +235,10 @@ fn unsupported_opcodes_are_explicit_and_leave_everything_unchanged() {
     let mut cpu = program(&[0x100]);
     cpu.state.interrupt_delay = true;
     for opcode in 0..=u16::MAX {
-        let allowed = matches!(opcode, 0x000..=0x0FF | 0x800..=0x8FF | 0xA00..=0xAFF
-            | 0xB00..=0xBFF | 0xC00..=0xDFF | 0xE00..=0xE7F | 0xE8C..=0xE8F | 0xEC0..=0xECF
-            | 0xF00..=0xF1F | 0xF28..=0xF2F | 0xF38..=0xF3F | 0xF40..=0xF7F
-            | 0xFCB | 0xFDB | 0xFFB | 0xFFF);
+        let reserved = matches!(opcode, 0xE9C..=0xE9F | 0xEAC..=0xEAF | 0xEBC..=0xEBF
+            | 0xED0..=0xEDF | 0xF20..=0xF27 | 0xF30..=0xF37 | 0xFCC..=0xFCF
+            | 0xFDC..=0xFDD | 0xFE9..=0xFEF | 0xFF9..=0xFFA | 0xFFC..=0xFFE);
+        let allowed = opcode <= 0xFFF && !reserved;
         assert_eq!(
             Instruction::decode(opcode).is_some(),
             allowed,
@@ -256,7 +256,7 @@ fn unsupported_opcodes_are_explicit_and_leave_everything_unchanged() {
             assert_eq!(cpu, before);
         }
     }
-    assert_eq!(supported, 1800);
+    assert_eq!(supported, 4034);
 }
 
 fn set_flags(state: &mut CpuState, value: u16) {
@@ -373,6 +373,7 @@ fn decoder_coverage_matches_original_python_handler_inventory() {
         let end = hex(fields[1]);
         assert_eq!(start, next_address);
         let expected_support = fields[3] == "1";
+        assert_eq!(expected_support, fields[2] != "_dummy");
         for opcode in start..=end {
             assert_eq!(
                 Instruction::decode(opcode).is_some(),
@@ -385,7 +386,7 @@ fn decoder_coverage_matches_original_python_handler_inventory() {
         next_address = end + 1;
     }
     assert_eq!(next_address, 4096);
-    assert_eq!(supported, 1800);
+    assert_eq!(supported, 4034);
 }
 
 #[test]
@@ -499,3 +500,18 @@ mod inc_dec;
 
 #[path = "e0c6200_flag_tests.rs"]
 mod flag_control;
+
+#[path = "e0c6200_transfer_tests.rs"]
+mod transfers;
+
+#[path = "e0c6200_branch_tests.rs"]
+mod branches;
+
+#[path = "e0c6200_stack_tests.rs"]
+mod stack;
+
+#[path = "e0c6200_subroutine_tests.rs"]
+mod subroutines;
+
+#[path = "e0c6200_control_tests.rs"]
+mod control;

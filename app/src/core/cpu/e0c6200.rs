@@ -1,4 +1,4 @@
-//! Partial E0C6200 interpreter based on BrickEmuPy (CC0).
+//! E0C6200 instruction interpreter based on BrickEmuPy (CC0).
 //!
 //! Source: references/BrickEmuPy-main/cores/E0C6200.py.
 //! Instruction semantics only; no MCU timers, interrupt execution, or host time.
@@ -103,8 +103,45 @@ impl IndexNibble {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Condition {
+    CarrySet,
+    CarryClear,
+    ZeroSet,
+    ZeroClear,
+}
+
+/// Nibble fields used by data-transfer and stack instructions.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RegisterNibble {
+    Xp,
+    Xh,
+    Xl,
+    Yp,
+    Yh,
+    Yl,
+    Sph,
+    Spl,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum StackValue {
+    Operand(Operand),
+    Register(RegisterNibble),
+    Flags,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Instruction {
     Jump(u8),
+    JumpIf(Condition, u8),
+    JumpBa,
+    Call(u8),
+    CallZero(u8),
+    Return,
+    ReturnSkip,
+    ReturnData(u8),
+    Push(StackValue),
+    Pop(StackValue),
     LoadY(u8),
     LoadX(u8),
     AddImmediate(Operand, u8),
@@ -135,6 +172,14 @@ pub enum Instruction {
     StoreIncrementX(u8),
     StoreIncrementY(u8),
     Load(Operand, Operand),
+    LoadBytePostX(u8),
+    LoadRegister(RegisterNibble, Operand),
+    LoadFromRegister(Operand, RegisterNibble),
+    StoreDirect(Operand, u8),
+    LoadDirect(Operand, u8),
+    LoadPostX(Operand, Operand),
+    LoadPostY(Operand, Operand),
+    Halt,
     Nop5,
     Nop7,
 }
@@ -143,7 +188,82 @@ impl Instruction {
     /// Only explicitly supported opcode ranges; no dummy instructions.
     pub fn decode(opcode: u16) -> Option<Self> {
         match opcode {
+            0x100..=0x1FF => Some(Self::ReturnData(opcode as u8)),
+            0x400..=0x4FF => Some(Self::Call(opcode as u8)),
+            0x500..=0x5FF => Some(Self::CallZero(opcode as u8)),
+            0xFDE => Some(Self::ReturnSkip),
+            0xFDF => Some(Self::Return),
+            0x200..=0x2FF => Some(Self::JumpIf(Condition::CarrySet, opcode as u8)),
+            0x300..=0x3FF => Some(Self::JumpIf(Condition::CarryClear, opcode as u8)),
+            0x600..=0x6FF => Some(Self::JumpIf(Condition::ZeroSet, opcode as u8)),
+            0x700..=0x7FF => Some(Self::JumpIf(Condition::ZeroClear, opcode as u8)),
+            0xFE8 => Some(Self::JumpBa),
             0x000..=0x0FF => Some(Self::Jump(opcode as u8)),
+            0x900..=0x9FF => Some(Self::LoadBytePostX(opcode as u8)),
+            0xE80..=0xE8B | 0xE90..=0xE9B => {
+                let field = match opcode & 0xFFC {
+                    0xE80 => RegisterNibble::Xp,
+                    0xE84 => RegisterNibble::Xh,
+                    0xE88 => RegisterNibble::Xl,
+                    0xE90 => RegisterNibble::Yp,
+                    0xE94 => RegisterNibble::Yh,
+                    0xE98 => RegisterNibble::Yl,
+                    _ => unreachable!("restricted register load range"),
+                };
+                Some(Self::LoadRegister(field, Operand::from_bits(opcode)))
+            }
+            0xEA0..=0xEAB | 0xEB0..=0xEBB => {
+                let field = match opcode & 0xFFC {
+                    0xEA0 => RegisterNibble::Xp,
+                    0xEA4 => RegisterNibble::Xh,
+                    0xEA8 => RegisterNibble::Xl,
+                    0xEB0 => RegisterNibble::Yp,
+                    0xEB4 => RegisterNibble::Yh,
+                    0xEB8 => RegisterNibble::Yl,
+                    _ => unreachable!("restricted register read range"),
+                };
+                Some(Self::LoadFromRegister(Operand::from_bits(opcode), field))
+            }
+            0xEE0..=0xEEF => Some(Self::LoadPostX(
+                Operand::from_bits(opcode >> 2),
+                Operand::from_bits(opcode),
+            )),
+            0xEF0..=0xEFF => Some(Self::LoadPostY(
+                Operand::from_bits(opcode >> 2),
+                Operand::from_bits(opcode),
+            )),
+            0xF80..=0xF9F => Some(Self::StoreDirect(
+                if opcode < 0xF90 {
+                    Operand::A
+                } else {
+                    Operand::B
+                },
+                (opcode & 15) as u8,
+            )),
+            0xFA0..=0xFBF => Some(Self::LoadDirect(
+                if opcode < 0xFB0 {
+                    Operand::A
+                } else {
+                    Operand::B
+                },
+                (opcode & 15) as u8,
+            )),
+            0xFE0..=0xFE3 => Some(Self::LoadRegister(
+                RegisterNibble::Sph,
+                Operand::from_bits(opcode),
+            )),
+            0xFE4..=0xFE7 => Some(Self::LoadFromRegister(
+                Operand::from_bits(opcode),
+                RegisterNibble::Sph,
+            )),
+            0xFF0..=0xFF3 => Some(Self::LoadRegister(
+                RegisterNibble::Spl,
+                Operand::from_bits(opcode),
+            )),
+            0xFF4..=0xFF7 => Some(Self::LoadFromRegister(
+                Operand::from_bits(opcode),
+                RegisterNibble::Spl,
+            )),
             0x800..=0x8FF => Some(Self::LoadY(opcode as u8)),
             0xA00..=0xA3F => Some(Self::AdcIndex(
                 IndexNibble::from_bits(opcode >> 4),
@@ -226,8 +346,31 @@ impl Instruction {
             0xF50..=0xF5F => Some(Self::ResetFlags((opcode & 15) as u8)),
             0xF60..=0xF6F => Some(Self::IncrementMemory((opcode & 15) as u8)),
             0xF70..=0xF7F => Some(Self::DecrementMemory((opcode & 15) as u8)),
+            0xFC0..=0xFCA | 0xFD0..=0xFDA => {
+                let value = match opcode & 15 {
+                    0..=3 => StackValue::Operand(Operand::from_bits(opcode)),
+                    4..=9 => StackValue::Register(
+                        [
+                            RegisterNibble::Xp,
+                            RegisterNibble::Xh,
+                            RegisterNibble::Xl,
+                            RegisterNibble::Yp,
+                            RegisterNibble::Yh,
+                            RegisterNibble::Yl,
+                        ][((opcode & 15) - 4) as usize],
+                    ),
+                    10 => StackValue::Flags,
+                    _ => unreachable!("restricted stack encoding range"),
+                };
+                Some(if opcode < 0xFD0 {
+                    Self::Push(value)
+                } else {
+                    Self::Pop(value)
+                })
+            }
             0xFCB => Some(Self::DecrementStackPointer),
             0xFDB => Some(Self::IncrementStackPointer),
+            0xFF8 => Some(Self::Halt),
             0xFFB => Some(Self::Nop5),
             0xFFF => Some(Self::Nop7),
             _ => None,
@@ -240,6 +383,7 @@ pub enum CpuError {
     ProgramTooLarge(usize),
     InvalidProgramWord { address: usize, value: u16 },
     MissingInstruction { pc: u16 },
+    Halted { pc: u16 },
     UnsupportedOpcode { pc: u16, opcode: u16 },
     UnsupportedAddress(u16),
 }
@@ -252,6 +396,12 @@ impl fmt::Display for CpuError {
                 write!(
                     f,
                     "invalid 12-bit opcode {value:#06x} at word {address:#06x}"
+                )
+            }
+            Self::Halted { pc } => {
+                write!(
+                    f,
+                    "CPU halted at PC {pc:#06x}; interrupt wake-up is not implemented"
                 )
             }
             Self::MissingInstruction { pc } => write!(f, "no instruction at PC {pc:#06x}"),
@@ -354,13 +504,81 @@ impl Cpu {
         Ok(())
     }
 
+    fn read_register_nibble(&self, field: RegisterNibble) -> u8 {
+        let (value, shift) = match field {
+            RegisterNibble::Xp => (self.state.ix, 8),
+            RegisterNibble::Xh => (self.state.ix, 4),
+            RegisterNibble::Xl => (self.state.ix, 0),
+            RegisterNibble::Yp => (self.state.iy, 8),
+            RegisterNibble::Yh => (self.state.iy, 4),
+            RegisterNibble::Yl => (self.state.iy, 0),
+            RegisterNibble::Sph => (u16::from(self.state.sp), 4),
+            RegisterNibble::Spl => (u16::from(self.state.sp), 0),
+        };
+        ((value >> shift) & 15) as u8
+    }
+
+    fn write_register_nibble(&mut self, field: RegisterNibble, value: u8) {
+        let (register, shift) = match field {
+            RegisterNibble::Xp => (&mut self.state.ix, 8),
+            RegisterNibble::Xh => (&mut self.state.ix, 4),
+            RegisterNibble::Xl => (&mut self.state.ix, 0),
+            RegisterNibble::Yp => (&mut self.state.iy, 8),
+            RegisterNibble::Yh => (&mut self.state.iy, 4),
+            RegisterNibble::Yl => (&mut self.state.iy, 0),
+            RegisterNibble::Sph => {
+                self.state.sp = (self.state.sp & 15) | ((value & 15) << 4);
+                return;
+            }
+            RegisterNibble::Spl => {
+                self.state.sp = (self.state.sp & 0xF0) | (value & 15);
+                return;
+            }
+        };
+        *register = (*register & !(15 << shift)) | (u16::from(value & 15) << shift);
+    }
+
+    /// Validate every destination before committing any of these ordinary memory writes.
+    fn write_memory_batch(&mut self, writes: &[(u16, u8)]) -> Result<(), CpuError> {
+        for &(address, _) in writes {
+            self.read_memory(address)?;
+        }
+        for &(address, value) in writes {
+            self.write_memory(address, value)?;
+        }
+        Ok(())
+    }
+
+    fn write_byte_post_x(&mut self, value: u8) -> Result<(), CpuError> {
+        let ix = self.state.ix;
+        self.write_memory_batch(&[
+            (ix, value & 15),
+            ((ix & 0xF00) | ((ix + 1) & 0xFF), value >> 4),
+        ])?;
+        self.state.ix = (ix & 0xF00) | ((ix + 2) & 0xFF);
+        Ok(())
+    }
+
+    fn stacked_return_address(&self) -> Result<u16, CpuError> {
+        let sp = u16::from(self.state.sp);
+        // The original reads SP+1 and SP+2 without eight-bit address wrapping.
+        Ok((self.state.pc & 0x1000)
+            | u16::from(self.read_memory(sp)?)
+            | (u16::from(self.read_memory(sp + 1)?) << 4)
+            | (u16::from(self.read_memory(sp + 2)?) << 8))
+    }
+
     fn next_pc(&mut self) {
         self.state.pc = (self.state.pc & 0x1000) | ((self.state.pc + 1) & 0xFFF);
         self.state.npc = self.state.pc;
     }
 
-    /// Executes exactly one supported instruction; no timers or interrupts.
+    /// Executes one instruction; a halted CPU returns Halted without fetching or advancing.
+    /// MCU idle cycles, interrupt wake-up, and timers are outside this instruction API.
     pub fn step(&mut self) -> Result<Step, CpuError> {
+        if self.state.halted {
+            return Err(CpuError::Halted { pc: self.state.pc });
+        }
         let pc = self.state.pc;
         let opcode = *self
             .program
@@ -371,6 +589,26 @@ impl Cpu {
         // Keep delay changes local until the instruction has completed successfully.
         let mut next_interrupt_delay = matches!(instruction, Instruction::SetPage(_));
         let cycles = match instruction {
+            Instruction::JumpIf(condition, target) => {
+                let taken = match condition {
+                    Condition::CarrySet => self.state.carry,
+                    Condition::CarryClear => !self.state.carry,
+                    Condition::ZeroSet => self.state.zero,
+                    Condition::ZeroClear => !self.state.zero,
+                };
+                if taken {
+                    self.state.pc = (self.state.npc & 0x1F00) | u16::from(target);
+                } else {
+                    self.next_pc();
+                }
+                5
+            }
+            Instruction::JumpBa => {
+                self.state.pc = (self.state.npc & 0x1F00)
+                    | (u16::from(self.state.b) << 4)
+                    | u16::from(self.state.a);
+                5
+            }
             Instruction::Jump(target) => {
                 self.state.pc = (self.state.npc & 0x1F00) | u16::from(target);
                 // _jp_s explicitly leaves _NPC unchanged.
@@ -379,6 +617,119 @@ impl Cpu {
             Instruction::SetPage(page) => {
                 self.state.npc = u16::from(page) << 8;
                 self.state.pc = (pc & 0x1000) | ((pc + 1) & 0xFFF);
+                5
+            }
+            Instruction::Call(target) | Instruction::CallZero(target) => {
+                let sp = self.state.sp;
+                let return_pc = pc + 1;
+                self.write_memory_batch(&[
+                    (u16::from(sp.wrapping_sub(1)), ((return_pc >> 8) & 15) as u8),
+                    (u16::from(sp.wrapping_sub(2)), ((return_pc >> 4) & 15) as u8),
+                    (u16::from(sp.wrapping_sub(3)), (return_pc & 15) as u8),
+                ])?;
+                self.state.sp = sp.wrapping_sub(3);
+                if matches!(instruction, Instruction::CallZero(_)) {
+                    self.state.pc = (self.state.npc & 0x1000) | u16::from(target);
+                    self.state.npc = self.state.pc;
+                } else {
+                    self.state.pc = (self.state.npc & 0x1F00) | u16::from(target);
+                }
+                7
+            }
+            Instruction::Return | Instruction::ReturnSkip | Instruction::ReturnData(_) => {
+                // Read the complete address before a RETD store can alias stack memory.
+                let return_pc = self.stacked_return_address()?;
+                if let Instruction::ReturnData(value) = instruction {
+                    // Preflight both writes before committing PC, SP, or the first nibble.
+                    self.write_byte_post_x(value)?;
+                }
+                self.state.sp = self.state.sp.wrapping_add(3);
+                self.state.pc = return_pc;
+                if matches!(instruction, Instruction::ReturnSkip) {
+                    self.next_pc();
+                } else {
+                    self.state.npc = return_pc;
+                }
+                if matches!(instruction, Instruction::Return) {
+                    7
+                } else {
+                    12
+                }
+            }
+            Instruction::Push(source) => {
+                let value = match source {
+                    StackValue::Operand(operand) => self.read_operand(operand)?,
+                    StackValue::Register(field) => self.read_register_nibble(field),
+                    StackValue::Flags => {
+                        u8::from(self.state.carry)
+                            | (u8::from(self.state.zero) << 1)
+                            | (u8::from(self.state.decimal) << 2)
+                            | (u8::from(self.state.interrupt_enable) << 3)
+                    }
+                };
+                let sp = self.state.sp.wrapping_sub(1);
+                self.write_memory(u16::from(sp), value)?;
+                self.state.sp = sp;
+                self.next_pc();
+                5
+            }
+            Instruction::Pop(target) => {
+                let value = self.read_memory(u16::from(self.state.sp))?;
+                match target {
+                    StackValue::Operand(operand) => self.write_operand(operand, value)?,
+                    StackValue::Register(field) => self.write_register_nibble(field, value),
+                    StackValue::Flags => {
+                        let enabled = value & 8 != 0;
+                        next_interrupt_delay = enabled && !self.state.interrupt_enable;
+                        self.state.carry = value & 1 != 0;
+                        self.state.zero = value & 2 != 0;
+                        self.state.decimal = value & 4 != 0;
+                        self.state.interrupt_enable = enabled;
+                    }
+                }
+                self.state.sp = self.state.sp.wrapping_add(1);
+                self.next_pc();
+                5
+            }
+            Instruction::LoadBytePostX(value) => {
+                self.write_byte_post_x(value)?;
+                self.next_pc();
+                5
+            }
+            Instruction::LoadRegister(field, source) => {
+                // Read through the old pointer before changing any part of that pointer.
+                let value = self.read_operand(source)?;
+                self.write_register_nibble(field, value);
+                self.next_pc();
+                5
+            }
+            Instruction::LoadFromRegister(target, field) => {
+                let value = self.read_register_nibble(field);
+                self.write_operand(target, value)?;
+                self.next_pc();
+                5
+            }
+            Instruction::StoreDirect(source, address) => {
+                let value = self.read_operand(source)?;
+                self.write_memory(u16::from(address), value)?;
+                self.next_pc();
+                5
+            }
+            Instruction::LoadDirect(target, address) => {
+                let value = self.read_memory(u16::from(address))?;
+                self.write_operand(target, value)?;
+                self.next_pc();
+                5
+            }
+            Instruction::LoadPostX(target, source) | Instruction::LoadPostY(target, source) => {
+                let value = self.read_operand(source)?;
+                self.write_operand(target, value)?;
+                if matches!(instruction, Instruction::LoadPostX(_, _)) {
+                    self.state.ix = (self.state.ix & 0xF00) | ((self.state.ix + 1) & 0xFF);
+                } else {
+                    self.state.iy = (self.state.iy & 0xF00) | ((self.state.iy + 1) & 0xFF);
+                }
+                self.next_pc();
                 5
             }
             Instruction::LoadX(value) => {
@@ -666,6 +1017,11 @@ impl Cpu {
                 self.state.interrupt_enable &= mask & 8 != 0;
                 self.next_pc();
                 7
+            }
+            Instruction::Halt => {
+                self.state.halted = true;
+                self.next_pc();
+                5
             }
             Instruction::Nop5 => {
                 self.next_pc();
