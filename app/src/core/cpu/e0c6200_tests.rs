@@ -106,7 +106,7 @@ fn synthetic_programs_match_python_after_every_instruction() {
             comparisons += 1;
         }
     }
-    assert_eq!(comparisons, 211);
+    assert_eq!(comparisons, 245);
 }
 
 #[test]
@@ -235,8 +235,8 @@ fn unsupported_opcodes_are_explicit_and_leave_everything_unchanged() {
     let mut cpu = program(&[0x100]);
     cpu.state.interrupt_delay = true;
     for opcode in 0..=u16::MAX {
-        let allowed = matches!(opcode, 0x000..=0x0FF | 0x800..=0x8FF | 0xA00..=0xAEF
-            | 0xB00..=0xBFF | 0xC00..=0xDFF | 0xE00..=0xE7F | 0xEC0..=0xECF
+        let allowed = matches!(opcode, 0x000..=0x0FF | 0x800..=0x8FF | 0xA00..=0xAFF
+            | 0xB00..=0xBFF | 0xC00..=0xDFF | 0xE00..=0xE7F | 0xE8C..=0xE8F | 0xEC0..=0xECF
             | 0xF00..=0xF1F | 0xF28..=0xF2F | 0xF38..=0xF3F | 0xFFB | 0xFFF);
         assert_eq!(
             Instruction::decode(opcode).is_some(),
@@ -255,7 +255,7 @@ fn unsupported_opcodes_are_explicit_and_leave_everything_unchanged() {
             assert_eq!(cpu, before);
         }
     }
-    assert_eq!(supported, 1714);
+    assert_eq!(supported, 1734);
 }
 
 fn set_flags(state: &mut CpuState, value: u16) {
@@ -384,7 +384,7 @@ fn decoder_coverage_matches_original_python_handler_inventory() {
         next_address = end + 1;
     }
     assert_eq!(next_address, 4096);
-    assert_eq!(supported, 1714);
+    assert_eq!(supported, 1734);
 }
 
 #[test]
@@ -489,3 +489,6 @@ mod index;
 
 #[path = "e0c6200_post_increment_tests.rs"]
 mod post_increment;
+
+#[path = "e0c6200_rotation_tests.rs"]
+mod rotation;

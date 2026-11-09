@@ -121,6 +121,7 @@ def decoder_inventory(namespace, tables, source):
         "_adc_xh_i", "_adc_xl_i", "_adc_yh_i", "_adc_yl_i",
         "_cp_xh_i", "_cp_xl_i", "_cp_yh_i", "_cp_yl_i",
         "_acpx_mx_r", "_acpy_my_r", "_scpx_mx_r", "_scpy_my_r",
+        "_rlc_r", "_rrc_r",
     }
     cpu = machine(namespace, tables, [0x100, 0x100, 0, 0, 0, 0, 0, 0])
     handlers = [handler.__name__ for handler in cpu._execute]
@@ -330,6 +331,63 @@ def post_increment_matrix(namespace, tables, source):
     return lines, cases
 
 
+def rotation_matrix(namespace, tables, source):
+    """All reference rotation encodings, values, flags, and memory layouts."""
+    lines = ["# E0C6200.py SHA256 " + hashlib.sha256(source).hexdigest(),
+             "# opcode|layout|initial_flags|cycles|next_pc|next_npc|delay|result_flags_pairs (hex; 16 input values)"]
+    layouts = ((0x20, 0x21), (0x20, 0x20), (0x2FF, 0),
+               (0xE00, 0xE4F), (0xE80, 0xECF), (0xE4F, 0xE4F))
+    starts = (0x100, 0xFFF, 0x1FFF, 0x10FF)
+    ram_seed = [(i * 3 + 1) & 15 for i in range(0x300)]
+    lcd_seed = [(i + 5) & 15 for i in range(0xA0)]
+    cases = 0
+    for opcode in (*range(0xAF0, 0xB00), *range(0xE8C, 0xE90)):
+        operand = opcode & 3
+        for layout, (ix, iy) in enumerate(layouts):
+            for initial_flags in range(16):
+                start = starts[initial_flags & 3]
+                cpu = machine(namespace, tables, [start, 0x1A00, 3, 5, ix, iy, 0xA5, initial_flags])
+                metadata = None
+                outcomes = []
+                for value in range(16):
+                    cpu._A, cpu._B = 3, 5
+                    cpu._PC, cpu._NPC = start, 0x1A00
+                    cpu._CF, cpu._ZF, cpu._DF, cpu._IF = (
+                        bool(initial_flags & (1 << bit)) for bit in range(4))
+                    cpu._RAM, cpu._VRAM = ram_seed.copy(), lcd_seed.copy()
+                    cpu._set_abmxmy_tbl[operand](cpu, value)
+                    before_ram, before_lcd = cpu._RAM.copy(), cpu._VRAM.copy()
+                    before_a, before_b = cpu._A, cpu._B
+                    cpu._if_delay = False
+                    cycles = cpu._execute[opcode](cpu, opcode)
+                    result = cpu._get_abmxmy_tbl[operand](cpu)
+                    if operand >= 2:
+                        address = ix if operand == 2 else iy
+                        if address < 0x300:
+                            before_ram[address] = result
+                        else:
+                            index = address - 0xE00 if address < 0xE50 else address - 0xE80 + 0x50
+                            before_lcd[index] = result
+                    assert cpu._RAM == before_ram and cpu._VRAM == before_lcd
+                    assert cpu._A == (result if operand == 0 else before_a)
+                    assert cpu._B == (result if operand == 1 else before_b)
+                    assert (cpu._IX, cpu._IY, cpu._SP, cpu._HALT) == (ix, iy, 0xA5, 0)
+                    assert flags(cpu) & 0xE == initial_flags & 0xE  # Preserve Z, D, I, even for result zero.
+                    assert cycles == (7 if opcode < 0xB00 else 5)
+                    assert not cpu._if_delay
+                    current = (cycles, cpu._PC, cpu._NPC, int(cpu._if_delay))
+                    if metadata is not None:
+                        assert current == metadata
+                    metadata = current
+                    outcomes.append(f"{result:X}{flags(cpu):X}")
+                    cases += 1
+                lines.append("|".join([
+                    *(f"{v:X}" for v in (opcode, layout, initial_flags, *metadata)),
+                    "".join(outcomes)]))
+    assert cases == 30720
+    return lines, cases
+
+
 def emit(name, lines, check):
     path = DATA / name
     content = "\n".join(lines) + "\n"
@@ -389,11 +447,13 @@ def main():
     emit("e0c6200_index_alu_reference.txt", index, args.check)
     post_increment, post_cases = post_increment_matrix(namespace, tables, source)
     emit("e0c6200_post_increment_reference.txt", post_increment, args.check)
+    rotations, rotation_cases = rotation_matrix(namespace, tables, source)
+    emit("e0c6200_rotation_reference.txt", rotations, args.check)
     action = "Verified" if args.check else "Generated"
     print(f"{action} {count} instruction snapshots from {programs} synthetic programs, "
           "512 legacy ADD cases, 131072 direct immediate ALU cases and "
           f"{two_operand_cases} direct two-operand ALU cases, {index_cases} direct index cases and "
-          f"{post_cases} direct post-increment cases.")
+          f"{post_cases} direct post-increment cases and {rotation_cases} direct rotation cases.")
 
 
 if __name__ == "__main__":

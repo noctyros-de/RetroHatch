@@ -25,7 +25,7 @@ AB0|ABF|_sbc_r_q|1
 AC0|ACF|_and_r_q|1
 AD0|ADF|_or_r_q|1
 AE0|AEF|_xor_r_q|1
-AF0|AFF|_rlc_r|0
+AF0|AFF|_rlc_r|1
 B00|BFF|_ld_x_x|1
 C00|C3F|_add_r_i|1
 C40|C7F|_adc_r_i|1
@@ -42,7 +42,7 @@ E70|E7F|_ldpy_my_i|1
 E80|E83|_ld_xp_r|0
 E84|E87|_ld_xh_r|0
 E88|E8B|_ld_xl_r|0
-E8C|E8F|_rrc_r|0
+E8C|E8F|_rrc_r|1
 E90|E93|_ld_yp_r|0
 E94|E97|_ld_yh_r|0
 E98|E9B|_ld_yl_r|0

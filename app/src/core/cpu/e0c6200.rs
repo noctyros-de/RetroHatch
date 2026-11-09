@@ -118,6 +118,8 @@ pub enum Instruction {
     Alu(AluOperation, Operand, Operand),
     AdcIndex(IndexNibble, u8),
     CompareIndex(IndexNibble, u8),
+    RotateLeft(Operand),
+    RotateRight(Operand),
     AdcPostX(Operand),
     AdcPostY(Operand),
     SbcPostX(Operand),
@@ -164,6 +166,8 @@ impl Instruction {
                     Operand::from_bits(opcode),
                 ))
             }
+            0xAF0..=0xAFF => Some(Self::RotateLeft(Operand::from_bits(opcode))),
+            0xE8C..=0xE8F => Some(Self::RotateRight(Operand::from_bits(opcode))),
             0xB00..=0xBFF => Some(Self::LoadX(opcode as u8)),
             0xC00..=0xC3F => Some(Self::AddImmediate(
                 Operand::from_bits(opcode >> 4),
@@ -589,6 +593,25 @@ impl Cpu {
                 self.state.zero = result == 0;
                 self.next_pc();
                 7
+            }
+            Instruction::RotateLeft(target) | Instruction::RotateRight(target) => {
+                let value = self.read_operand(target)?;
+                let (result, carry, cycles) = if matches!(instruction, Instruction::RotateLeft(_)) {
+                    let extended = (value << 1) | u8::from(self.state.carry);
+                    (extended & 15, extended > 15, 7)
+                } else {
+                    (
+                        (value >> 1) | (u8::from(self.state.carry) << 3),
+                        value & 1 != 0,
+                        5,
+                    )
+                };
+                // A failed access must not change carry, PC, or any preserved flags.
+                self.write_operand(target, result)?;
+                self.state.carry = carry;
+                // Unlike ALU instructions, rotations preserve Z as well as D/I.
+                self.next_pc();
+                cycles
             }
             Instruction::Nop5 => {
                 self.next_pc();
