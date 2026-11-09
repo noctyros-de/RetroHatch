@@ -2,13 +2,13 @@
 use std::path::{Path, PathBuf};
 
 #[cfg(windows)]
-pub fn pick_p1_rom(folder: &Path) -> Result<Option<PathBuf>, String> {
+pub fn pick_rom(folder: &Path) -> Result<Option<PathBuf>, String> {
     use std::os::windows::ffi::{OsStrExt, OsStringExt};
     use windows_sys::Win32::UI::Controls::Dialogs::*;
-    let filter: Vec<u16> = "P1 ROM (*.bin;*.rom)\0*.bin;*.rom\0All files\0*.*\0\0"
+    let filter: Vec<u16> = "Tamagotchi ROM (*.bin;*.rom)\0*.bin;*.rom\0All files\0*.*\0\0"
         .encode_utf16()
         .collect();
-    let title: Vec<u16> = "Open user-provided Tamagotchi P1 ROM"
+    let title: Vec<u16> = "Open user-provided Tamagotchi ROM"
         .encode_utf16()
         .chain(Some(0))
         .collect();
@@ -40,6 +40,6 @@ pub fn pick_p1_rom(folder: &Path) -> Result<Option<PathBuf>, String> {
     }
 }
 #[cfg(not(windows))]
-pub fn pick_p1_rom(_: &Path) -> Result<Option<PathBuf>, String> {
+pub fn pick_rom(_: &Path) -> Result<Option<PathBuf>, String> {
     Err("Use the ROM library path on this platform.".into())
 }

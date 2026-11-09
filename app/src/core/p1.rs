@@ -1,7 +1,5 @@
 //! Tamagotchi P1 profile from BrickEmuPy's TamagotchiP1.brick (CC0).
-use super::cpu::e0c6200::{CpuError, CpuState};
-use super::device::{Button, Descriptor, Device, DisplaySnapshot};
-use super::mcu::{Mcu, io::Port};
+use super::profile::DeviceProfile;
 use std::fmt;
 
 pub const ROM_BYTES: usize = 0x3000;
@@ -18,11 +16,11 @@ impl fmt::Display for RomError {
         match self {
             Self::Size(size) => write!(
                 f,
-                "Invalid P1 ROM size: {size} bytes. Expected 12288 bytes (6144 big-endian 16-bit words). Packed 12-bit dumps are not supported."
+                "Invalid ROM size: {size} bytes. Expected 12288 bytes for P1 or 16384 bytes for Genjintch/Angel, as selected (big-endian 16-bit words). Packed 12-bit dumps are not supported."
             ),
             Self::Word { offset, value } => write!(
                 f,
-                "Invalid P1 opcode {value:#06x} at byte offset {offset:#06x}: the upper four bits must be zero. Use an unpacked big-endian dump."
+                "Invalid E0C6200 opcode {value:#06x} at byte offset {offset:#06x}: the upper four bits must be zero. Use an unpacked big-endian dump."
             ),
         }
     }
@@ -32,13 +30,17 @@ impl std::error::Error for RomError {}
 pub struct RomImage {
     pub words: Vec<u16>,
     pub crc32: u32,
+    pub profile: DeviceProfile,
 }
 impl RomImage {
     pub fn decode(bytes: &[u8]) -> Result<Self, RomError> {
-        if bytes.len() != ROM_BYTES {
+        Self::decode_for_profile(bytes, DeviceProfile::P1)
+    }
+    pub fn decode_for_profile(bytes: &[u8], profile: DeviceProfile) -> Result<Self, RomError> {
+        if bytes.len() != profile.rom_bytes() {
             return Err(RomError::Size(bytes.len()));
         }
-        let mut words = Vec::with_capacity(ROM_BYTES / 2);
+        let mut words = Vec::with_capacity(profile.rom_bytes() / 2);
         for (index, pair) in bytes.chunks_exact(2).enumerate() {
             let word = u16::from_be_bytes([pair[0], pair[1]]);
             if word > 0xFFF {
@@ -56,77 +58,26 @@ impl RomImage {
                 crc = (crc >> 1) ^ (0xEDB88320 & 0u32.wrapping_sub(crc & 1));
             }
         }
-        Ok(Self { words, crc32: !crc })
+        Ok(Self {
+            words,
+            crc32: !crc,
+            profile,
+        })
     }
     /// Identity only: structurally valid unknown dumps still require manual P1 assignment.
     pub fn known_world_p1(&self) -> bool {
-        self.crc32 == 0x5C864CB1
+        self.profile == DeviceProfile::P1 && self.crc32 == 0x5C864CB1
     }
 }
 
-pub struct P1 {
-    pub mcu: Mcu,
-}
-impl P1 {
-    pub fn new(rom: &RomImage) -> Result<Self, CpuError> {
-        Ok(Self {
-            mcu: Mcu::new(&rom.words)?,
-        })
-    }
-}
-impl Device for P1 {
-    fn descriptor(&self) -> Descriptor {
-        Descriptor {
-            id: PROFILE_ID,
-            name: "Tamagotchi P1",
-        }
-    }
-    fn advance_to(&mut self, master_tick: u64) -> Result<(), CpuError> {
-        self.mcu.advance_to(master_tick)
-    }
-    fn time(&self) -> u64 {
-        self.mcu.time()
-    }
-    fn cpu_state(&self) -> &CpuState {
-        self.mcu.cpu().state()
-    }
-    fn set_button(&mut self, button: Button, pressed: bool) {
-        let mask = match button {
-            Button::A => 4,
-            Button::B => 2,
-            Button::C => 1,
-        };
-        self.mcu
-            .pin(Port::K0, mask, if pressed { Some(false) } else { None });
-    }
-    fn release_inputs(&mut self) {
-        for button in [Button::A, Button::B, Button::C] {
-            self.set_button(button, false);
-        }
-    }
-    fn reset(&mut self) {
-        self.mcu.reset();
-    }
-    fn display(&self) -> DisplaySnapshot {
-        let ctrl = self.mcu.cpu().io().lcd_control();
-        let nibbles = if self.mcu.reset_held() || ctrl & 8 != 0 {
-            [0; 160]
-        } else if ctrl & 4 != 0 {
-            // ALON means every segment. The upstream FULL_VRAM=[1;160] only sets bit 0.
-            [15; 160]
-        } else {
-            *self.mcu.cpu().lcd_memory()
-        };
-        DisplaySnapshot { nibbles }
-    }
-    fn drain_audio(&mut self) -> Vec<i16> {
-        self.mcu.drain_audio()
-    }
-}
+// Preserve the established P1 constructor/import while sharing the MCU device.
+pub use super::tamagotchi::Tamagotchi as P1;
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::cpu::e0c6200::CpuState;
+    use crate::core::device::{Button, Device, DisplaySnapshot};
     #[test]
     fn rom_validation_rejects_sizes_and_endianness_errors_without_executing_firmware() {
         for size in [0, 2, 8192, 9216, 16384] {

@@ -174,6 +174,30 @@ fn invalid_io_and_reserved_opcodes_fail_without_advancing_time() {
 
 #[test]
 fn integrated_mcu_matches_the_original_clock_across_buttons_lcd_timers_audio_and_gpio() {
+    compare_mcu_fixtures(
+        include_str!("../../../tests/data/e0c6200_mcu_programs.txt"),
+        include_str!("../../../tests/data/e0c6200_mcu_reference.txt"),
+        crate::core::profile::DeviceProfile::P1,
+        391,
+    );
+}
+
+#[test]
+fn genjintch_matches_original_clock_across_knock_lcd_gaps_and_oscillator_switching() {
+    compare_mcu_fixtures(
+        include_str!("../../../tests/data/genjintch_programs.txt"),
+        include_str!("../../../tests/data/genjintch_reference.txt"),
+        crate::core::profile::DeviceProfile::Genjintch,
+        236,
+    );
+}
+
+fn compare_mcu_fixtures(
+    programs: &str,
+    expected: &str,
+    profile: crate::core::profile::DeviceProfile,
+    expected_count: usize,
+) {
     fn hex(s: &str) -> u16 {
         u16::from_str_radix(s, 16).unwrap()
     }
@@ -188,8 +212,7 @@ fn integrated_mcu_matches_the_original_clock_across_buttons_lcd_timers_audio_and
         memory
     }
     let mut checkpoints = 0;
-    let expected = include_str!("../../../tests/data/e0c6200_mcu_reference.txt");
-    for line in include_str!("../../../tests/data/e0c6200_mcu_programs.txt")
+    for line in programs
         .lines()
         .filter(|line| !line.starts_with('#') && !line.is_empty())
     {
@@ -219,7 +242,11 @@ fn integrated_mcu_matches_the_original_clock_across_buttons_lcd_timers_audio_and
             .filter(|row| row.starts_with(&format!("{name}|")))
             .collect();
         let mut row_index = 0;
-        let mut m = machine(&program);
+        let mut words = vec![0xFFB; profile.rom_bytes() / 2];
+        for &(address, opcode) in &program {
+            words[address] = opcode;
+        }
+        let mut m = Mcu::for_profile(&words, profile).unwrap();
         for clock in 0..clocks {
             for event in &pins {
                 if event[0].parse::<usize>().unwrap() == clock {
@@ -309,7 +336,7 @@ fn integrated_mcu_matches_the_original_clock_across_buttons_lcd_timers_audio_and
             assert_eq!(m.interrupts, 4);
         }
     }
-    assert_eq!(checkpoints, 391);
+    assert_eq!(checkpoints, expected_count);
 }
 
 #[test]
@@ -350,4 +377,103 @@ fn reset_hold_stops_the_oscillator_and_release_restarts_actual_cpu_execution() {
     assert_eq!(m.cpu.state().a, 1);
     assert_eq!(m.cpu.state().pc, 0x101);
     assert_eq!(m.read(0xF20), Ok(1));
+}
+
+#[test]
+fn cycle_counters_preserve_exact_fast_slow_and_halt_clock_scaling() {
+    let mut m = machine(&[]);
+    for _ in 0..10 {
+        m.clock().unwrap();
+    }
+    assert_eq!(m.counters.slow, 50);
+    assert_eq!(m.time(), 50 * OSC1_TICKS);
+    m.write(0xF70, 8).unwrap();
+    for _ in 0..10 {
+        m.clock().unwrap();
+    }
+    assert_eq!(m.counters.fast, 50);
+    assert_eq!(m.counters.instructions, 100);
+    assert_eq!(m.counters.total(), m.counters.fast + m.counters.slow);
+    assert_eq!(
+        m.time(),
+        m.counters.fast * OSC2_TICKS + m.counters.slow * OSC1_TICKS
+    );
+    assert_eq!(m.counters.osc1_edges, m.time() / OSC1_TICKS + 1);
+
+    let mut halted = machine(&[(0x100, 0xFF8)]);
+    halted.clock().unwrap(); // HALT executes for five slow-clock cycles.
+    halted.clock().unwrap(); // Idle preserves the selected slow oscillator.
+    halted.write(0xF70, 8).unwrap();
+    halted.clock().unwrap(); // Idle now consumes seven fast-clock cycles.
+    assert_eq!(halted.counters.instructions, 5);
+    assert_eq!(halted.counters.halt, 14);
+    assert_eq!(halted.counters.slow, 12);
+    assert_eq!(halted.counters.fast, 7);
+    assert_eq!(halted.counters.total(), 19);
+    assert_eq!(halted.time(), 12 * OSC1_TICKS + 7 * OSC2_TICKS);
+}
+
+#[test]
+fn detailed_profiling_does_not_change_execution_time_state_or_nonzero_pcm() {
+    let mut plain = machine(&[]);
+    let mut profiled = machine(&[]);
+    profiled.set_profiling(true);
+    for m in [&mut plain, &mut profiled] {
+        m.write(0xF74, 3).unwrap();
+        m.write(0xF54, 0).unwrap();
+    }
+    for clock in 0..600 {
+        if clock == 100 {
+            plain.write(0xF70, 8).unwrap();
+            profiled.write(0xF70, 8).unwrap();
+        }
+        plain.clock().unwrap();
+        profiled.clock().unwrap();
+    }
+    assert_eq!(plain.time(), profiled.time());
+    assert_eq!(plain.cpu, profiled.cpu);
+    assert_eq!(plain.counters, profiled.counters);
+    let samples = plain.drain_audio();
+    assert!(samples.iter().any(|&sample| sample != 0));
+    assert_eq!(samples, profiled.drain_audio());
+    assert_eq!(plain.profile.cpu_ns, 0);
+    assert!(profiled.profile.cpu_ns > 0);
+    assert!(profiled.profile.irq_ns > 0);
+    assert!(profiled.profile.timers_ns > 0);
+    assert!(profiled.profile.pcm_ns > 0);
+}
+
+#[test]
+fn genjintch_fractional_fast_clock_preserves_remainders_across_halt_and_switches() {
+    use crate::core::profile::DeviceProfile;
+    let words = vec![0xFFB; 0x2000];
+    let mut m = Mcu::for_profile(&words, DeviceProfile::Genjintch).unwrap();
+    for i in 0..10000 {
+        m.write(0xF70, if i % 53 < 31 { 8 } else { 0 }).unwrap();
+        m.clock().unwrap();
+        let expected = m.counters.slow * OSC1_TICKS + m.counters.fast * MASTER_HZ / 1_060_000;
+        assert_eq!(m.time(), expected);
+    }
+    let mut words = words;
+    words[0x100] = 0xFF8;
+    let mut m = Mcu::for_profile(&words, DeviceProfile::Genjintch).unwrap();
+    m.write(0xF70, 8).unwrap();
+    for _ in 0..1000 {
+        m.clock().unwrap();
+    }
+    assert_eq!(m.counters.halt, 999 * 7);
+    assert_eq!(m.time(), m.counters.fast * MASTER_HZ / 1_060_000);
+    assert_eq!(m.counters.osc1_edges, m.time() / OSC1_TICKS + 1);
+    assert_eq!(m.counters.audio_samples, m.time() * 44100 / MASTER_HZ);
+}
+
+#[test]
+fn angel_matches_reference_timers_knock_halt_audio_clock_and_disconnected_bus() {
+    // compare_angel.py verifies identical clock/masks/GPIO in the original profiles.
+    compare_mcu_fixtures(
+        include_str!("../../../tests/data/genjintch_programs.txt"),
+        include_str!("../../../tests/data/genjintch_reference.txt"),
+        crate::core::profile::DeviceProfile::Angel,
+        236,
+    );
 }

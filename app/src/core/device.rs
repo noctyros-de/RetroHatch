@@ -6,6 +6,7 @@ pub enum Button {
     A,
     B,
     C,
+    Knock,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

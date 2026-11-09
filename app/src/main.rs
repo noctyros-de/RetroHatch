@@ -2,6 +2,10 @@
 
 #[rustfmt::skip]
 mod lcd_geometry;
+#[rustfmt::skip]
+mod genjintch_lcd_geometry;
+#[rustfmt::skip]
+mod angel_lcd_geometry;
 mod ui;
 
 fn main() -> eframe::Result {

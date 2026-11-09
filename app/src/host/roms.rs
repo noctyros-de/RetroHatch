@@ -1,5 +1,5 @@
 //! User-owned local ROM discovery and bounded loading.
-use crate::core::p1::{ROM_BYTES, RomImage};
+use crate::core::{p1::RomImage, profile::DeviceProfile};
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
@@ -36,11 +36,14 @@ pub fn list(folder: &Path) -> Result<Vec<PathBuf>, String> {
     Ok(paths)
 }
 pub fn load(path: &Path) -> Result<RomImage, String> {
+    load_for_profile(path, DeviceProfile::P1)
+}
+pub fn load_for_profile(path: &Path, profile: DeviceProfile) -> Result<RomImage, String> {
     let file =
         std::fs::File::open(path).map_err(|e| format!("Cannot open {}: {e}", path.display()))?;
     let mut data = Vec::new();
-    file.take((ROM_BYTES + 1) as u64)
+    file.take((profile.rom_bytes() + 1) as u64)
         .read_to_end(&mut data)
         .map_err(|e| format!("Cannot read {}: {e}", path.display()))?;
-    RomImage::decode(&data).map_err(|e| e.to_string())
+    RomImage::decode_for_profile(&data, profile).map_err(|e| format!("{}: {e}", profile.name()))
 }

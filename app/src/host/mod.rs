@@ -3,3 +3,5 @@ pub mod audio;
 pub mod platform;
 pub mod roms;
 pub mod runner;
+
+pub mod performance;

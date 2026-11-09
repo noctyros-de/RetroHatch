@@ -434,6 +434,7 @@ pub struct Cpu {
     ram: [u8; RAM_NIBBLES],
     lcd: [u8; LCD_NIBBLES],
     io: Option<RefCell<Io>>,
+    lcd_gap_bus: bool,
 }
 
 impl Cpu {
@@ -454,6 +455,7 @@ impl Cpu {
             ram: [0; RAM_NIBBLES],
             lcd: [0; LCD_NIBBLES],
             io: None,
+            lcd_gap_bus: false,
         })
     }
 
@@ -462,6 +464,14 @@ impl Cpu {
         self.ram.fill(0);
         self.lcd.fill(0);
         self.attach_io();
+    }
+
+    /// Genjintch/Angel MCU profiles use the reference policy for disconnected LCD
+    /// addresses and unregistered F7C. BrickEmuPy reads these as zero
+    /// and ignores writes. Keep the established standalone/P1 strict policy
+    /// and reject every other gap.
+    pub(crate) fn enable_lcd_gap_bus(&mut self) {
+        self.lcd_gap_bus = true;
     }
 
     pub(crate) fn attach_io(&mut self) {
@@ -512,6 +522,7 @@ impl Cpu {
             0x000..=0x2FF => Ok(self.ram[address as usize]),
             0xE00..=0xE4F => Ok(self.lcd[(address - 0xE00) as usize]),
             0xE80..=0xECF => Ok(self.lcd[(address - 0xE80 + 0x50) as usize]),
+            0xE50..=0xE7F | 0xED0..=0xEFF | 0xF7C if self.lcd_gap_bus => Ok(0),
             0xF00..=0xF7E if self.io.is_some() && Io::supports(address) => {
                 Ok(self.with_io(|io| io.read(address)))
             }
@@ -525,6 +536,7 @@ impl Cpu {
             0x000..=0x2FF => self.ram[address as usize] = value,
             0xE00..=0xE4F => self.lcd[(address - 0xE00) as usize] = value,
             0xE80..=0xECF => self.lcd[(address - 0xE80 + 0x50) as usize] = value,
+            0xE50..=0xE7F | 0xED0..=0xEFF | 0xF7C if self.lcd_gap_bus => {}
             0xF00..=0xF7E if self.io.is_some() && Io::supports(address) => {
                 self.with_io(|io| io.write(address, value))
             }
@@ -601,6 +613,7 @@ impl Cpu {
         // Validation must not acknowledge a read-to-clear interrupt register.
         match address {
             0..=0x2FF | 0xE00..=0xE4F | 0xE80..=0xECF => Ok(()),
+            0xE50..=0xE7F | 0xED0..=0xEFF | 0xF7C if self.lcd_gap_bus => Ok(()),
             0xF00..=0xF7E if self.io.is_some() && Io::supports(address) => Ok(()),
             _ => Err(CpuError::UnsupportedAddress(address)),
         }
