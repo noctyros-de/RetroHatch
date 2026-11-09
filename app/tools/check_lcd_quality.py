@@ -25,7 +25,7 @@ if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--probe',type=Path,default=ROOT/'app/target/release/examples/lcd_probe.exe');args=p.parse_args()
     for key,name,left,top in PROFILES:
         root=ET.fromstring((ROOT/f'references/BrickEmuPy-main/assets/{name}.svg').read_bytes());display=next(n for n in root.iter()if n.get('id')=='display');nodes=[n for n in display if not n.get('id','').startswith('col_')]
-        oldname={'p1':'lcd_geometry','genjintch':'genjintch_lcd_geometry','angel':'angel_lcd_geometry','morino':'morino_lcd_geometry'}[key]
+        oldname={'p1':'lcd_geometry','genjintch':'genjintch_lcd_geometry','angel':'angel_lcd_geometry','morino':'morino_lcd_geometry','umino':'umino_lcd_geometry'}[key]
         text=(ROOT/f'app/src/{oldname}.rs').read_text().split('pub const ICON_SPANS')[1]
         spans=[[tuple(map(int,t)) for t in re.findall(r'\((\d+),\s*(\d+),\s*(\d+)\)',part)] for part in re.findall(r'&\[(.*?)\]',text,re.S) if re.search(r'\(\d+,',part)]
         assert len(spans)==8,(key,len(spans))

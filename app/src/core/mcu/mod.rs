@@ -46,9 +46,15 @@ impl Mcu {
         cpu.attach_io();
         if matches!(
             profile,
-            DeviceProfile::Genjintch | DeviceProfile::Angel | DeviceProfile::Morino
+            DeviceProfile::Genjintch
+                | DeviceProfile::Angel
+                | DeviceProfile::Morino
+                | DeviceProfile::Umino
         ) {
             cpu.enable_lcd_gap_bus();
+        }
+        if profile == DeviceProfile::Umino {
+            cpu.enable_reference_unmapped_bus();
         }
         Ok(Self {
             cpu,

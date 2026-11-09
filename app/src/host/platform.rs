@@ -22,7 +22,7 @@ fn pick_file(folder: &Path, save: bool, state: bool) -> Result<Option<PathBuf>, 
     } else if state {
         "Import RetroHatch Save"
     } else {
-        "Open user-provided Tamagotchi ROM"
+        "Import user-provided Tamagotchi ROM"
     })
     .encode_utf16()
     .chain(Some(0))

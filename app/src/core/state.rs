@@ -79,6 +79,7 @@ pub fn profile_code(p: DeviceProfile) -> u8 {
         DeviceProfile::Genjintch => 1,
         DeviceProfile::Angel => 2,
         DeviceProfile::Morino => 3,
+        DeviceProfile::Umino => 4,
     }
 }
 pub fn fingerprint(words: &[u16]) -> [u8; 32] {
@@ -354,5 +355,34 @@ mod tests {
         body.extend_from_slice(&hash);
         assert!(d.restored(&body).err().unwrap().contains("PCM"));
         assert_eq!(d.save_state().unwrap(), good);
+    }
+    #[test]
+    fn umino_appends_a_profile_code_without_changing_existing_save_identities() {
+        for (p, code) in [
+            (DeviceProfile::P1, 0),
+            (DeviceProfile::Genjintch, 1),
+            (DeviceProfile::Angel, 2),
+            (DeviceProfile::Morino, 3),
+            (DeviceProfile::Umino, 4),
+        ] {
+            assert_eq!(profile_code(p), code);
+            assert_eq!(synthetic(p).save_state().unwrap()[12], code);
+        }
+        let umino = synthetic(DeviceProfile::Umino);
+        let saved = umino.save_state().unwrap();
+        for profile in [
+            DeviceProfile::Genjintch,
+            DeviceProfile::Angel,
+            DeviceProfile::Morino,
+        ] {
+            let other = synthetic(profile);
+            let before = other.save_state().unwrap();
+            assert_eq!(
+                other.rom_hash, umino.rom_hash,
+                "Same program must exercise profile identity independently of ROM identity"
+            );
+            assert!(other.restored(&saved).is_err());
+            assert_eq!(other.save_state().unwrap(), before);
+        }
     }
 }

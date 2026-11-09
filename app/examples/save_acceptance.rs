@@ -67,6 +67,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         (DeviceProfile::Genjintch, "TamagotchiGenjintch.bin"),
         (DeviceProfile::Angel, "TamagotchiAngel.bin"),
         (DeviceProfile::Morino, "TamagotchiMorino.bin"),
+        (DeviceProfile::Umino, "TamagotchiUmino.bin"),
     ] {
         let path = folder.join(name);
         let rom = roms::load_for_profile(&path, profile)?;
@@ -168,6 +169,7 @@ fn worker_check(folder: &Path, root: &Path) -> Result<(), Box<dyn std::error::Er
         (DeviceProfile::Genjintch, "TamagotchiGenjintch.bin"),
         (DeviceProfile::Angel, "TamagotchiAngel.bin"),
         (DeviceProfile::Morino, "TamagotchiMorino.bin"),
+        (DeviceProfile::Umino, "TamagotchiUmino.bin"),
     ] {
         let rom = roms::load_for_profile(&folder.join(name), profile)?;
         let fresh = Tamagotchi::new(&rom)?;

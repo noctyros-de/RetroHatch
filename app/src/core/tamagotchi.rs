@@ -239,4 +239,54 @@ mod tests {
         malformed[0] = 0x10;
         assert!(RomImage::decode_for_profile(&malformed, DeviceProfile::Morino).is_err());
     }
+    #[test]
+    fn umino_profile_rom_inputs_reset_and_display_share_real_mcu_behavior() {
+        assert_eq!(DeviceProfile::parse("ocean"), Some(DeviceProfile::Umino));
+        assert_eq!(
+            DeviceProfile::parse("tamagotchi-umino"),
+            Some(DeviceProfile::Umino)
+        );
+        let mut umino = device(DeviceProfile::Umino);
+        assert_eq!(umino.descriptor().id, "tamagotchi-umino");
+        assert_eq!(umino.profile.osc2_hz(), 1_060_000);
+        assert_eq!(umino.profile.rom_bytes(), 16384);
+        assert_eq!(umino.mcu.read(0xF42), Ok(15));
+        for (button, mask) in [
+            (Button::A, 4),
+            (Button::B, 2),
+            (Button::C, 1),
+            (Button::Knock, 8),
+        ] {
+            umino.set_button(button, true);
+            assert_eq!(umino.mcu.read(0xF40), Ok(15 ^ mask));
+            umino.set_button(button, false);
+            assert_eq!(umino.mcu.read(0xF40), Ok(15));
+        }
+        umino.set_button(Button::A, true);
+        umino.set_button(Button::Knock, true);
+        assert_eq!(umino.mcu.read(0xF40), Ok(3));
+        umino.release_inputs();
+        assert_eq!(umino.mcu.read(0xF40), Ok(15));
+        umino.set_button(Button::Knock, true);
+        umino
+            .advance_to(umino.time() + crate::core::mcu::MASTER_HZ / 10)
+            .unwrap();
+        assert_eq!(umino.mcu.read(0xF40), Ok(7)); // No invented automatic sensor pulse.
+        umino.set_button(Button::Knock, false);
+        umino
+            .advance_to(umino.time() + crate::core::mcu::MASTER_HZ / 10)
+            .unwrap();
+        assert_eq!(umino.mcu.read(0xF40), Ok(15));
+        umino.mcu.write(0xE10, 5).unwrap();
+        umino.mcu.write(0xF71, 0).unwrap();
+        assert_eq!(umino.display().nibbles[16], 5);
+        umino.set_button(Button::Knock, true);
+        umino.reset();
+        assert_eq!(umino.mcu.read(0xF40), Ok(15));
+        assert_eq!(umino.display(), DisplaySnapshot::default());
+        assert!(RomImage::decode_for_profile(&vec![0; 12288], DeviceProfile::Umino).is_err());
+        let mut malformed = vec![0; 16384];
+        malformed[0] = 0x10;
+        assert!(RomImage::decode_for_profile(&malformed, DeviceProfile::Umino).is_err());
+    }
 }

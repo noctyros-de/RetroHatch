@@ -22,3 +22,8 @@ settings.rhc
 settings.rhc.bak
 .settings.rhc.*.tmp
 .settings.rhc.bak.*.tmp
+
+# Private ROM libraries, including developer data-root overrides
+**/rom-library/
+*.rhl
+*.rhl.bak

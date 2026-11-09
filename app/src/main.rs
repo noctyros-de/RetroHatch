@@ -9,6 +9,8 @@ mod angel_lcd_geometry;
 #[rustfmt::skip]
 mod morino_lcd_geometry;
 #[rustfmt::skip]
+mod umino_lcd_geometry;
+#[rustfmt::skip]
 mod lcd_masks;
 mod lcd_render;
 mod ui;

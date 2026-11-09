@@ -14,7 +14,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let profile = args
         .next()
         .and_then(|v| v.to_str().and_then(DeviceProfile::parse))
-        .ok_or("Specify p1, genjintch, angel or morino")?;
+        .ok_or("Specify p1, genjintch, angel, morino or umino")?;
     let path = args.next().ok_or("Provide a local ROM path")?;
     let target = args.next().ok_or("Provide a private trace output path")?;
     let gameplay = match args.next() {

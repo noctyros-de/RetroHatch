@@ -180,6 +180,19 @@ impl Settings {
 mod tests {
     use super::*;
     #[test]
+    fn every_device_profile_round_trips_without_changing_user_preferences() {
+        for profile in DeviceProfile::ALL {
+            let settings = Settings {
+                last_profile: profile,
+                theme: Theme::Lilac,
+                muted: true,
+                labels: false,
+                ..Settings::default()
+            };
+            assert_eq!(Settings::decode(&settings.encode()).unwrap(), settings);
+        }
+    }
+    #[test]
     fn new_installations_are_green_but_explicit_pink_preferences_are_preserved() {
         assert_eq!(Settings::default().theme, Theme::Green);
         let old = Settings {

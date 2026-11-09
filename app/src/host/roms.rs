@@ -45,5 +45,8 @@ pub fn load_for_profile(path: &Path, profile: DeviceProfile) -> Result<RomImage,
     file.take((profile.rom_bytes() + 1) as u64)
         .read_to_end(&mut data)
         .map_err(|e| format!("Cannot read {}: {e}", path.display()))?;
+    super::pending_devices::ensure_supported(&crate::core::state::hex(
+        &crate::core::state::sha256(&data),
+    ))?;
     RomImage::decode_for_profile(&data, profile).map_err(|e| format!("{}: {e}", profile.name()))
 }

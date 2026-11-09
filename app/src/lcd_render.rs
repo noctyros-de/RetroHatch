@@ -7,6 +7,7 @@ pub fn masks(p: DeviceProfile) -> &'static Masks {
         DeviceProfile::Genjintch => &crate::lcd_masks::GENJINTCH,
         DeviceProfile::Angel => &crate::lcd_masks::ANGEL,
         DeviceProfile::Morino => &crate::lcd_masks::MORINO,
+        DeviceProfile::Umino => &crate::lcd_masks::UMINO,
     }
 }
 pub struct Coverage {
@@ -80,6 +81,7 @@ pub fn paint(
             DeviceProfile::Genjintch => 1,
             DeviceProfile::Angel => 2,
             DeviceProfile::Morino => 3,
+            DeviceProfile::Umino => 4,
         },
         physical_width,
     );

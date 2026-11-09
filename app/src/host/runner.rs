@@ -19,6 +19,7 @@ use std::time::{Duration, Instant};
 pub enum Command {
     Load(PathBuf),
     LoadProfile(PathBuf, DeviceProfile),
+    LoadVerified(PathBuf, DeviceProfile, [u8; 32]),
     Run,
     Pause,
     Reset,
@@ -50,6 +51,7 @@ pub struct Snapshot {
     pub running: bool,
     pub rom_name: String,
     pub crc32: Option<u32>,
+    pub rom_hash: Option<[u8; 32]>,
     pub known_world_p1: bool,
     pub profile: DeviceProfile,
     pub ticks: u64,
@@ -83,6 +85,7 @@ impl Default for Snapshot {
             running: false,
             rom_name: String::new(),
             crc32: None,
+            rom_hash: None,
             known_world_p1: false,
             profile: DeviceProfile::P1,
             ticks: 0,
@@ -173,6 +176,7 @@ fn publish(
 ) {
     let started = Instant::now();
     state.loaded = device.is_some();
+    state.rom_hash = device.map(|d| d.rom_hash);
     state.running = running;
     if let Some(p1) = device {
         state.display = p1.display();
@@ -332,17 +336,21 @@ fn run(
                     }
                     return;
                 }
-                command @ (Command::Load(_) | Command::LoadProfile(..)) => {
+                command @ (Command::Load(_)
+                | Command::LoadProfile(..)
+                | Command::LoadVerified(..)) => {
                     if state.loading || exit_requested {
                         state.save_error=Some("Please wait for saved progress to finish loading before switching ROMs.".into());
                         continue;
                     }
-                    let (path, profile) = match command {
-                        Command::Load(path) => (path, DeviceProfile::P1),
-                        Command::LoadProfile(path, profile) => (path, profile),
+                    let (path, profile, expected) = match command {
+                        Command::Load(path) => (path, DeviceProfile::P1, None),
+                        Command::LoadProfile(path, profile) => (path, profile, None),
+                        Command::LoadVerified(path, profile, hash) => (path, profile, Some(hash)),
                         _ => unreachable!(),
                     };
                     let prepared = roms::load_for_profile(&path, profile).and_then(|rom| {
+                        if expected.is_some_and(|hash|crate::core::state::fingerprint(&rom.words)!=hash){return Err("Library ROM changed before loading. Reimport matching firmware to repair it.".into())}
                         let known = rom.known_world_p1();
                         let crc = rom.crc32;
                         Tamagotchi::new(&rom)
@@ -860,6 +868,57 @@ mod tests {
         c.send(Command::Load(path.clone())); // Explicit P1 assignment rejects a Angel-sized image.
         let failed = wait(&c, |s| s.error.is_some());
         assert_eq!(failed.profile, DeviceProfile::Angel);
+        assert_eq!(failed.ticks, paused.ticks);
+        c.send(Command::Reset);
+        wait(&c, |s| {
+            s.running && s.error.is_none() && s.state.halted && s.display.nibbles[16] == 0
+        });
+        c.send(Command::Button(Button::Knock, true));
+        wait(&c, |s| s.display.nibbles[16] == 7);
+        let mut p1 = vec![0; ROM_BYTES];
+        p1[0x200..0x202].copy_from_slice(&0xFF8u16.to_be_bytes());
+        std::fs::write(&path, p1).unwrap();
+        c.send(Command::LoadProfile(path.clone(), DeviceProfile::P1));
+        wait(&c, |s| {
+            s.profile == DeviceProfile::P1 && s.state.halted && s.error.is_none()
+        });
+        drop(c);
+        std::fs::remove_file(path).unwrap();
+        std::fs::remove_dir(folder).unwrap();
+    }
+    #[test]
+    fn umino_worker_knock_irq_pause_reset_failed_load_and_switch_back_to_p1() {
+        let folder = std::env::temp_dir().join(format!("retrohatch-umino-{}", std::process::id()));
+        std::fs::create_dir_all(&folder).unwrap();
+        let path = folder.join("misleading-p1-name.bin");
+        let line = include_str!("../../tests/data/genjintch_programs.txt")
+            .lines()
+            .find(|s| s.starts_with("genjintch_inputs|"))
+            .unwrap();
+        let mut bytes = vec![0; DeviceProfile::Umino.rom_bytes()];
+        for pair in bytes.chunks_exact_mut(2) {
+            pair.copy_from_slice(&0xFFBu16.to_be_bytes());
+        }
+        for item in line.split('|').nth(2).unwrap().split(',') {
+            let (a, v) = item.split_once(':').unwrap();
+            let offset = usize::from_str_radix(a, 16).unwrap() * 2;
+            bytes[offset..offset + 2]
+                .copy_from_slice(&u16::from_str_radix(v, 16).unwrap().to_be_bytes());
+        }
+        std::fs::write(&path, bytes).unwrap();
+        let c = Controller::new(false);
+        c.send(Command::LoadProfile(path.clone(), DeviceProfile::Umino));
+        let initial = wait(&c, |s| {
+            s.loaded && s.state.halted && s.display.nibbles[0] == 15
+        });
+        assert_eq!(initial.profile, DeviceProfile::Umino);
+        c.send(Command::Button(Button::Knock, true));
+        wait(&c, |s| s.display.nibbles[16] == 7 && s.interrupts >= 1);
+        c.send(Command::Pause);
+        let paused = wait(&c, |s| !s.running);
+        c.send(Command::Load(path.clone())); // Explicit P1 assignment rejects an Umino-sized image.
+        let failed = wait(&c, |s| s.error.is_some());
+        assert_eq!(failed.profile, DeviceProfile::Umino);
         assert_eq!(failed.ticks, paused.ticks);
         c.send(Command::Reset);
         wait(&c, |s| {

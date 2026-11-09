@@ -488,3 +488,64 @@ fn morino_matches_reference_timers_knock_halt_audio_clock_and_disconnected_bus()
         236,
     );
 }
+
+#[test]
+fn umino_matches_reference_timers_knock_halt_audio_clock_and_disconnected_bus() {
+    // compare_umino.py checks the original profile before sharing its hardware oracle.
+    compare_mcu_fixtures(
+        include_str!("../../../tests/data/genjintch_programs.txt"),
+        include_str!("../../../tests/data/genjintch_reference.txt"),
+        crate::core::profile::DeviceProfile::Umino,
+        236,
+    );
+}
+
+#[test]
+fn umino_unmapped_data_bus_matches_reference_without_changing_strict_profiles() {
+    use crate::core::profile::DeviceProfile;
+    let words = vec![0xFF8; 0x2000];
+    let mut umino = Mcu::for_profile(&words, DeviceProfile::Umino).unwrap();
+    for address in [
+        0x300, 0xDFF, 0xE50, 0xE7F, 0xED0, 0xEFF, 0xF06, 0xF7C, 0xF7F, 0xFD0, 0xFFF,
+    ] {
+        let before = umino.cpu.clone();
+        assert_eq!(umino.read(address), Ok(0));
+        umino.write(address, 15).unwrap();
+        assert_eq!(
+            umino.cpu, before,
+            "Disconnected write changed real memory at {address:03X}"
+        );
+    }
+    let before = umino.cpu.clone();
+    assert!(umino.write(0x1000, 15).is_err());
+    assert!(umino.read(0x1000).is_err());
+    assert_eq!(umino.cpu, before);
+    for profile in [
+        DeviceProfile::P1,
+        DeviceProfile::Genjintch,
+        DeviceProfile::Angel,
+        DeviceProfile::Morino,
+    ] {
+        let mut other = Mcu::for_profile(&words, profile).unwrap();
+        let before = other.cpu.clone();
+        assert_eq!(other.read(0xFD0), Err(CpuError::UnsupportedAddress(0xFD0)));
+        assert!(other.write(0xFD0, 15).is_err());
+        assert_eq!(other.cpu, before);
+    }
+    let mut reserved = words.clone();
+    reserved[0x100] = 0xFF9;
+    let mut invalid = Mcu::for_profile(&reserved, DeviceProfile::Umino).unwrap();
+    let before = invalid.cpu.clone();
+    assert!(matches!(
+        invalid.clock(),
+        Err(CpuError::UnsupportedOpcode { .. })
+    ));
+    assert_eq!(invalid.cpu, before);
+    assert_eq!(invalid.time(), 0);
+    compare_mcu_fixtures(
+        include_str!("../../../tests/data/umino_programs.txt"),
+        include_str!("../../../tests/data/umino_reference.txt"),
+        DeviceProfile::Umino,
+        65,
+    );
+}

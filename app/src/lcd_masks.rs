@@ -46,3 +46,14 @@ pub static MORINO:Masks=Masks{data:include_bytes!("../assets/lcd/morino.alpha"),
     Icon {origin:[38.250000,261.000000],size:[418,390],offset:911337,ram:137,bit:0},
     Icon {origin:[117.000000,5.500000],size:[344,366],offset:1074357,ram:16,bit:1},
 ]};
+// TamagotchiUmino SVG SHA256: 111c4530c09a7822908b28f80b7abfc8d56af8a69a49423d13abb8800d242bee
+pub static UMINO:Masks=Masks{data:include_bytes!("../assets/lcd/umino.alpha"),icons:[
+    Icon {origin:[185.375000,261.250000],size:[449,377],offset:0,ram:155,bit:3},
+    Icon {origin:[261.750000,262.125000],size:[438,351],offset:169273,ram:137,bit:3},
+    Icon {origin:[189.125000,6.500000],size:[403,355],offset:323011,ram:36,bit:0},
+    Icon {origin:[122.625000,261.125000],size:[259,375],offset:466076,ram:157,bit:3},
+    Icon {origin:[265.625000,6.000000],size:[390,360],offset:563201,ram:38,bit:0},
+    Icon {origin:[41.000000,5.625000],size:[368,364],offset:703601,ram:16,bit:0},
+    Icon {origin:[38.000000,260.750000],size:[403,374],offset:837553,ram:159,bit:3},
+    Icon {origin:[115.375000,7.500000],size:[376,337],offset:988275,ram:34,bit:0},
+]};

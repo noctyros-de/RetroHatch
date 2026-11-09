@@ -11,7 +11,7 @@ from PyQt6.QtCore import QByteArray,QRectF
 from PyQt6.QtGui import QImage,QPainter
 from PyQt6.QtSvg import QSvgRenderer
 ROOT=Path(__file__).resolve().parents[2]
-PROFILES=[('p1','TamagotchiP1',173.004,294.179),('genjintch','TamagotchiGenjintch',173.003,294.178),('angel','TamagotchiAngel',171.945,294.178),('morino','TamagotchiMorino',171.945,294.178)]
+PROFILES=[('p1','TamagotchiP1',173.004,294.179),('genjintch','TamagotchiGenjintch',173.003,294.178),('angel','TamagotchiAngel',171.945,294.178),('morino','TamagotchiMorino',171.945,294.178),('umino','TamagotchiUmino',171.945,294.178)]
 SCALE=8
 def icon_source(node,box):
     x,y,w,h=box
@@ -53,4 +53,4 @@ if __name__=='__main__':
     for path,data in generate().items():
         if args.check:assert path.read_bytes()==data,f'Coverage mask differs: {path}'
         else:path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(data)
-    print('Verified exact Qt SVG coverage masks for four displays.' if args.check else 'Generated display-only Qt coverage masks for four displays.')
+    print('Verified exact Qt SVG coverage masks for five displays.' if args.check else 'Generated display-only Qt coverage masks for five displays.')

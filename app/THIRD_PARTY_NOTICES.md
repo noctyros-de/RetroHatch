@@ -15,3 +15,13 @@ dump size/format and the known World P1 CRC32. Their source code and firmware
 are not incorporated. TG18 is UI/architecture inspiration only.
 
 No Tamagotchi firmware is included. All stored test programs are synthetic.
+
+
+TamaOtch research also consulted Epson's E0C6S48 manual, TamaLIB/TamaTool
+documentation and GPLv2 license texts, Paramix Studio's GPL notices and research
+metadata, and a mirror of the original product information. No covered emulator
+implementation, icon bitmap, manual figure, product artwork or firmware from
+those sources is incorporated. The local-image fingerprint is a factual
+identifier for explicit unsupported-device reporting. No playable TamaOtch
+profile or substitute display is supplied. Research evidence, limitations and
+source links are recorded in ../docs/TAMAOTCH.md.

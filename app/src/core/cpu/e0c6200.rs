@@ -435,6 +435,7 @@ pub struct Cpu {
     lcd: [u8; LCD_NIBBLES],
     io: Option<RefCell<Io>>,
     lcd_gap_bus: bool,
+    reference_unmapped_bus: bool,
 }
 
 impl Cpu {
@@ -456,6 +457,7 @@ impl Cpu {
             lcd: [0; LCD_NIBBLES],
             io: None,
             lcd_gap_bus: false,
+            reference_unmapped_bus: false,
         })
     }
 
@@ -472,6 +474,13 @@ impl Cpu {
     /// and reject every other gap.
     pub(crate) fn enable_lcd_gap_bus(&mut self) {
         self.lcd_gap_bus = true;
+    }
+
+    /// Umino accesses unpopulated addresses (including FD0 during startup).
+    /// Match BrickEmuPy get_mem/set_mem: zero reads and ignored writes throughout
+    /// the disconnected 12-bit data bus, without inventing peripheral registers.
+    pub(crate) fn enable_reference_unmapped_bus(&mut self) {
+        self.reference_unmapped_bus = true;
     }
 
     pub(crate) fn attach_io(&mut self) {
@@ -526,6 +535,7 @@ impl Cpu {
             0xF00..=0xF7E if self.io.is_some() && Io::supports(address) => {
                 Ok(self.with_io(|io| io.read(address)))
             }
+            0x300..=0xFFF if self.reference_unmapped_bus => Ok(0),
             _ => Err(CpuError::UnsupportedAddress(address)),
         }
     }
@@ -540,6 +550,7 @@ impl Cpu {
             0xF00..=0xF7E if self.io.is_some() && Io::supports(address) => {
                 self.with_io(|io| io.write(address, value))
             }
+            0x300..=0xFFF if self.reference_unmapped_bus => {}
             _ => return Err(CpuError::UnsupportedAddress(address)),
         }
         Ok(())
@@ -615,6 +626,7 @@ impl Cpu {
             0..=0x2FF | 0xE00..=0xE4F | 0xE80..=0xECF => Ok(()),
             0xE50..=0xE7F | 0xED0..=0xEFF | 0xF7C if self.lcd_gap_bus => Ok(()),
             0xF00..=0xF7E if self.io.is_some() && Io::supports(address) => Ok(()),
+            0x300..=0xFFF if self.reference_unmapped_bus => Ok(()),
             _ => Err(CpuError::UnsupportedAddress(address)),
         }
     }

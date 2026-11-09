@@ -1,6 +1,8 @@
 //! Minimal themed device view; all machine state and disk I/O belong to the host worker.
+mod library_ui;
 use crate::lcd_geometry::{ICON_BITS, ICON_SPANS, LCD_SIZE, PIXELS};
 use eframe::egui;
+use library_ui::LibraryUi;
 use retrohatch::core::{
     device::{Button, DisplaySnapshot},
     mcu::MASTER_HZ,
@@ -21,12 +23,14 @@ use std::{
 #[derive(Clone, Copy)]
 enum PickerKind {
     Rom,
+    Repair,
     Export,
     Import,
 }
 type PickerResult = (PickerKind, Result<Option<PathBuf>, String>);
 pub struct RetroHatchApp {
     controller: Controller,
+    library: LibraryUi,
     settings: Settings,
     data_dir: Option<PathBuf>,
     dirty: Option<Instant>,
@@ -62,11 +66,11 @@ impl RetroHatchApp {
                 {
                     app.selected_profile = profile;
                     if let Some(path) = args.next() {
-                        app.load_rom(path.into());
+                        app.library_import(path.into(), Some(profile));
                     }
                 } else {
                     app.local_error = Some(
-                        "Use --profile p1, genjintch, angel or morino followed by a local ROM path.".into(),
+                        "Use --profile p1, genjintch, angel, morino or umino followed by a local ROM path.".into(),
                     );
                 }
             } else {
@@ -74,7 +78,7 @@ impl RetroHatchApp {
             }
         } else if let Some(path) = app.settings.last_rom.clone() {
             app.selected_profile = app.settings.last_profile;
-            app.load_rom(path);
+            app.library_startup(path, app.selected_profile);
         }
         app.apply_theme(&cc.egui_ctx);
         app
@@ -117,8 +121,9 @@ impl RetroHatchApp {
             .unwrap_or_else(roms::default_folder)
             .to_string_lossy()
             .into_owned();
-        Self {
+        let mut app = Self {
             controller,
+            library: LibraryUi::default(),
             selected_profile: settings.last_profile,
             settings,
             data_dir,
@@ -145,8 +150,13 @@ impl RetroHatchApp {
             last_message: None,
             message_until: Instant::now(),
             message_serial: 0,
+        };
+        if let Some(root) = app.data_dir.clone() {
+            app.start_library(root);
         }
+        app
     }
+    #[cfg(test)]
     fn load_rom(&mut self, path: PathBuf) {
         self.release_inputs();
         let loads = self.controller.snapshot().loads;
@@ -193,6 +203,11 @@ impl RetroHatchApp {
         }
     }
     fn begin_exit(&mut self, s: &Snapshot) {
+        if self.library.busy() {
+            self.library.close_after = true;
+            self.release_inputs();
+            return;
+        }
         if self.exit_pending {
             return;
         }
@@ -208,7 +223,7 @@ impl RetroHatchApp {
             return;
         }
         self.release_inputs();
-        let folder = if matches!(kind, PickerKind::Rom) {
+        let folder = if matches!(kind, PickerKind::Rom | PickerKind::Repair) {
             PathBuf::from(&self.folder)
         } else {
             self.data_dir
@@ -219,7 +234,7 @@ impl RetroHatchApp {
         let ctx = ctx.clone();
         std::thread::spawn(move || {
             let result = match kind {
-                PickerKind::Rom => platform::pick_rom(&folder),
+                PickerKind::Rom | PickerKind::Repair => platform::pick_rom(&folder),
                 PickerKind::Export => platform::pick_save(&folder, true),
                 PickerKind::Import => platform::pick_save(&folder, false),
             };
@@ -258,18 +273,17 @@ impl RetroHatchApp {
             ui.menu_button("File", |ui| {
                 if ui
                     .add_enabled(
-                        self.picker.is_none() && !self.exit_pending && !s.loading && !s.saving,
-                        egui::Button::new("Open ROM"),
+                        self.picker.is_none()
+                            && !self.exit_pending
+                            && !s.loading
+                            && !s.saving
+                            && self.library.available()
+                            && !self.library.busy(),
+                        egui::Button::new("Import ROM..."),
                     )
                     .clicked()
                 {
                     self.picker(PickerKind::Rom, &ctx);
-                    ui.close();
-                }
-                if ui.button("Open ROM Folder").clicked() {
-                    if let Err(e) = platform::open_folder(std::path::Path::new(&self.folder)) {
-                        self.local_error = Some(e);
-                    }
                     ui.close();
                 }
                 ui.separator();
@@ -333,6 +347,7 @@ impl RetroHatchApp {
                     ui.close();
                 }
             });
+            self.library_menu(ui, s);
             ui.menu_button("Emulation", |ui| {
                 if ui
                     .add_enabled(
@@ -394,9 +409,9 @@ impl RetroHatchApp {
                     ui.close();
                 }
             });
-            if s.saving || s.loading {
+            if s.saving || s.loading || self.library.busy() {
                 ui.spinner();
-            } else if Instant::now() < self.message_until {
+            } else if Instant::now() < self.message_until && ui.available_width() > 140.0 {
                 if let Some(message) = &self.last_message {
                     ui.small(message);
                 }
@@ -408,6 +423,7 @@ impl RetroHatchApp {
     }
     fn content(&mut self, ui: &mut egui::Ui) {
         let ctx = ui.ctx().clone();
+        self.poll_library();
         self.apply_theme(&ctx);
         ui.set_style(ctx.global_style());
         if let Some((kind, result)) = self.picker.as_ref().and_then(|p| p.try_recv().ok()) {
@@ -415,6 +431,7 @@ impl RetroHatchApp {
             match result {
                 Ok(Some(path)) => match kind {
                     PickerKind::Rom => self.pending_rom = Some(path),
+                    PickerKind::Repair => self.library_repair(path),
                     PickerKind::Export => self.controller.send(Command::Export(path)),
                     PickerKind::Import => self.controller.send(Command::Import(path)),
                 },
@@ -427,6 +444,9 @@ impl RetroHatchApp {
         {
             self.release_inputs();
             self.pending_rom = Some(path);
+        }
+        if let Some(path) = self.pending_rom.take() {
+            self.library_import(path, None);
         }
         let s = self.controller.snapshot();
         if self.last_restore != s.restores {
@@ -441,7 +461,9 @@ impl RetroHatchApp {
             let (path, profile, _) = self.waiting_load.take().unwrap();
             self.settings.last_rom = Some(path.clone());
             self.settings.last_profile = profile;
-            self.settings.rom_folder = path.parent().map(|p| p.to_path_buf());
+            if !path.components().any(|p| p.as_os_str() == "rom-library") {
+                self.settings.rom_folder = path.parent().map(|p| p.to_path_buf());
+            }
             if let Some(folder) = &self.settings.rom_folder {
                 self.folder = folder.to_string_lossy().into_owned();
             }
@@ -451,6 +473,13 @@ impl RetroHatchApp {
             self.message_serial = s.save_count + s.restores;
             self.last_message = s.save_message.clone();
             self.message_until = Instant::now() + Duration::from_secs(4);
+        }
+        if self.library.close_after
+            && !self.library.busy()
+            && (self.waiting_load.is_none() || s.error.is_some())
+        {
+            self.library.close_after = false;
+            self.begin_exit(&s);
         }
         let title = if s.loaded {
             format!("RetroHatch - {}", s.profile.name())
@@ -496,6 +525,7 @@ impl RetroHatchApp {
             || self.pending_rom.is_some()
             || self.reset_confirm
             || self.shortcuts_open
+            || self.library.blocked()
             || self.exit_pending;
         let accepts = keys.0 && !ctx.egui_wants_keyboard_input() && !blocked;
         if accepts && keys.3 {
@@ -652,17 +682,7 @@ impl RetroHatchApp {
             self.shortcuts_open = open;
         }
 
-        if let Some(path) = self.pending_rom.clone() {
-            let mut load = false;
-            let mut cancel = false;
-            egui::Window::new("Load ROM").collapsible(false).resizable(false).anchor(egui::Align2::CENTER_CENTER,egui::Vec2::ZERO).show(ctx,|ui|{ui.label(path.file_name().unwrap_or_default().to_string_lossy());ui.label("Select the hardware for this image:");egui::ComboBox::from_label("Device profile").selected_text(self.selected_profile.name()).show_ui(ui,|ui|{for p in DeviceProfile::ALL{ui.selectable_value(&mut self.selected_profile,p,p.name());}});ui.weak(format!("{} bytes; unpacked big-endian 12-bit words.",self.selected_profile.rom_bytes()));ui.label(format!("Unidentified firmware will be assigned to {}.",self.selected_profile.name()));ui.weak("Filenames do not identify hardware. Existing saved progress will resume when compatible.");ui.horizontal(|ui|{load=ui.button("Load").clicked();cancel=ui.button("Cancel").clicked();});});
-            if load {
-                self.pending_rom = None;
-                self.load_rom(path);
-            } else if cancel {
-                self.pending_rom = None;
-            }
-        }
+        self.library_dialogs(ctx, s);
         if self.reset_confirm {
             let mut yes = false;
             let mut no = false;
@@ -714,6 +734,16 @@ impl RetroHatchApp {
                     });
                 } else {
                     close = ui.button("Close").clicked();
+                    if self.library.failed {
+                        if ui.button("Manage ROMs...").clicked() {
+                            self.library.manage = true;
+                            close = true;
+                        }
+                        if self.library.repair.is_some() && ui.button("Repair ROM...").clicked() {
+                            self.picker(PickerKind::Repair, ctx);
+                            close = true;
+                        }
+                    }
                 }
             });
             if close {
@@ -861,6 +891,10 @@ fn paint_profile_lcd(
             use crate::morino_lcd_geometry as g;
             (g::LCD_SIZE, g::PIXELS, g::ICON_BITS, g::ICON_SPANS)
         }
+        DeviceProfile::Umino => {
+            use crate::umino_lcd_geometry as g;
+            (g::LCD_SIZE, g::PIXELS, g::ICON_BITS, g::ICON_SPANS)
+        }
     };
     let ppp = ui.ctx().pixels_per_point();
     let width = (width * ppp).round() / ppp;
@@ -901,7 +935,7 @@ fn paint_profile_lcd(
         ui.painter().text(
             rect.center(),
             egui::Align2::CENTER_CENTER,
-            "Open a ROM from File",
+            "Import a ROM from File",
             egui::FontId::proportional(15.0),
             on,
         );
@@ -1214,7 +1248,7 @@ mod tests {
         std::fs::remove_dir(folder).unwrap();
     }
     #[test]
-    fn all_pastel_views_have_exactly_three_menus_optional_labels_and_unchanged_lcd_colors() {
+    fn all_pastel_views_have_four_menus_optional_labels_and_unchanged_lcd_colors() {
         fn texts(shapes: &[egui::epaint::ClippedShape]) -> Vec<String> {
             fn walk(s: &egui::epaint::Shape, out: &mut Vec<String>) {
                 match s {
@@ -1241,7 +1275,7 @@ mod tests {
                 app.settings.labels = labels;
                 let mut output = ctx.run_ui(egui::RawInput::default(), |ui| app.content(ui));
                 let strings = texts(&output.shapes);
-                for menu in ["File", "Emulation", "Settings"] {
+                for menu in ["File", "My Tamagotchis", "Emulation", "Settings"] {
                     assert!(
                         strings.iter().any(|s| s == menu),
                         "Missing {menu}: {strings:?}"
@@ -1384,7 +1418,11 @@ mod tests {
         let folder =
             std::env::temp_dir().join(format!("retrohatch-morino-layout-{}", std::process::id()));
         std::fs::create_dir_all(&folder).unwrap();
-        for profile in [DeviceProfile::P1, DeviceProfile::Morino] {
+        for profile in [
+            DeviceProfile::P1,
+            DeviceProfile::Morino,
+            DeviceProfile::Umino,
+        ] {
             let path = folder.join(format!("{}.bin", profile.id()));
             let bytes: Vec<_> = (0..profile.rom_bytes() / 2)
                 .flat_map(|_| 0xFF8u16.to_be_bytes())
@@ -1549,6 +1587,7 @@ mod tests {
                 DeviceProfile::Genjintch => crate::genjintch_lcd_geometry::ICON_BITS,
                 DeviceProfile::Angel => crate::angel_lcd_geometry::ICON_BITS,
                 DeviceProfile::Morino => g::ICON_BITS,
+                DeviceProfile::Umino => crate::umino_lcd_geometry::ICON_BITS,
             };
             for (icon, &(ram, bit)) in source.icons.iter().zip(expected) {
                 assert_eq!((icon.ram, icon.bit), (ram, bit));
@@ -1561,5 +1600,215 @@ mod tests {
             }
         }
         assert_eq!(bits.len(), 520);
+    }
+    #[test]
+    fn umino_has_all_original_segments_and_renders_without_shell_artwork() {
+        use crate::umino_lcd_geometry as g;
+        let mut bits = std::collections::HashSet::new();
+        assert_eq!(g::PIXELS.len(), 512);
+        for &(x, y, ram, bit) in g::PIXELS {
+            assert!(x >= 0. && y >= 0. && x + 10. <= g::LCD_SIZE[0] && y + 10. <= g::LCD_SIZE[1]);
+            assert!(ram < 160 && bit < 4 && bits.insert((ram, bit)));
+        }
+        assert_eq!(
+            g::ICON_BITS,
+            &[
+                (155, 3),
+                (137, 3),
+                (36, 0),
+                (157, 3),
+                (38, 0),
+                (16, 0),
+                (159, 3),
+                (34, 0)
+            ]
+        );
+        for &(ram, bit) in g::ICON_BITS {
+            assert!(bits.insert((ram, bit)));
+        }
+        assert_eq!(bits.len(), 520);
+        let ctx = egui::Context::default();
+        let mut out = ctx.run_ui(egui::RawInput::default(), |ui| {
+            paint_profile_lcd(
+                ui,
+                &DisplaySnapshot { nibbles: [15; 160] },
+                352.,
+                false,
+                DeviceProfile::Umino,
+            );
+        });
+        let primitives = ctx.tessellate(out.shapes.clone(), out.pixels_per_point);
+        out.textures_delta.clear();
+        assert!(!primitives.is_empty());
+    }
+    #[test]
+    fn unidentified_rom_workflow_selects_umino_explicitly_and_loads_the_actual_worker() {
+        fn find(shape: &egui::epaint::Shape, label: &str) -> Option<egui::Pos2> {
+            match shape {
+                egui::epaint::Shape::Text(t) if t.galley.text() == label => {
+                    Some(t.galley.rect.translate(t.pos.to_vec2()).center())
+                }
+                egui::epaint::Shape::Vec(v) => v.iter().find_map(|s| find(s, label)),
+                _ => None,
+            }
+        }
+        fn frame(
+            ctx: &egui::Context,
+            app: &mut RetroHatchApp,
+            events: Vec<egui::Event>,
+        ) -> egui::FullOutput {
+            let mut out = ctx.run_ui(
+                egui::RawInput {
+                    focused: true,
+                    screen_rect: Some(egui::Rect::from_min_size(
+                        egui::Pos2::ZERO,
+                        egui::vec2(640., 800.),
+                    )),
+                    events,
+                    ..Default::default()
+                },
+                |ui| app.content(ui),
+            );
+            out.textures_delta.clear();
+            out
+        }
+        fn center(out: &egui::FullOutput, label: &str) -> egui::Pos2 {
+            out.shapes
+                .iter()
+                .find_map(|s| find(&s.shape, label))
+                .unwrap_or_else(|| panic!("Missing dialog control: {label}"))
+        }
+        fn click(
+            ctx: &egui::Context,
+            app: &mut RetroHatchApp,
+            pos: egui::Pos2,
+        ) -> egui::FullOutput {
+            frame(
+                ctx,
+                app,
+                vec![
+                    egui::Event::PointerMoved(pos),
+                    egui::Event::PointerButton {
+                        pos,
+                        button: egui::PointerButton::Primary,
+                        pressed: true,
+                        modifiers: egui::Modifiers::NONE,
+                    },
+                ],
+            );
+            frame(
+                ctx,
+                app,
+                vec![egui::Event::PointerButton {
+                    pos,
+                    button: egui::PointerButton::Primary,
+                    pressed: false,
+                    modifiers: egui::Modifiers::NONE,
+                }],
+            );
+            frame(ctx, app, vec![])
+        }
+        let folder =
+            std::env::temp_dir().join(format!("retrohatch-umino-picker-{}", std::process::id()));
+        std::fs::create_dir_all(&folder).unwrap();
+        let path = folder.join("misleading-p1-filename.bin");
+        let bytes: Vec<_> = (0..DeviceProfile::Umino.rom_bytes() / 2)
+            .flat_map(|_| 0xFF8u16.to_be_bytes())
+            .collect();
+        std::fs::write(&path, bytes).unwrap();
+        let ctx = egui::Context::default();
+        let mut app = RetroHatchApp::create(false);
+        app.start_library(folder.clone());
+        app.pending_rom = Some(path.clone());
+        let deadline = Instant::now() + Duration::from_secs(3);
+        while !app.library.blocked() {
+            frame(&ctx, &mut app, vec![]);
+            assert!(Instant::now() < deadline);
+            std::thread::sleep(Duration::from_millis(2));
+        }
+        frame(&ctx, &mut app, vec![]);
+        let out = frame(&ctx, &mut app, vec![]);
+        let pos = center(&out, "Select model...");
+        let out = click(&ctx, &mut app, pos);
+        let pos = center(&out, "Tamagotchi Umino (Ocean)");
+        let out = click(&ctx, &mut app, pos);
+        let _ = center(&out, "Tamagotchi Umino (Ocean)");
+        let pos = center(&out, "Import and Start");
+        click(&ctx, &mut app, pos);
+        let deadline = Instant::now() + Duration::from_secs(3);
+        loop {
+            frame(&ctx, &mut app, vec![]);
+            let snapshot = app.controller.snapshot();
+            if snapshot.loaded {
+                assert_eq!(snapshot.profile, DeviceProfile::Umino);
+                assert!(snapshot.error.is_none());
+                break;
+            }
+            assert!(
+                Instant::now() < deadline,
+                "Umino load did not finish: {:?}",
+                snapshot.error
+            );
+            std::thread::sleep(Duration::from_millis(5));
+        }
+        assert_eq!(app.library.entries.len(), 1);
+        assert!(path.exists(), "Import moved the source ROM");
+        std::fs::remove_file(&path).unwrap(); // Only the test-owned original copy.
+        let before = app.controller.snapshot().loads;
+        let out = frame(&ctx, &mut app, vec![]);
+        let pos = center(&out, "My Tamagotchis");
+        let out = click(&ctx, &mut app, pos);
+        let entry_label = app.library.entries[0].label();
+        let pos = center(&out, &format!("Current: {entry_label}"));
+        click(&ctx, &mut app, pos);
+        let deadline = Instant::now() + Duration::from_secs(3);
+        while app.controller.snapshot().loads <= before {
+            frame(&ctx, &mut app, vec![]);
+            assert!(Instant::now() < deadline);
+            std::thread::sleep(Duration::from_millis(2));
+        }
+        assert_eq!(app.controller.snapshot().profile, DeviceProfile::Umino);
+        assert!(
+            !app.library.blocked(),
+            "One-click start asked for the model again"
+        );
+
+        let out = frame(&ctx, &mut app, vec![]);
+        let pos = center(&out, "My Tamagotchis");
+        let out = click(&ctx, &mut app, pos);
+        let pos = center(&out, "Manage ROMs...");
+        let out = click(&ctx, &mut app, pos);
+        assert!(app.library.manage);
+        let pos = center(&out, "Remove...");
+        let out = click(&ctx, &mut app, pos);
+        let pos = center(&out, "Cancel");
+        click(&ctx, &mut app, pos);
+        let entries = retrohatch::host::library::Library::open(&folder)
+            .unwrap()
+            .entries();
+        assert_eq!(entries.len(), 1);
+        let internal = folder
+            .join("rom-library")
+            .join("roms")
+            .join(&entries[0].filename);
+        assert!(internal.exists());
+        let out = frame(&ctx, &mut app, vec![]);
+        let pos = center(&out, "Remove...");
+        let out = click(&ctx, &mut app, pos);
+        let pos = center(&out, "Also delete the internal ROM copy");
+        let out = click(&ctx, &mut app, pos);
+        let pos = center(&out, "Remove entry");
+        click(&ctx, &mut app, pos);
+        let deadline = Instant::now() + Duration::from_secs(3);
+        while !app.library.entries.is_empty() {
+            frame(&ctx, &mut app, vec![]);
+            assert!(Instant::now() < deadline);
+            std::thread::sleep(Duration::from_millis(2));
+        }
+        assert!(!internal.exists());
+        assert!(app.controller.snapshot().error.is_none());
+        drop(app);
+        assert_eq!(folder.parent(), Some(std::env::temp_dir().as_path()));
+        std::fs::remove_dir_all(folder).unwrap();
     }
 }

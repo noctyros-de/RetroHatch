@@ -9,3 +9,8 @@ pub mod performance;
 pub mod saves;
 pub mod settings;
 pub mod storage;
+
+pub mod fingerprints;
+pub mod library;
+
+pub mod pending_devices;
