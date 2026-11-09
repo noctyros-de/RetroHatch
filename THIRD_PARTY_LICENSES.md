@@ -39,11 +39,29 @@ Corresponding Source/preferred-source availability must be resolved before
 distributing the affected assets or executable. This preparation does not remove,
 redraw, relicense or publicly package them.
 
-## Inspiration and research; no incorporated implementation identified
+## TG18-Emu implementation incorporated under MIT
+
+The On/Meets backend incorporates the Rust library from
+[oreo-fox/tg18-emu](https://github.com/oreo-fox/tg18-emu), Copyright (c) 2026
+oreo-fox, under MIT. Its ARM926 CPU, bus/peripherals, LCD, timers/RTC,
+signature-based firmware hooks, sound and snapshot/flash logic are preserved
+in `app/third_party/tg18-core/`. The complete unchanged MIT text is in that
+directory's `LICENSE` and [LICENSES/TG18-Emu-MIT.txt](LICENSES/TG18-Emu-MIT.txt).
+Both must accompany redistributed substantial copies; the binary packager
+includes the notice. MIT is compatible with the enclosing GPL-3.0-only program.
+
+`UPSTREAM.json` records SHA-256 values of the local original source files before
+changes. Integration changes add bounded snapshot decompression, peripheral
+and synthesizer state continuity, and flash-delta snapshots. These additions to
+the copied library are identified as MIT; the RetroHatch host adapter is
+GPL-3.0-only. No TG18 frontend, logo, shell graphics, screenshots or firmware
+are copied. Display artwork for this backend comes from the user's firmware
+while it runs. The separate classic-LCD provenance blockers remain unchanged.
+
+## Inspiration and research; no other incorporated implementation identified
 
 | Project/source | Verified declaration and attribution | RetroHatch use / limits |
 | --- | --- | --- |
-| [TG18-Emu](https://github.com/oreo-fox/tg18-emu) | Local LICENSE: MIT; Copyright (c) 2026 oreo-fox | Desktop design, menus/settings/save-architecture inspiration. No incorporated TG18 implementation identified in the inspected E0C6200 application. Full MIT notice retained in [LICENSES/TG18-Emu-MIT.txt](LICENSES/TG18-Emu-MIT.txt) as acknowledgement; this does not claim a copied TG18 core. |
 | [TamaEmu](https://github.com/maragotchi/tamaemu) | Upstream LICENSE contains GPL version 3; README declares GNU GPL-3.0. Maintainer handle maragotchi; no separate code copyright owner established by the inspected README/LICENSE/header. | S1C33/color-device research context, not a linked or ported RetroHatch implementation. Exact-only versus later-version grant was not established from the inspected code header. Its README's instruction against charging conflicts with the ordinary GPL freedom to charge; clarify terms before any future reuse. No such restriction is imposed on RetroHatch. |
 | [TamaLIB](https://github.com/jcrona/tamalib), [TamaTool](https://github.com/jcrona/tamatool) | Upstream GPLv2 texts and Jean-Christophe Rona attribution inspected | Hardware/ROM-format research only; no code, icon set or firmware included. GPL-2.0-only code must not be assumed compatible with GPL-3.0-only; review the exact grant before any future incorporation. |
 | [Paramix Studio](https://github.com/mameise/Paramix-Studio) | Project notices declare GPLv3-or-later; include TamaLIB components with their own notices | Factual research labels/checksum corroboration only. No emulator implementation, approximate icon bitmap or firmware copied. No exclusive ownership of that project's contributions is claimed. |
@@ -57,7 +75,7 @@ No license from a research-only project is silently imported into this program.
 
 ## Rust/Cargo dependencies actually resolved for Windows
 
-There are **100 third-party packages** in the locked default Windows normal/
+There are **106 third-party packages** in the locked default Windows normal/
 build graph, plus RetroHatch itself. There are no Git-source dependencies in
 that graph. See the complete per-name/version/upstream/license inventory:
 
@@ -73,8 +91,8 @@ notices rather than claiming every listed item is linked into the executable.
 It does not audit every other platform/feature in Cargo.lock. Published package
 authors are not substituted for copyright holders where notices say otherwise.
 
-Direct dependencies are eframe 0.37.0 (MIT OR Apache-2.0) and windows-sys 0.61.2
-(MIT OR Apache-2.0). Their complete resolved GUI/windowing/font/image/Windows
+Direct dependencies are eframe 0.37.0 (MIT OR Apache-2.0), windows-sys 0.61.2
+(MIT OR Apache-2.0), and the local MIT tg18-core library described above. Their complete resolved GUI/windowing/font/image/Windows
 dependency set is enumerated, including multiple versions where applicable.
 Apache-2.0 contributions can be included in GPLv3 works while retaining their
 own conditions; see the [Apache compatibility explanation](https://apache.org/licenses/GPL-compatibility.html).

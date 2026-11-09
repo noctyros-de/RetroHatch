@@ -2,8 +2,8 @@
 // SPDX-FileCopyrightText: 2026 Noktyros
 // Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Per-ROM storage coordination. Capture on the owning worker; disk I/O stays off it.
+use super::emulator::Emulator;
 use super::{runner::Snapshot, storage::Writer};
-use crate::core::tamagotchi::Tamagotchi;
 use std::{
     collections::BTreeMap,
     path::PathBuf,
@@ -51,7 +51,7 @@ enum Task {
     },
     Restore {
         identity: String,
-        prepared: Tamagotchi,
+        prepared: Emulator,
         generation: u64,
     },
     Exit,
@@ -77,7 +77,7 @@ impl Saves {
             resume_blocked: false,
         }
     }
-    pub fn directory(&self, d: &Tamagotchi) -> PathBuf {
+    pub fn directory(&self, d: &Emulator) -> PathBuf {
         self.root.join("saves").join(d.identity())
     }
     pub fn configure(&mut self, p: SavePolicy) {
@@ -94,13 +94,13 @@ impl Saves {
     pub fn busy(&self) -> bool {
         !self.tasks.is_empty()
     }
-    pub fn save(&mut self, d: &Tamagotchi, target: SaveTarget) -> Result<(), String> {
+    pub fn save(&mut self, d: &Emulator, target: SaveTarget) -> Result<(), String> {
         if self.resume_blocked {
             return Err("Saved progress was not restored. Resume or Reset explicitly before saving a fresh device.".into());
         }
-        let data = d.save_state()?;
+        let data = d.capture_save()?;
         let path = self.directory(d).join(target.filename()?);
-        let id = self.writer.write(path, data)?;
+        let id = self.writer.write_capture(path, data)?;
         self.tasks.insert(
             id,
             Task::Write {
@@ -115,8 +115,8 @@ impl Saves {
         self.reset_timer();
         Ok(())
     }
-    pub fn export(&mut self, d: &Tamagotchi, path: PathBuf) -> Result<(), String> {
-        let id = self.writer.write(path, d.save_state()?)?;
+    pub fn export(&mut self, d: &Emulator, path: PathBuf) -> Result<(), String> {
+        let id = self.writer.write_capture(path, d.capture_save()?)?;
         self.tasks.insert(
             id,
             Task::Write {
@@ -127,7 +127,7 @@ impl Saves {
         );
         Ok(())
     }
-    pub fn load(&mut self, d: &Tamagotchi, path: PathBuf, automatic: bool) -> Result<(), String> {
+    pub fn load(&mut self, d: &Emulator, path: PathBuf, automatic: bool) -> Result<(), String> {
         let id = self.writer.read(path)?;
         self.tasks.insert(
             id,
@@ -139,7 +139,7 @@ impl Saves {
         );
         Ok(())
     }
-    pub fn start(&mut self, d: &Tamagotchi, s: &mut Snapshot) -> Result<(), String> {
+    pub fn start(&mut self, d: &Emulator, s: &mut Snapshot) -> Result<(), String> {
         self.generation += 1;
         self.resume_blocked = false;
         self.reset_timer();
@@ -154,14 +154,16 @@ impl Saves {
         }
         result
     }
-    pub fn exit(&mut self, d: Option<&Tamagotchi>) -> Result<(), String> {
+    pub fn exit(&mut self, d: Option<&Emulator>) -> Result<(), String> {
         if self.policy.save_on_exit && self.resume_blocked {
             return Err("Saved progress was not restored. Import a valid save, or explicitly Resume/Reset to start fresh. The existing autosave has been kept.".into());
         }
         let id = if self.policy.save_on_exit {
             if let Some(d) = d {
-                self.writer
-                    .write(self.directory(d).join("autosave.rhstate"), d.save_state()?)?
+                self.writer.write_capture(
+                    self.directory(d).join("autosave.rhstate"),
+                    d.capture_save()?,
+                )?
             } else {
                 self.writer.barrier()?
             }
@@ -171,7 +173,7 @@ impl Saves {
         self.tasks.insert(id, Task::Exit);
         Ok(())
     }
-    pub fn automatic_due(&mut self, d: &Tamagotchi, running: bool) -> Result<(), String> {
+    pub fn automatic_due(&mut self, d: &Emulator, running: bool) -> Result<(), String> {
         if running && self.policy.autosave_minutes != 0 && Instant::now() >= self.next {
             self.save(d, SaveTarget::Autosave)?;
         }
@@ -180,7 +182,7 @@ impl Saves {
     /// Returns true when a newly prepared device was applied, or automatic boot was released.
     pub fn poll(
         &mut self,
-        device: &mut Option<Tamagotchi>,
+        device: &mut Option<Emulator>,
         state: &mut Snapshot,
         running: &mut bool,
     ) -> bool {
@@ -262,9 +264,11 @@ impl Saves {
                                     state.save_message = Some("Resumed saved progress".into());
                                     rebased = true;
                                 } else {
-                                    match d.save_state().and_then(|data| {
-                                        self.writer
-                                            .write(self.directory(d).join("recovery.rhstate"), data)
+                                    match d.capture_save().and_then(|data| {
+                                        self.writer.write_capture(
+                                            self.directory(d).join("recovery.rhstate"),
+                                            data,
+                                        )
                                     }) {
                                         Ok(id) => {
                                             self.tasks.insert(

@@ -2,7 +2,8 @@
 // SPDX-FileCopyrightText: 2026 Noktyros
 // Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Ordered background I/O and crash-safe replacement in the destination directory.
-use crate::core::state::{MAGIC, MAX_FILE, sha256};
+use crate::core::state::{MAGIC, sha256};
+const MAX_FILE: usize = 64 * 1024 * 1024;
 use std::{
     io::{Read, Write},
     path::{Path, PathBuf},
@@ -139,6 +140,7 @@ fn state_write(path: &Path, data: &[u8]) -> Result<(), String> {
 }
 enum Job {
     Write(u64, PathBuf, Vec<u8>),
+    Capture(u64, PathBuf, super::emulator::SaveCapture),
     Read(u64, PathBuf),
     Barrier(u64),
     Stop,
@@ -163,6 +165,12 @@ impl Writer {
                 for job in jobs {
                     let (id, result) = match job {
                         Job::Write(id, path, data) => (id, state_write(&path, &data).map(|_| None)),
+                        Job::Capture(id, path, capture) => (
+                            id,
+                            capture()
+                                .and_then(|data| state_write(&path, &data))
+                                .map(|_| None),
+                        ),
                         Job::Read(id, path) => (id, read_bounded(&path, MAX_FILE)),
                         Job::Barrier(id) => (id, Ok(None)),
                         Job::Stop => break,
@@ -187,6 +195,13 @@ impl Writer {
     }
     pub fn write(&mut self, p: PathBuf, d: Vec<u8>) -> Result<u64, String> {
         self.submit(|id| Job::Write(id, p, d))
+    }
+    pub fn write_capture(
+        &mut self,
+        p: PathBuf,
+        capture: super::emulator::SaveCapture,
+    ) -> Result<u64, String> {
+        self.submit(|id| Job::Capture(id, p, capture))
     }
     pub fn read(&mut self, p: PathBuf) -> Result<u64, String> {
         self.submit(|id| Job::Read(id, p))

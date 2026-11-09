@@ -51,6 +51,8 @@ pub struct RetroHatchApp {
     exit_was_running: bool,
     applied_theme: Option<Theme>,
     title: String,
+    color_texture: Option<egui::TextureHandle>,
+    color_pixels: Option<std::sync::Arc<Vec<u8>>>,
     last_restore: u64,
     waiting_load: Option<(PathBuf, DeviceProfile, u64)>,
     last_message: Option<String>,
@@ -73,7 +75,7 @@ impl RetroHatchApp {
                     }
                 } else {
                     app.local_error = Some(
-                        "Use --profile p1, p2, genjintch, angel, morino or umino followed by a local ROM path.".into(),
+                        "Use --profile p1, p2, genjintch, angel, morino, umino or on followed by a local ROM path.".into(),
                     );
                 }
             } else {
@@ -148,6 +150,8 @@ impl RetroHatchApp {
             exit_was_running: false,
             applied_theme: None,
             title: String::new(),
+            color_texture: None,
+            color_pixels: None,
             last_restore: 0,
             waiting_load: None,
             last_message: None,
@@ -560,17 +564,28 @@ impl RetroHatchApp {
                         } else {
                             130.0
                         };
+                        let color = (if s.loaded {
+                            s.profile
+                        } else {
+                            self.selected_profile
+                        })
+                        .is_color();
+                        let aspect = if color { 1.0 } else { 329.0 / 352.0 };
                         let width = (ui.available_width() - 40.0)
-                            .min((ui.available_height() - reserve) * 352.0 / 329.0)
+                            .min((ui.available_height() - reserve) / aspect)
                             .clamp(160.0, 384.0);
-                        let total = width * 329.0 / 352.0 + reserve;
+                        let total = width * aspect + reserve;
                         ui.add_space(((ui.available_height() - total) / 2.0).max(14.0));
                         let profile = if s.loaded {
                             s.profile
                         } else {
                             self.selected_profile
                         };
-                        let lcd = paint_profile_lcd(ui, &s.display, width, !s.loaded, profile);
+                        let lcd = if profile.is_color() {
+                            self.paint_color_lcd(ui, &s, width)
+                        } else {
+                            paint_profile_lcd(ui, &s.display, width, !s.loaded, profile)
+                        };
                         let enabled = s.loaded && s.running && !s.loading && !blocked;
                         if enabled && profile.has_knock() {
                             pointer[3] = lcd.is_pointer_button_down_on();
@@ -662,6 +677,35 @@ impl RetroHatchApp {
         }
         ctx.request_repaint_after(Duration::from_millis(16));
     }
+    fn paint_color_lcd(&mut self, ui: &mut egui::Ui, s: &Snapshot, width: f32) -> egui::Response {
+        let ppp = ui.ctx().pixels_per_point();
+        let width = ((width * ppp / 128.0).floor().max(1.0) * 128.0) / ppp;
+        if let Some(pixels) = &s.color_display {
+            if self.color_pixels.as_deref() != Some(pixels.as_ref()) || self.color_texture.is_none()
+            {
+                let image = egui::ColorImage::from_rgb([128, 128], pixels);
+                if let Some(texture) = &mut self.color_texture {
+                    texture.set(image, egui::TextureOptions::NEAREST);
+                } else {
+                    self.color_texture = Some(ui.ctx().load_texture(
+                        "tg18-color-lcd",
+                        image,
+                        egui::TextureOptions::NEAREST,
+                    ));
+                }
+                self.color_pixels = Some(pixels.clone());
+            }
+            let texture = self.color_texture.as_ref().unwrap();
+            ui.add(egui::Image::new((texture.id(), egui::vec2(width, width))))
+        } else {
+            // No generated game artwork: this is an empty, unpowered color LCD.
+            let (rect, response) =
+                ui.allocate_exact_size(egui::vec2(width, width), egui::Sense::hover());
+            ui.painter().rect_filled(rect, 0.0, egui::Color32::BLACK);
+            response
+        }
+    }
+
     fn dialogs(&mut self, ctx: &egui::Context, s: &Snapshot) {
         if self.shortcuts_open {
             let mut open = true;
@@ -841,7 +885,7 @@ fn diagnostics(ctx: &egui::Context, s: &Snapshot, open: &mut bool) {
         ui.label(s.profile.name());
         ui.monospace(format!(
             "PC {:04X} | {:.3} emulated seconds",
-            s.state.pc,
+            s.arm_pc.unwrap_or(u32::from(s.state.pc)),
             s.ticks as f64 / MASTER_HZ as f64
         ));
         let p = &s.performance;
@@ -849,13 +893,24 @@ fn diagnostics(ctx: &egui::Context, s: &Snapshot, open: &mut bool) {
             "Speed {:.2}% | Average {:.2}% | Lag {:.2} ms",
             p.speed_percent, p.average_speed_percent, p.lag_ms
         ));
-        ui.monospace(format!(
-            "{} instructions | {} interrupts | {} cycles",
-            s.instructions,
-            s.interrupts,
-            s.cycles.total()
-        ));
-        ui.monospace(format!("OSC1 32768 Hz | OSC2 {} Hz", s.profile.osc2_hz()));
+        if s.profile.is_color() {
+            ui.monospace(format!(
+                "{} nominal ARM instruction/skip ticks | {} interrupts",
+                s.instructions, s.interrupts
+            ));
+            ui.label("TG18 ARM926: 96 MHz nominal instruction-time model; RTC 32768 Hz");
+            if s.sleeping {
+                ui.label("Display sleeping; press A, B or C to wake");
+            }
+        } else {
+            ui.monospace(format!(
+                "{} instructions | {} interrupts | {} cycles",
+                s.instructions,
+                s.interrupts,
+                s.cycles.total()
+            ));
+            ui.monospace(format!("OSC1 32768 Hz | OSC2 {} Hz", s.profile.osc2_hz()));
+        }
         ui.monospace(format!(
             "Core {:.2} ms | Audio {:.2} ms | Wait {:.2} ms",
             p.core_ms, p.audio_ms, p.wait_ms
@@ -894,6 +949,7 @@ fn paint_profile_lcd(
             use crate::morino_lcd_geometry as g;
             (g::LCD_SIZE, g::PIXELS, g::ICON_BITS, g::ICON_SPANS)
         }
+        DeviceProfile::On => unreachable!("On uses the color framebuffer renderer"),
         DeviceProfile::Umino => {
             use crate::umino_lcd_geometry as g;
             (g::LCD_SIZE, g::PIXELS, g::ICON_BITS, g::ICON_SPANS)
@@ -1584,7 +1640,7 @@ mod tests {
             assert!(x >= 0. && y >= 0. && x + 10. <= g::LCD_SIZE[0] && y + 10. <= g::LCD_SIZE[1]);
             assert!(bits.insert((ram, bit)));
         }
-        for profile in DeviceProfile::ALL {
+        for profile in DeviceProfile::CLASSIC {
             let source = crate::lcd_render::masks(profile);
             let expected = match profile {
                 DeviceProfile::P1 | DeviceProfile::P2 => ICON_BITS,
@@ -1592,6 +1648,7 @@ mod tests {
                 DeviceProfile::Angel => crate::angel_lcd_geometry::ICON_BITS,
                 DeviceProfile::Morino => g::ICON_BITS,
                 DeviceProfile::Umino => crate::umino_lcd_geometry::ICON_BITS,
+                DeviceProfile::On => unreachable!("Classic geometry test"),
             };
             for (icon, &(ram, bit)) in source.icons.iter().zip(expected) {
                 assert_eq!((icon.ram, icon.bit), (ram, bit));
@@ -1653,6 +1710,11 @@ mod tests {
     fn unidentified_p1_sized_rom_can_select_p2_and_start_from_the_persistent_library() {
         unidentified_rom_workflow(DeviceProfile::P2);
     }
+    #[test]
+    fn unidentified_on_import_color_display_and_one_click_library_start_use_the_existing_ui() {
+        unidentified_rom_workflow(DeviceProfile::On);
+    }
+
     fn unidentified_rom_workflow(profile: DeviceProfile) {
         fn find(shape: &egui::epaint::Shape, label: &str) -> Option<egui::Pos2> {
             match shape {
@@ -1726,15 +1788,23 @@ mod tests {
         ));
         std::fs::create_dir_all(&folder).unwrap();
         let path = folder.join("misleading-p1-filename.bin");
-        let bytes: Vec<_> = (0..profile.rom_bytes() / 2)
-            .flat_map(|_| 0xFF8u16.to_be_bytes())
-            .collect();
+        let bytes: Vec<u8> = if profile.is_color() {
+            let mut bytes = vec![0; profile.rom_bytes()];
+            bytes[..4].copy_from_slice(b"SPII");
+            bytes[0x48..0x4c].copy_from_slice(&0xeafffffeu32.to_le_bytes());
+            bytes
+        } else {
+            (0..profile.rom_bytes() / 2)
+                .flat_map(|_| 0xFF8u16.to_be_bytes())
+                .collect()
+        };
         std::fs::write(&path, bytes).unwrap();
         let ctx = egui::Context::default();
         let mut app = RetroHatchApp::create(false);
         app.start_library(folder.clone());
         app.pending_rom = Some(path.clone());
-        let deadline = Instant::now() + Duration::from_secs(3);
+        let deadline =
+            Instant::now() + Duration::from_secs(if profile.is_color() { 20 } else { 3 });
         while !app.library.blocked() {
             frame(&ctx, &mut app, vec![]);
             assert!(Instant::now() < deadline);
@@ -1749,7 +1819,8 @@ mod tests {
         let _ = center(&out, profile.name());
         let pos = center(&out, "Import and Start");
         click(&ctx, &mut app, pos);
-        let deadline = Instant::now() + Duration::from_secs(3);
+        let deadline =
+            Instant::now() + Duration::from_secs(if profile.is_color() { 20 } else { 3 });
         loop {
             frame(&ctx, &mut app, vec![]);
             let snapshot = app.controller.snapshot();
@@ -1775,7 +1846,8 @@ mod tests {
         let entry_label = app.library.entries[0].label();
         let pos = center(&out, &format!("Current: {entry_label}"));
         click(&ctx, &mut app, pos);
-        let deadline = Instant::now() + Duration::from_secs(3);
+        let deadline =
+            Instant::now() + Duration::from_secs(if profile.is_color() { 20 } else { 3 });
         while app.controller.snapshot().loads <= before {
             frame(&ctx, &mut app, vec![]);
             assert!(Instant::now() < deadline);
@@ -1793,6 +1865,26 @@ mod tests {
         let pos = center(&out, "Manage ROMs...");
         let out = click(&ctx, &mut app, pos);
         assert!(app.library.manage);
+        let out = if profile.is_color() {
+            // Allow the newly opened management window to finish its automatic layout.
+            for _ in 0..3 {
+                frame(&ctx, &mut app, vec![]);
+            }
+            let deadline = Instant::now() + Duration::from_secs(20);
+            while app.library.busy() {
+                frame(&ctx, &mut app, vec![]);
+                assert!(Instant::now() < deadline, "Library refresh did not finish");
+                std::thread::sleep(Duration::from_millis(5));
+            }
+            let snapshot = app.controller.snapshot();
+            assert!(
+                !snapshot.loading && !snapshot.saving,
+                "Worker operation still pending"
+            );
+            frame(&ctx, &mut app, vec![])
+        } else {
+            out
+        };
         let pos = center(&out, "Remove...");
         let out = click(&ctx, &mut app, pos);
         let pos = center(&out, "Cancel");
@@ -1813,7 +1905,8 @@ mod tests {
         let out = click(&ctx, &mut app, pos);
         let pos = center(&out, "Remove entry");
         click(&ctx, &mut app, pos);
-        let deadline = Instant::now() + Duration::from_secs(3);
+        let deadline =
+            Instant::now() + Duration::from_secs(if profile.is_color() { 20 } else { 3 });
         while !app.library.entries.is_empty() {
             frame(&ctx, &mut app, vec![]);
             assert!(Instant::now() < deadline);

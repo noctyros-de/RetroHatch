@@ -1,7 +1,7 @@
 {
   "target": "x86_64-pc-windows-msvc",
   "scope": "Locked default Windows normal/build dependencies; not other targets or toolchains",
-  "cargo_lock_sha256": "a28b750116be083a071419f291565a62bc5fd36b1a281dafdad64596bb10faa6",
+  "cargo_lock_sha256": "8e6fb123c2582cb8b9b0659d8e7c8b1ac116c1398bf9afb4f53c0930096ece97",
   "packages": [
     {
       "name": "accesskit",
@@ -791,6 +791,20 @@
       }
     },
     {
+      "name": "itoa",
+      "version": "1.0.19",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/dtolnay/itoa",
+      "declared_authors_not_a_copyright_assignment": [
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE-APACHE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "LICENSE-MIT": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+      }
+    },
+    {
       "name": "khronos_api",
       "version": "3.1.0",
       "declared_license": "Apache-2.0",
@@ -959,6 +973,24 @@
         "LICENSE-MIT": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb",
         "src/lib.rs [source header]": "7dd02652d0e11a4636e9acb2f63b7084ba7b370089ba62b4d8c63d4b785bf416",
         "src/macros.rs [source header]": "2bd0bdd23faaf15426d501071f4e0859e67c407530a7c2c50b13a78a9372c94d"
+      }
+    },
+    {
+      "name": "memchr",
+      "version": "2.8.3",
+      "declared_license": "Unlicense OR MIT",
+      "repository": "https://github.com/BurntSushi/memchr",
+      "declared_authors_not_a_copyright_assignment": [
+        "Andrew Gallant <jamslam@gmail.com>",
+        "bluss"
+      ],
+      "features": [
+        "alloc",
+        "std"
+      ],
+      "notice_sections": {
+        "COPYING": "01c266bced4a434da0051174d6bee16a4c82cf634e2679b6155d40d75012390f",
+        "LICENSE-MIT": "0f96a83840e146e43c0ec96a22ec1f392e0680e6c1226e6f3ba87e0740af850f"
       }
     },
     {
@@ -1768,6 +1800,9 @@
         "David Tolnay <dtolnay@gmail.com>"
       ],
       "features": [
+        "default",
+        "derive",
+        "serde_derive",
         "std"
       ],
       "notice_sections": {
@@ -1792,6 +1827,39 @@
       "notice_sections": {
         "LICENSE-APACHE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
         "LICENSE-MIT": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+      }
+    },
+    {
+      "name": "serde_derive",
+      "version": "1.0.229",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/serde-rs/serde",
+      "declared_authors_not_a_copyright_assignment": [
+        "Erick Tryzelaar <erick.tryzelaar@gmail.com>",
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "features": [
+        "default"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "LICENSE-MIT": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+      }
+    },
+    {
+      "name": "serde_json",
+      "version": "1.0.154",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/serde-rs/json",
+      "declared_authors_not_a_copyright_assignment": [],
+      "features": [
+        "default",
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "LICENSE-MIT": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "src/lexical/mod.rs [source header]": "666be13ce29fb237873a125ca2d666b70edc11ed21a52d2bfd84cfd11664736b"
       }
     },
     {
@@ -1899,6 +1967,19 @@
       "notice_sections": {
         "LICENSE-APACHE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
         "LICENSE-MIT": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+      }
+    },
+    {
+      "name": "tg18-core",
+      "version": "0.1.0",
+      "declared_license": "MIT",
+      "repository": "https://github.com/oreo-fox/tg18-emu",
+      "declared_authors_not_a_copyright_assignment": [],
+      "features": [],
+      "notice_sections": {
+        "LICENSE": "1c628d23320358877a93cf89431ca9b3ba80a1f0a1695a9ef58f4492228be4c3",
+        "src/snapshot.rs [source header]": "b54db4ff7a3fc8986104e35d677cb95ef5e3bb40cd18ecb359636a5fcf7593bc",
+        "src/sound.rs [source header]": "df311ffa189f454b6f12cdb86fa9cc78caa1dd8a1b8192bf634fec838a3d3e9b"
       }
     },
     {
@@ -2442,6 +2523,19 @@
       ],
       "notice_sections": {
         "LICENSE": "e72111c52b7d96ebe25348dee19f0744f444d3c95ae6b1ecb6ccaecc5bce05ba"
+      }
+    },
+    {
+      "name": "zmij",
+      "version": "1.0.23",
+      "declared_license": "MIT",
+      "repository": "https://github.com/dtolnay/zmij",
+      "declared_authors_not_a_copyright_assignment": [
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE-MIT": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
       }
     }
   ]

@@ -50,7 +50,13 @@ not every regional revision, minigame or complete device lifetime. TamaOtch is
 a recognized **unsupported research target**: its exact LCD mapping, geometry
 and board settings are unresolved. Recognized TamaOtch firmware is refused with
 an explanation; another device's display is not substituted. Tamagotchi
-Connection/ON/Meets and other MCU families are not implemented.
+Connection and other MCU families are not implemented.
+
+**On/Meets integration, firmware validation pending:** the reused MIT TG18 ARM
+backend is connected to the existing library, color LCD, A/B/C controls, audio,
+pause/reset and private saves. No suitable local On/Meets firmware was available
+for a real boot or gameplay test; this is not a claim of verified playable On
+support. See [TG18 integration](developer/TG18.md).
 
 ## Build from source
 
@@ -95,6 +101,13 @@ copies; removal never deletes original ROMs or saved games. Identical imports
 share content storage. P1/P2 expect 12,288-byte unpacked images; the four
 supported sensor-equipped profiles expect 16,384 bytes. Size alone does not
 prove that a model is supported. Packed dumps are not accepted.
+
+On/Meets imports require an exact 8-MiB flash image beginning with `SPII`.
+Nine upstream code fingerprints supply revision labels for known On (EN) and
+Meets (JP) images; these are FNV-1a code fingerprints, not invented full-ROM
+SHA-256 entries. Full-dump SHA-256 still isolates every local library entry and
+save. An unknown TG18-shaped image asks for confirmation once. Filenames never
+prove a variant; SOME is not supported. Real On/Meets firmware testing is pending.
 
 ## Controls and settings
 

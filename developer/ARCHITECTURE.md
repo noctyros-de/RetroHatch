@@ -3,7 +3,7 @@
 
 # Architecture for contributors
 
-The emulation core is independent of egui and host filesystem/wall time. A
+The classic emulation core is independent of egui and host filesystem/wall time. A
 shared E0C6200 instruction interpreter implements the non-reserved reference
 encodings, with explicit atomic errors for unsupported operations. MCU I/O,
 timer/interrupt scheduling, oscillator phases and audio generation live above
@@ -27,7 +27,10 @@ ROM SHA-256, profile identity and integrity checking. They include CPU, RAM/LCD,
 I/O/timer/oscillator/interrupt state, audio generation and emulated time. Loading
 prepares a compatible replacement before changing the active device. Manual
 slots and separate autosave are per-ROM/profile, with host settings independent
-of machine state. ROM contents are never embedded in a save.
+of machine state. Classic states contain no original ROM. TG18 snapshots store modified flash
+as an XOR delta against the required user ROM, plus RAM/SRAM, color framebuffer,
+timers, RTC, peripheral state and synthesizer phase/cursor. They are private
+runtime data and may contain firmware-derived graphics/code; never publish saves.
 
 The local ROM library stores content-addressed private copies and a versioned,
 checksummed index under Windows user data. Exact catalog hashes and remembered
@@ -46,3 +49,16 @@ resolving their rights and source-form availability is a release gate.
 Privacy boundaries: `docs/` contains private research/audits; `developer/` is the
 public documentation area. Keep ROMs, saves, library indexes, credentials and
 diagnostic captures outside public source. Do not publish `.git` or tool refs.
+
+
+The host `Emulator` dispatches to the unchanged classic device or the separately
+licensed TG18 ARM library. TG18 uses its upstream 96-MHz nominal instruction-time
+model and 32,768-Hz RTC, mapped onto the worker's common master-tick timebase.
+The host initializes RTC from local time once, then advances it using emulated
+time. It does not speed up the RTC to disguise execution lag. No offline pet
+growth or closed-application clock advance is implemented. Work and input remain
+on the same single-owner worker, independent of UI focus/repaint frequency.
+ROM content and device profile isolate state directories. Classic profile codes
+0..5 and their schema remain unchanged; On/Meets appends code 6, backend schema 2.
+TG18 capture runs on the owner, while compression and ordered atomic writes run
+on the existing I/O worker. See [TG18.md](TG18.md) for verification limits.

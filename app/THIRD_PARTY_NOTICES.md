@@ -13,7 +13,13 @@ The independent provenance of derived icon silhouettes remains unresolved and
 blocks public distribution of affected assets/binaries. No exclusive project
 authorship or fabricated GPL license is claimed for them.
 
-TG18-Emu is UI/architecture inspiration. TamaEmu, TamaLIB/TamaTool, MAME, Epson
+The On/Meets ARM library is incorporated from oreo-fox/tg18-emu under MIT,
+Copyright (c) 2026 oreo-fox. Its complete license is in
+third_party/tg18-core/LICENSE and ../LICENSES/TG18-Emu-MIT.txt. MIT integration
+changes in that library retain separate attribution; the host adapter is GPL-3.0-only.
+No upstream desktop frontend, logo, screenshots or ROM data are included.
+
+TamaEmu, TamaLIB/TamaTool, MAME, Epson
 and Paramix Studio supplied research context or factual corroboration; no
 implementation or icon set from those research-only sources is incorporated.
 No copyrighted firmware is included; stored test programs are synthetic.

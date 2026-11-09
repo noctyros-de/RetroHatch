@@ -84,6 +84,7 @@ pub fn profile_code(p: DeviceProfile) -> u8 {
         DeviceProfile::Morino => 3,
         DeviceProfile::Umino => 4,
         DeviceProfile::P2 => 5,
+        DeviceProfile::On => 6,
     }
 }
 pub fn fingerprint(words: &[u16]) -> [u8; 32] {
@@ -257,7 +258,7 @@ mod tests {
             device::{Button, Device},
             mcu::io::Port,
         };
-        for profile in DeviceProfile::ALL {
+        for profile in DeviceProfile::CLASSIC {
             let mut original = synthetic(profile);
             for _ in 0..501 {
                 original.mcu.clock().unwrap();
@@ -328,7 +329,7 @@ mod tests {
     }
     #[test]
     fn reset_hold_and_initial_clock_boundaries_round_trip() {
-        for profile in DeviceProfile::ALL {
+        for profile in DeviceProfile::CLASSIC {
             let mut d = synthetic(profile);
             let initial = d.save_state().unwrap();
             assert_eq!(d.restored(&initial).unwrap().save_state().unwrap(), initial);

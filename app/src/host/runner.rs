@@ -2,18 +2,20 @@
 // SPDX-FileCopyrightText: 2026 Noktyros
 // Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Single-owner emulation worker, bounded real-time work, and latest-frame publication.
+use super::emulator::Emulator;
 use super::performance::{
     CsvLog, Pacer, Performance, Telemetry, UiReads, WORK_TICKS, milliseconds,
 };
 use super::{
     audio::AudioSink,
-    roms,
     saves::{SavePolicy, SaveTarget, Saves},
 };
 use crate::core::cpu::e0c6200::CpuState;
-use crate::core::device::{Button, Device, DisplaySnapshot};
+#[cfg(test)]
+use crate::core::device::Device;
+use crate::core::device::{Button, DisplaySnapshot};
 use crate::core::mcu::metrics::{CoreProfile, CycleCounters};
-use crate::core::{profile::DeviceProfile, tamagotchi::Tamagotchi};
+use crate::core::profile::DeviceProfile;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex, mpsc};
 use std::thread::{self, JoinHandle};
@@ -49,6 +51,9 @@ struct Envelope {
 #[derive(Clone)]
 pub struct Snapshot {
     pub display: DisplaySnapshot,
+    pub color_display: Option<Arc<Vec<u8>>>,
+    pub arm_pc: Option<u32>,
+    pub sleeping: bool,
     pub state: CpuState,
     pub loaded: bool,
     pub running: bool,
@@ -83,6 +88,9 @@ impl Default for Snapshot {
     fn default() -> Self {
         Self {
             display: DisplaySnapshot::default(),
+            color_display: None,
+            arm_pc: None,
+            sleeping: false,
             state: CpuState::default(),
             loaded: false,
             running: false,
@@ -171,7 +179,7 @@ impl Drop for Controller {
 fn publish(
     latest: &Mutex<Snapshot>,
     state: &mut Snapshot,
-    device: Option<&Tamagotchi>,
+    device: Option<&Emulator>,
     running: bool,
     pacer: &Pacer,
     telemetry: &mut Telemetry,
@@ -179,16 +187,19 @@ fn publish(
 ) {
     let started = Instant::now();
     state.loaded = device.is_some();
-    state.rom_hash = device.map(|d| d.rom_hash);
+    state.rom_hash = device.map(|d| d.rom_hash());
     state.running = running;
     if let Some(p1) = device {
         state.display = p1.display();
-        state.state = p1.cpu_state().clone();
+        state.color_display = p1.color_display();
+        state.arm_pc = p1.arm_pc();
+        state.sleeping = p1.sleeping();
+        state.state = p1.classic_cpu_state().cloned().unwrap_or_default();
         state.ticks = p1.time();
-        state.instructions = p1.mcu.instructions;
-        state.interrupts = p1.mcu.interrupts;
-        state.cycles = p1.mcu.counters;
-        state.core_profile = p1.mcu.profile;
+        state.instructions = p1.instructions();
+        state.interrupts = p1.interrupts();
+        state.cycles = p1.counters();
+        state.core_profile = p1.core_profile();
         let now = Instant::now();
         state.performance = telemetry.sample(
             now,
@@ -198,8 +209,8 @@ fn publish(
             } else {
                 p1.time()
             },
-            p1.mcu.instructions,
-            p1.mcu.counters,
+            p1.instructions(),
+            p1.counters(),
             ui,
         );
     }
@@ -222,7 +233,7 @@ fn run(
     let mut saves = storage.map(|(root, policy)| Saves::new(root, policy));
     let mut exit_requested = false;
     let mut volume = saves.as_ref().map_or(100, |s| s.policy.volume);
-    let mut device: Option<Tamagotchi> = None;
+    let mut device: Option<Emulator> = None;
     let mut running = false;
     let mut state = Snapshot::default();
     let mut audio: Option<AudioSink> = None;
@@ -243,7 +254,7 @@ fn run(
         if let Some(store) = &mut saves {
             if store.poll(&mut device, &mut state, &mut running) {
                 if let Some(d) = &mut device {
-                    d.mcu.set_profiling(detailed);
+                    d.set_profiling(detailed);
                     let now = Instant::now();
                     pacer = Pacer::new(now, d.time());
                     telemetry = Telemetry::new(d.time());
@@ -334,7 +345,7 @@ fn run(
                             state.core_profile,
                             state.instructions,
                             false,
-                            state.state.halted,
+                            state.sleeping || state.state.halted,
                         );
                     }
                     return;
@@ -352,16 +363,17 @@ fn run(
                         Command::LoadVerified(path, profile, hash) => (path, profile, Some(hash)),
                         _ => unreachable!(),
                     };
-                    let prepared = roms::load_for_profile(&path, profile).and_then(|rom| {
-                        if expected.is_some_and(|hash|crate::core::state::fingerprint(&rom.words)!=hash){return Err("Library ROM changed before loading. Reimport matching firmware to repair it.".into())}
-                        let known = rom.known_world_p1();
-                        let crc = rom.crc32;
-                        Tamagotchi::new(&rom)
-                            .map(|p1| (p1, crc, known))
-                            .map_err(|e| e.to_string())
-                    });
+                    let prepared = super::storage::read_bounded(&path, profile.rom_bytes())
+                        .and_then(|b| b.ok_or_else(|| "The selected ROM is missing".to_string()))
+                        .and_then(|bytes| {
+                            if expected.is_some_and(|hash| crate::core::state::sha256(&bytes) != hash) {
+                                return Err("Library ROM changed before loading. Reimport matching firmware to repair it.".into());
+                            }
+                            Emulator::from_bytes(&bytes, profile)
+                        });
                     match prepared {
-                        Ok((mut p1, crc, known)) => {
+                        Ok(mut p1) => {
+                            let (crc, known) = p1.classic_rom_metadata();
                             if let Some(store) = &mut saves
                                 && store.policy.save_on_exit
                                 && store.can_capture()
@@ -374,7 +386,7 @@ fn run(
                             if let Some(audio) = &mut audio {
                                 audio.clear();
                             }
-                            p1.mcu.set_profiling(detailed);
+                            p1.set_profiling(detailed);
                             device = Some(p1);
                             running = true;
                             state.error = None;
@@ -383,7 +395,7 @@ fn run(
                                 .unwrap_or_default()
                                 .to_string_lossy()
                                 .into_owned();
-                            state.crc32 = Some(crc);
+                            state.crc32 = crc;
                             state.known_world_p1 = known;
                             state.profile = profile;
                             state.loads += 1;
@@ -555,7 +567,7 @@ fn run(
                     detailed = value;
                     state.detailed_profiling = value;
                     if let Some(p1) = &mut device {
-                        p1.mcu.set_profiling(value);
+                        p1.set_profiling(value);
                     }
                 }
             }
@@ -574,10 +586,7 @@ fn run(
                 }
                 let core_start = Instant::now();
                 if let Err(error) = p1.advance_to(Pacer::chunk(current, requested)) {
-                    state.error = Some(format!(
-                        "Emulation stopped at PC {:04X}: {error}",
-                        p1.cpu_state().pc
-                    ));
+                    state.error = Some(format!("Emulation stopped at PC {:04X}: {error}", p1.pc()));
                     running = false;
                     telemetry.pause(Instant::now());
                     p1.release_inputs();
@@ -642,7 +651,7 @@ fn run(
                     state.core_profile,
                     state.instructions,
                     running,
-                    state.state.halted,
+                    state.sleeping || state.state.halted,
                 )
             {
                 state.diagnostics_error = Some(error);
@@ -945,6 +954,7 @@ mod tests {
 #[cfg(test)]
 mod save_tests {
     use super::*;
+    use crate::core::tamagotchi::Tamagotchi;
     fn wait(c: &Controller, condition: impl Fn(&Snapshot) -> bool) -> Snapshot {
         let end = Instant::now() + Duration::from_secs(5);
         loop {

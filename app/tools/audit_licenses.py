@@ -40,7 +40,7 @@ def generate():
         "--filter-platform", TARGET, "--format-version", "1"], cwd=ROOT/"app")
     metadata = json.loads(raw)
     nodes = {n["id"]: n for n in metadata["resolve"]["nodes"]}
-    packages = sorted((p for p in metadata["packages"] if p["source"] and p["id"] in nodes),
+    packages = sorted((p for p in metadata["packages"] if (p["source"] or p["name"] == "tg18-core") and p["id"] in nodes),
         key=lambda p: (p["name"], p["version"]))
     apache = next(Path(p["manifest_path"]).parent/"LICENSE" for p in packages if p["name"] == "glutin").read_text(encoding="utf-8")
     egui_mit = (ROOT/"LICENSES/egui-LICENSE-MIT.txt").read_text(encoding="utf-8")
@@ -94,7 +94,7 @@ def generate():
             "notice_sections": {name: hashlib.sha256(text.encode()).hexdigest() for name, text in sorted(notices.items())}}
         records.append(record)
         sections.append(f"\n{'='*72}\nPACKAGE {package['name']} {package['version']}\n"
-            f"SOURCE https://crates.io/crates/{package['name']}/{package['version']}\n"
+            f"SOURCE {package['repository'] if package['name'] == 'tg18-core' else 'https://crates.io/crates/'+package['name']+'/'+package['version']}\n"
             f"DECLARED LICENSE {package['license']}\n")
         for name, text in sorted(notices.items()):
             sections.append(f"\n--- {name} ---\n{text}\n")
@@ -111,7 +111,7 @@ def generate():
         "See [THIRD_PARTY_LICENSES.md](../THIRD_PARTY_LICENSES.md) for mandatory compound licenses and limitations.\n",
         "| Package | Version | Declared license | Upstream |", "| --- | --- | --- | --- |"]
     for p in records:
-        table.append(f"| {p['name']} | {p['version']} | `{p['declared_license']}` | [crate](https://crates.io/crates/{p['name']}/{p['version']}) |")
+        table.append(f"| {p['name']} | {p['version']} | `{p['declared_license']}` | [source]({p['repository'] if p['name'] == 'tg18-core' else 'https://crates.io/crates/'+p['name']+'/'+p['version']}) |")
     outputs[ROOT/"LICENSES/CARGO_INVENTORY.md"] = "\n".join(table)+"\n"
     return outputs, len(records)
 

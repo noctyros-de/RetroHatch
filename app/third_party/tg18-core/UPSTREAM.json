@@ -1,0 +1,23 @@
+{
+  "upstream": "https://github.com/oreo-fox/tg18-emu",
+  "license": "MIT",
+  "copyright": "Copyright (c) 2026 oreo-fox",
+  "local_source_sha256_before_integration_changes": {
+    "src/cpu.rs": "1e38fa4b81014fa0c11b77ce8c8b63fd6274cf1a55b3d981990761cd885394b4",
+    "src/lib.rs": "c6bf8e6c1568c10c36dfa749585eef1bdf7c3cf192b7dd141c3e4796c60274c1",
+    "src/machine.rs": "a5d1695b7a7d3279896beddd9071ca9c1acbcd34ed749e34e273069087428782",
+    "src/png.rs": "37e1c13c388f7584b56b0967b69b600bd05d1803ea3f446318a4a2247ea28d62",
+    "src/roms.rs": "890574ab86596b3b6c8692a61ec6218e393240d6ccffd73367cf66fb2675b93a",
+    "src/save.rs": "924dd691562a8b0ebb1f34ceb873ef4de23ebb834fed6dd1f63cb332f30e87e7",
+    "src/sigs.rs": "bb5b704e29d3f1a9d41875940ca0c70abef0ecbeadf79df0e9f1d27c1f04521e",
+    "src/snapshot.rs": "17b8d5a6f7a78326986ec5f28cc360ddea1af12724cbe3df534de4474f55a5e0",
+    "src/sound.rs": "edd7ef3918e9676ae8b17efa5d7e948e505c94dd1dea0824dbdca947927fd770",
+    "src/sys.rs": "c416a56071689deb01f1e5b95bcba03dca095028ff01ad1b5114538e535c8297"
+  },
+  "changes": [
+    "Library-only Cargo metadata; no CLI or desktop frontend included.",
+    "Bounded snapshot decompression and additional peripheral state.",
+    "Explicit tone synthesizer state access for host save continuity.",
+    "XOR flash deltas against the required user ROM for RetroHatch saves; original raw snapshot restore remains available."
+  ]
+}

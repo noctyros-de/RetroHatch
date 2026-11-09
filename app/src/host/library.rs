@@ -7,7 +7,6 @@ use super::{
     storage,
 };
 use crate::core::{
-    p1::RomImage,
     profile::DeviceProfile,
     state::{hex, sha256},
 };
@@ -77,8 +76,8 @@ pub fn inspect_bytes(bytes: Vec<u8>, source_name: String) -> Result<Prepared, St
         .collect();
     let p = *candidates
         .first()
-        .ok_or("Unsupported ROM size. Import an unpacked 12,288- or 16,384-byte E0C6200 image.")?;
-    RomImage::decode_for_profile(&bytes, p).map_err(|e| e.to_string())?;
+        .ok_or("Unsupported ROM size. Import an unpacked 12,288/16,384-byte classic image or an 8-MiB SPII On/Meets flash dump.")?;
+    super::emulator::validate_rom(&bytes, p)?;
     Ok(Prepared {
         hash,
         bytes,
@@ -282,7 +281,7 @@ impl Library {
             return Err("The internal ROM copy is corrupted. Use Repair to reimport matching firmware; saves are untouched.".into());
         }
         super::pending_devices::ensure_supported(&key.hash)?;
-        RomImage::decode_for_profile(&data, key.profile).map_err(|e| e.to_string())?;
+        super::emulator::validate_rom(&data, key.profile)?;
         Ok(path)
     }
     pub fn entries(&self) -> Vec<Entry> {
@@ -303,7 +302,15 @@ impl Library {
         if !remembered.is_empty() {
             remembered
         } else {
-            fingerprints::matches(&p.hash, fingerprints::CATALOG)
+            let choices = fingerprints::matches(&p.hash, fingerprints::CATALOG);
+            if choices.is_empty() && p.candidates == [DeviceProfile::On] {
+                if let Some(known) = tg18::roms::identify(&p.bytes) {
+                    return vec![Assignment { profile: DeviceProfile::On,
+                        variant: format!("{} {}", if known.region == "en" { "On" } else { "Meets" }, known.display_name()),
+                        evidence: "TG18 upstream code fingerprint (FNV-1a); full-dump SHA-256 stored locally".into() }];
+                }
+            }
+            choices
         }
     }
     pub fn automatic(&self, p: &Prepared) -> Option<Assignment> {

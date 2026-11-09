@@ -12,11 +12,16 @@ pub const OSC2_HZ: u32 = 1_600_000;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RomError {
     Size(usize),
+    Profile,
     Word { offset: usize, value: u16 },
 }
 impl fmt::Display for RomError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::Profile => write!(
+                f,
+                "This profile requires the TG18 ARM backend, not the E0C6200 decoder"
+            ),
             Self::Size(size) => write!(
                 f,
                 "Invalid ROM size: {size} bytes. Expected 12288 bytes for P1/P2 or 16384 bytes for Genjintch/Angel/Morino/Umino, as selected (big-endian 16-bit words). Packed 12-bit dumps are not supported."
@@ -40,6 +45,9 @@ impl RomImage {
         Self::decode_for_profile(bytes, DeviceProfile::P1)
     }
     pub fn decode_for_profile(bytes: &[u8], profile: DeviceProfile) -> Result<Self, RomError> {
+        if profile.is_color() {
+            return Err(RomError::Profile);
+        }
         if bytes.len() != profile.rom_bytes() {
             return Err(RomError::Size(bytes.len()));
         }

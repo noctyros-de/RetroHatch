@@ -15,7 +15,8 @@ class PackagingTests(unittest.TestCase):
     def test_required_source_and_notices_are_allowed(self):
         for name in ("LICENSE", "README.md", "app/Cargo.lock", "app/src/main.rs",
                      "app/assets/lcd/angel.alpha", "app/tests/data/e0c6200_reference.txt",
-                     "LICENSES/CARGO_NOTICES.txt", ".github/workflows/windows-release.yml"):
+                     "LICENSES/CARGO_NOTICES.txt", ".github/workflows/windows-release.yml",
+                     "app/third_party/tg18-core/LICENSE", "app/third_party/tg18-core/src/cpu.rs"):
             with self.subTest(name=name):
                 self.assertTrue(source_allowed(name))
 

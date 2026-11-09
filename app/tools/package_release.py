@@ -22,7 +22,7 @@ ROOT_FILES = {".gitignore", "LICENSE", "README.md", "COPYRIGHT.md",
               "THIRD_PARTY_LICENSES.md", "CONTRIBUTING.md", "SECURITY.md"}
 APP_FILES = {"app/.gitignore", "app/Cargo.toml", "app/Cargo.lock", "app/THIRD_PARTY_NOTICES.md"}
 PREFIXES = (".github/", "developer/", "LICENSES/", "app/src/", "app/assets/lcd/",
-            "app/examples/", "app/tests/", "app/tools/", "app/LICENSES/")
+            "app/examples/", "app/tests/", "app/tools/", "app/LICENSES/", "app/third_party/")
 SUFFIXES = {".rs", ".toml", ".lock", ".md", ".txt", ".py", ".ps1", ".json",
             ".html", ".alpha", ".yml", ".yaml"}
 SYSTEM_DLLS = {"kernel32.dll", "kernelbase.dll", "user32.dll", "dwmapi.dll",
@@ -39,7 +39,7 @@ def source_allowed(name):
         return False
     if name in ROOT_FILES or name in APP_FILES:
         return True
-    return name.startswith(PREFIXES) and path.suffix.lower() in SUFFIXES
+    return name.startswith(PREFIXES) and (path.suffix.lower() in SUFFIXES or path.name == "LICENSE")
 
 
 def pe_imports(data):
@@ -205,7 +205,7 @@ ROMs, firmware, personal libraries, settings and saves are not included.
         binary = stage/"windows"
         shutil.copyfile(executable, binary/"RetroHatch.exe")
         for name in files:
-            if name in ROOT_FILES-{".gitignore"} or name.startswith(("LICENSES/", "developer/", "app/LICENSES/")) or name == "app/THIRD_PARTY_NOTICES.md":
+            if name in ROOT_FILES-{".gitignore"} or name.startswith(("LICENSES/", "developer/", "app/LICENSES/")) or name in {"app/THIRD_PARTY_NOTICES.md", "app/third_party/tg18-core/LICENSE"}:
                 destination = binary/name
                 destination.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(source/name, destination)

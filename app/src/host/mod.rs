@@ -3,6 +3,7 @@
 // Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Host services: worker scheduling, local ROM files, native dialogs and PCM output.
 pub mod audio;
+pub mod emulator;
 pub mod platform;
 pub mod roms;
 pub mod runner;
