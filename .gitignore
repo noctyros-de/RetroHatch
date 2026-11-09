@@ -1,0 +1,16 @@
+# Reference projects
+/references/
+
+# Internal documentation
+/docs/
+/AGENTS.md
+
+# Build files
+/app/target/
+*.exe
+
+# ROMs and save states
+/roms/
+/saves/
+/app/roms/
+/app/saves/

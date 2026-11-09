@@ -1,0 +1,12 @@
+[package]
+name = "retrohatch"
+version = "0.1.0"
+edition = "2024"
+description = "Native Windows interface for the planned RetroHatch emulator"
+
+[[bin]]
+name = "RetroHatch"
+path = "src/main.rs"
+
+[dependencies]
+eframe = { version = "0.37", default-features = false, features = ["default_fonts", "glow"] }
