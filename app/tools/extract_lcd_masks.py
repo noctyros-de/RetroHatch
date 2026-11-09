@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# SPDX-FileCopyrightText: 2026 Noktyros
 """Extract exact display-only SVG paths through Qt, matching BrickEmuPy's renderer.
 
 Qt is a development dependency only. No shell artwork or firmware is embedded.

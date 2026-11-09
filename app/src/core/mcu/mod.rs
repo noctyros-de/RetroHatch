@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-FileCopyrightText: 2026 Noktyros
+// Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Deterministic E0C6200 MCU integration based on BrickEmuPy (CC0).
 pub mod buzzer;
 pub mod io;

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-FileCopyrightText: 2026 Noktyros
+// Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! End-to-end local firmware save verification; no firmware is supplied.
 //! Usage: save_acceptance ROM_FOLDER PRIVATE_OUTPUT_FOLDER
 use retrohatch::core::{
@@ -64,6 +67,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     std::fs::create_dir_all(&output)?;
     for (profile, name) in [
         (DeviceProfile::P1, "TamagotchiP1Japanese.bin"),
+        (DeviceProfile::P2, "TamagotchiP2.bin"),
         (DeviceProfile::Genjintch, "TamagotchiGenjintch.bin"),
         (DeviceProfile::Angel, "TamagotchiAngel.bin"),
         (DeviceProfile::Morino, "TamagotchiMorino.bin"),
@@ -166,6 +170,7 @@ fn worker_check(folder: &Path, root: &Path) -> Result<(), Box<dyn std::error::Er
     }
     for (profile, name) in [
         (DeviceProfile::P1, "TamagotchiP1Japanese.bin"),
+        (DeviceProfile::P2, "TamagotchiP2.bin"),
         (DeviceProfile::Genjintch, "TamagotchiGenjintch.bin"),
         (DeviceProfile::Angel, "TamagotchiAngel.bin"),
         (DeviceProfile::Morino, "TamagotchiMorino.bin"),

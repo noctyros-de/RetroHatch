@@ -2,7 +2,12 @@
 name = "retrohatch"
 version = "0.1.0"
 edition = "2024"
-description = "Native Windows Tamagotchi P1, Genjintch, Angel, Morino and Umino emulator with a deterministic Rust core"
+license = "GPL-3.0-only"
+authors = ["Noktyros"]
+repository = "https://github.com/Noktyros/RetroHatch"
+readme = "../README.md"
+publish = false
+description = "Native Windows Tamagotchi P1, P2, Genjintch, Angel, Morino and Umino emulator with a deterministic Rust core"
 
 [[bin]]
 name = "RetroHatch"

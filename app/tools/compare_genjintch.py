@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# SPDX-FileCopyrightText: 2026 Noktyros
 """Generate/check focused Genjintch MCU fixtures using unchanged original handlers.
 
 The fixtures contain synthetic programs only. Optional --rom and --trace compare
@@ -79,11 +81,11 @@ def generate():
                 count += 1
     return inputs, outputs, count
 
-def compare_rom(rom, trace):
+def compare_rom(rom, trace, *, clock=CLOCK, rom_bytes=16384):
     data=rom.read_bytes()
-    assert len(data)==16384 and all(data[i] < 16 for i in range(0,len(data),2)), "Expected a 16384-byte unpacked E0C6200 image"
+    assert len(data)==rom_bytes and all(data[i] < 16 for i in range(0,len(data),2)), f"Expected a {rom_bytes}-byte unpacked E0C6200 image"
     words=[int.from_bytes(data[i:i+2],"big") for i in range(0,len(data),2)]
-    cpu, _=load_reference(words,CLOCK)
+    cpu, _=load_reference(words,clock)
     elapsed=Fraction(); clocks=0; checkpoints=0; events=0; displays=set()
     for line in trace.read_text(encoding="utf-8").splitlines():
         fields=line.split('|')
@@ -96,13 +98,13 @@ def compare_rom(rom, trace):
             cpu.pin_handler('K0',int(fields[2]),0 if fields[3]=='1' else -1)
             events+=1; continue
         context=f"clock {clocks}"
-        assert int(fields[2])==int(elapsed*MASTER_HZ/CLOCK),(context,'time')
+        assert int(fields[2])==int(elapsed*MASTER_HZ/clock),(context,'time')
         assert [int(v,16) for v in fields[3].split(',')]==state(cpu),(context,'CPU')
         assert fields[4]==''.join(f'{v:X}' for v in cpu._RAM),(context,'RAM')
         assert fields[5]==''.join(f'{v:X}' for v in cpu._VRAM),(context,'LCD')
         assert fields[6]==f'{cpu.get_mem(0xF70):X},{cpu.get_mem(0xF71):X}',(context,'oscillator/display control')
         displays.add(fields[5]); checkpoints+=1
-    print(f"Verified user ROM SHA256 {hashlib.sha256(data).hexdigest()}: {checkpoints} complete CPU/RAM/LCD checkpoints, {events} input transitions, {clocks} original clocks, {len(displays)} distinct LCD states, {float(elapsed/CLOCK):.6f} seconds.")
+    print(f"Verified user ROM SHA256 {hashlib.sha256(data).hexdigest()}: {checkpoints} complete CPU/RAM/LCD checkpoints, {events} input transitions, {clocks} original clocks, {len(displays)} distinct LCD states, {float(elapsed/clock):.6f} seconds.")
 
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__)

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-FileCopyrightText: 2026 Noktyros
+// Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Exact, locally reference-validated ROM identities. No firmware or personal paths.
 use crate::core::profile::DeviceProfile;
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -12,6 +15,11 @@ pub struct Fingerprint<'a> {
     pub variant: &'a str,
 }
 pub const CATALOG: &[Fingerprint<'static>] = &[
+    Fingerprint {
+        sha256: "7ee70ec703f390e17f6a3a4c817ba6e6f6ea97a718969aefd8641b7e2e1aa6c8",
+        profile: DeviceProfile::P2,
+        variant: "Region not verified",
+    },
     Fingerprint {
         sha256: "efd0eb757a052e109ec65e3e695653b63bbcd76506e9cdf17e3dd6bab2eb609a",
         profile: DeviceProfile::P1,

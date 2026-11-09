@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-FileCopyrightText: 2026 Noktyros
+// Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! E0C6200 instruction interpreter based on BrickEmuPy (CC0).
 //!
 //! Source: references/BrickEmuPy-main/cores/E0C6200.py.

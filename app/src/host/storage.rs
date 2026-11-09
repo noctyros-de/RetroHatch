@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-FileCopyrightText: 2026 Noktyros
+// Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Ordered background I/O and crash-safe replacement in the destination directory.
 use crate::core::state::{MAGIC, MAX_FILE, sha256};
 use std::{

@@ -27,3 +27,33 @@ settings.rhc.bak
 **/rom-library/
 *.rhl
 *.rhl.bak
+
+
+# Publication preparation: retain private documentation and local material above.
+# Public developer documentation belongs in /developer/, not /docs/.
+/dist/
+/release-staging/
+/.codex/
+/.agents/
+/.aws/
+/.ssh/
+.env
+.env.*
+!.env.example
+*.rom
+*.bin
+*.dump
+*.dmp
+*.pdb
+*.dll
+*.lib
+*.log
+*.csv
+*.trace
+*.wav
+*.zip
+*.7z
+*.pem
+*.key
+__pycache__/
+*.py[cod]

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-FileCopyrightText: 2026 Noktyros
+// Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Monotonic real-time pacing and low-frequency observational telemetry.
 use crate::core::mcu::{MASTER_HZ, metrics::CycleCounters};
 use std::sync::atomic::{AtomicU64, Ordering};

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-FileCopyrightText: 2026 Noktyros
+// Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 use super::*;
 
 fn machine(words: &[(usize, u16)]) -> Mcu {
@@ -547,5 +550,15 @@ fn umino_unmapped_data_bus_matches_reference_without_changing_strict_profiles() 
         include_str!("../../../tests/data/umino_reference.txt"),
         DeviceProfile::Umino,
         65,
+    );
+}
+
+#[test]
+fn p2_reuses_the_complete_original_p1_mcu_oracle_without_clock_or_input_changes() {
+    compare_mcu_fixtures(
+        include_str!("../../../tests/data/e0c6200_mcu_programs.txt"),
+        include_str!("../../../tests/data/e0c6200_mcu_reference.txt"),
+        crate::core::profile::DeviceProfile::P2,
+        391,
     );
 }

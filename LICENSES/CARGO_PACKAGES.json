@@ -1,0 +1,2448 @@
+{
+  "target": "x86_64-pc-windows-msvc",
+  "scope": "Locked default Windows normal/build dependencies; not other targets or toolchains",
+  "cargo_lock_sha256": "a28b750116be083a071419f291565a62bc5fd36b1a281dafdad64596bb10faa6",
+  "packages": [
+    {
+      "name": "accesskit",
+      "version": "0.25.2",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/AccessKit/accesskit",
+      "declared_authors_not_a_copyright_assignment": [
+        "The AccessKit contributors"
+      ],
+      "features": [],
+      "notice_sections": {
+        "src/geometry.rs [source header]": "e38254ff702e4a278b0198abe2f5cc8b11fa58e488a8a13b7833b3d2a7e8d537",
+        "src/lib.rs [source header]": "468e37a93c8dd8e5458b325dcc7ccf348bfd176dcc07e79cdcc023e53041c456"
+      }
+    },
+    {
+      "name": "adler2",
+      "version": "2.0.1",
+      "declared_license": "0BSD OR MIT OR Apache-2.0",
+      "repository": "https://github.com/oyvindln/adler2",
+      "declared_authors_not_a_copyright_assignment": [
+        "Jonas Schievink <jonasschievink@gmail.com>",
+        "oyvindln <oyvindln@users.noreply.github.com>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE-0BSD": "861399f8c21c042b110517e76dc6b63a2b334276c8cf17412fc3c8908ca8dc17",
+        "LICENSE-APACHE": "8ada45cd9f843acf64e4722ae262c622a2b3b3007c7310ef36ac1061a30f6adb",
+        "LICENSE-MIT": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+      }
+    },
+    {
+      "name": "ahash",
+      "version": "0.8.12",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/tkaitchuck/ahash",
+      "declared_authors_not_a_copyright_assignment": [
+        "Tom Kaitchuck <Tom.Kaitchuck@gmail.com>"
+      ],
+      "features": [
+        "no-rng",
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "0444c6991eead6822f7b9102e654448d51624431119546492e8b231db42c48bb"
+      }
+    },
+    {
+      "name": "arrayvec",
+      "version": "0.7.8",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/bluss/arrayvec",
+      "declared_authors_not_a_copyright_assignment": [
+        "bluss"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "4da95ec4ecb65b738d470b7d762894ad9c97da93e6cbfb18b570fc2c96f4b871",
+        "src/char.rs [source header]": "d0f67310947d751e1a26733fe821404c67a73b5d67d17193cb81df33ca7d2450"
+      }
+    },
+    {
+      "name": "autocfg",
+      "version": "1.5.1",
+      "declared_license": "Apache-2.0 OR MIT",
+      "repository": "https://github.com/cuviper/autocfg",
+      "declared_authors_not_a_copyright_assignment": [
+        "Josh Stone <cuviper@gmail.com>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "27995d58ad5c1145c1a8cd86244ce844886958a35eb2b78c6b772748669999ac"
+      }
+    },
+    {
+      "name": "bitflags",
+      "version": "2.13.2",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/bitflags/bitflags",
+      "declared_authors_not_a_copyright_assignment": [
+        "The Rust Project Developers"
+      ],
+      "features": [
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb",
+        "src/lib.rs [source header]": "04e6410a91c2673c285da4aa79c33e44893c6158138338a59f5badc7f5cbcf4c"
+      }
+    },
+    {
+      "name": "bytemuck",
+      "version": "1.25.2",
+      "declared_license": "Zlib OR Apache-2.0 OR MIT",
+      "repository": "https://github.com/Lokathor/bytemuck",
+      "declared_authors_not_a_copyright_assignment": [
+        "Lokathor <zefria@gmail.com>"
+      ],
+      "features": [
+        "bytemuck_derive",
+        "derive",
+        "extern_crate_alloc",
+        "min_const_generics"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "e3ba223bb1423f0aad8c3dfce0fe3148db48926d41e6fbc3afbbf5ff9e1c89cb",
+        "LICENSE-MIT": "9df9ba60a11af705f2e451b53762686e615d86f76b169cf075c3237730dbd7e2",
+        "LICENSE-ZLIB": "84b34dd7608f7fb9b17bd588a6bf392bf7de504e2716f024a77d89f1b145a151"
+      }
+    },
+    {
+      "name": "bytemuck_derive",
+      "version": "1.12.1",
+      "declared_license": "Zlib OR Apache-2.0 OR MIT",
+      "repository": "https://github.com/Lokathor/bytemuck",
+      "declared_authors_not_a_copyright_assignment": [
+        "Lokathor <zefria@gmail.com>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE-APACHE": "e3ba223bb1423f0aad8c3dfce0fe3148db48926d41e6fbc3afbbf5ff9e1c89cb",
+        "LICENSE-MIT": "9df9ba60a11af705f2e451b53762686e615d86f76b169cf075c3237730dbd7e2",
+        "LICENSE-ZLIB": "84b34dd7608f7fb9b17bd588a6bf392bf7de504e2716f024a77d89f1b145a151"
+      }
+    },
+    {
+      "name": "byteorder-lite",
+      "version": "0.1.0",
+      "declared_license": "Unlicense OR MIT",
+      "repository": "https://github.com/image-rs/byteorder-lite",
+      "declared_authors_not_a_copyright_assignment": [],
+      "features": [
+        "default",
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-MIT": "0f96a83840e146e43c0ec96a22ec1f392e0680e6c1226e6f3ba87e0740af850f"
+      }
+    },
+    {
+      "name": "cfg-if",
+      "version": "1.0.5",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/rust-lang/cfg-if",
+      "declared_authors_not_a_copyright_assignment": [
+        "Alex Crichton <alex@alexcrichton.com>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397"
+      }
+    },
+    {
+      "name": "cfg_aliases",
+      "version": "0.2.2",
+      "declared_license": "MIT",
+      "repository": "https://github.com/katharostech/cfg_aliases",
+      "declared_authors_not_a_copyright_assignment": [
+        "Zicklag <zicklag@katharostech.com>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE": "31b94860253d8ec7b4529f51901044d3b459d6292d996504a36b1bae3a36a812",
+        "NOTICES.md": "1e2b7ade3fb228130408b9990cae6a7618eb314c75aa0b164bfe485d9d9756ee"
+      }
+    },
+    {
+      "name": "color",
+      "version": "0.3.3",
+      "declared_license": "Apache-2.0 OR MIT",
+      "repository": "https://github.com/linebender/color",
+      "declared_authors_not_a_copyright_assignment": [],
+      "features": [
+        "bytemuck",
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "a6cba85bc92e0cff7a450b1d873c0eaa2e9fc96bf472df0247a26bec77bf3ff9",
+        "LICENSE-MIT": "508a77d2e7b51d98adeed32648ad124b7b30241a8e70b2e72c99f92d8e5874d1",
+        "examples/gradient.rs [source header]": "4312ad0b57095b8a314e50e2dfe272daf73543411cf8fd277797f9e4d301d9aa",
+        "examples/interp.rs [source header]": "4fafaf40684ba9e4a745658238b2360fbaf4dba7381a75b5fd07a72c45133f47",
+        "examples/parse.rs [source header]": "78319310797acbb1b0f99432efa16fcf970f76c55a1dfa920b05acdc8139b59d",
+        "src/cache_key.rs [source header]": "7d29d8166967ad5e82787cd32b68dcf47b8c92ec44c5759fa31d9c191d3ccf47",
+        "src/chromaticity.rs [source header]": "3e743018eb589122b3b31ddb19aa642c3391e836cfd6aba927b86ecc777c5efd",
+        "src/color.rs [source header]": "fa64229d8bcfe5e859a2a0b1f34492a7a8750c28e3faffb02f615b0d63b9706a",
+        "src/colorspace.rs [source header]": "3e743018eb589122b3b31ddb19aa642c3391e836cfd6aba927b86ecc777c5efd",
+        "src/dynamic.rs [source header]": "65e0a782704079a47e4baddb7a077a76e1a25d0101ca6e14b347fd5de1d805f8",
+        "src/flags.rs [source header]": "44ece946755f7d04b82c89471204dff852a75270cf8b9f2d23eeb1f0b6244f02",
+        "src/floatfuncs.rs [source header]": "99f7ed52b35d0950fe228912e184f9c10b80c3c95dc43983be439ddcf05380e3",
+        "src/gradient.rs [source header]": "3e743018eb589122b3b31ddb19aa642c3391e836cfd6aba927b86ecc777c5efd",
+        "src/impl_bytemuck.rs [source header]": "3e743018eb589122b3b31ddb19aa642c3391e836cfd6aba927b86ecc777c5efd",
+        "src/lib.rs [source header]": "a7f02fd85bd34db11108c14c8ebc9db3c21c146f3be3fc7afd50c571aba6b5f9",
+        "src/palette/css.rs [source header]": "6c306bf9da00902fe6f5c155c29d528ec6da8457ad71f96e2c3a6b49ada868c0",
+        "src/palette/mod.rs [source header]": "f0e99b1946738d551ae9dc3e0c2572fe989a5974571846fd6590ccb315662d0f",
+        "src/parse.rs [source header]": "efc97a6b928d5bc002c3c9654d859c814c8e60f41b594103a78efbabed9712b5",
+        "src/rgba8.rs [source header]": "3e743018eb589122b3b31ddb19aa642c3391e836cfd6aba927b86ecc777c5efd",
+        "src/serialize.rs [source header]": "78364342197a40bfa88b35cf63dc07198e3cbe25cd1e80ca1f73eee9e740ddc9",
+        "src/tag.rs [source header]": "77afc90f317fd1b9ed28449c036557801c86f2e4f582c28de59a4daf19bb5bdd",
+        "src/x11_colors.rs [source header]": "9139be915bb6362016de39b8a637ae1c85e7b0748eb57ef92a72063142347871"
+      }
+    },
+    {
+      "name": "crc32fast",
+      "version": "1.5.4",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/srijs/rust-crc32fast",
+      "declared_authors_not_a_copyright_assignment": [
+        "Sam Rijs <srijs@airpost.net>",
+        "Alex Crichton <alex@alexcrichton.com>"
+      ],
+      "features": [
+        "default",
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08",
+        "LICENSE-MIT": "61d383b05b87d78f94d2937e2580cce47226d17823c0430fbcad09596537efcf"
+      }
+    },
+    {
+      "name": "cursor-icon",
+      "version": "1.2.0",
+      "declared_license": "MIT OR Apache-2.0 OR Zlib",
+      "repository": "https://github.com/rust-windowing/cursor-icon",
+      "declared_authors_not_a_copyright_assignment": [
+        "Kirill Chibisov <contact@kchibisov.com>"
+      ],
+      "features": [
+        "alloc",
+        "default",
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "b59affd015e517ed998dd735757f9a3693643cd389609947ed54074234a10784",
+        "LICENSE-MIT": "c138726a726ac37bae09d0f8a48e74e8e3aa8a8952fcd10fae0fb224cc1c05f1",
+        "LICENSE-ZLIB": "01e533bd94e8f1c32b2c2531e2c398de7d35d7804add3d574b4e1fe581d53537",
+        "src/lib.rs [source header]": "840c76e16d54457f400ac39f6277ee18e926478dc3d735c4af9503280eab69fc"
+      }
+    },
+    {
+      "name": "document-features",
+      "version": "0.2.12",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/slint-ui/document-features",
+      "declared_authors_not_a_copyright_assignment": [
+        "Slint Developers <info@slint.dev>"
+      ],
+      "features": [
+        "default"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff",
+        "LICENSE-MIT": "aa893340d14b9844625be6a50ac644169a01b52f0211cbf81b09e1874c8cd81d",
+        "lib.rs [source header]": "0a346ffd2726a3b46e61e82817df93a32b30bfc90444edbdc5220819fa2e2d96"
+      }
+    },
+    {
+      "name": "dpi",
+      "version": "0.1.2",
+      "declared_license": "Apache-2.0 AND MIT",
+      "repository": "https://github.com/rust-windowing/winit",
+      "declared_authors_not_a_copyright_assignment": [],
+      "features": [
+        "default",
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE": "6dc0e068dcf3a5bc8e054205b85b7720e1d49265bbc64bf515d2cf79197df69a",
+        "LICENSE-LIBM-MIT": "9eff396a99bafd208e7126602420d6864f6066c08b84485a5b032320a9c01997",
+        "src/libm.rs [source header]": "0f80571b75a8d88e2706ef5dd0db6916e527438f22e18433542d9a3de8927268"
+      }
+    },
+    {
+      "name": "ecolor",
+      "version": "0.37.0",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/emilk/egui",
+      "declared_authors_not_a_copyright_assignment": [
+        "Emil Ernerfeldt <emil.ernerfeldt@gmail.com>",
+        "Andreas Reich <reichandreas@gmx.de>"
+      ],
+      "features": [
+        "bytemuck"
+      ],
+      "notice_sections": {
+        "Apache-2.0 [egui release 0.37.0 workspace]": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90",
+        "MIT [egui release 0.37.0 workspace; standalone text omitted by some packages]": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c"
+      }
+    },
+    {
+      "name": "eframe",
+      "version": "0.37.0",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/emilk/egui/tree/main/crates/eframe",
+      "declared_authors_not_a_copyright_assignment": [
+        "Emil Ernerfeldt <emil.ernerfeldt@gmail.com>"
+      ],
+      "features": [
+        "default_fonts",
+        "glow"
+      ],
+      "notice_sections": {
+        "Apache-2.0 [egui release 0.37.0 workspace]": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90",
+        "MIT [egui release 0.37.0 workspace; standalone text omitted by some packages]": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c"
+      }
+    },
+    {
+      "name": "egui",
+      "version": "0.37.0",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/emilk/egui",
+      "declared_authors_not_a_copyright_assignment": [
+        "Emil Ernerfeldt <emil.ernerfeldt@gmail.com>"
+      ],
+      "features": [
+        "bytemuck",
+        "default_fonts",
+        "web_file"
+      ],
+      "notice_sections": {
+        "Apache-2.0 [egui release 0.37.0 workspace]": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90",
+        "MIT [egui release 0.37.0 workspace; standalone text omitted by some packages]": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c"
+      }
+    },
+    {
+      "name": "egui-winit",
+      "version": "0.37.0",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/emilk/egui/tree/main/crates/egui-winit",
+      "declared_authors_not_a_copyright_assignment": [
+        "Emil Ernerfeldt <emil.ernerfeldt@gmail.com>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "Apache-2.0 [egui release 0.37.0 workspace]": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90",
+        "MIT [egui release 0.37.0 workspace; standalone text omitted by some packages]": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c"
+      }
+    },
+    {
+      "name": "egui_glow",
+      "version": "0.37.0",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/emilk/egui/tree/main/crates/egui_glow",
+      "declared_authors_not_a_copyright_assignment": [
+        "Emil Ernerfeldt <emil.ernerfeldt@gmail.com>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "Apache-2.0 [egui release 0.37.0 workspace]": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90",
+        "MIT [egui release 0.37.0 workspace; standalone text omitted by some packages]": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c"
+      }
+    },
+    {
+      "name": "either",
+      "version": "1.19.0",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/rayon-rs/either",
+      "declared_authors_not_a_copyright_assignment": [],
+      "features": [
+        "std",
+        "use_std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "7576269ea71f767b99297934c0b2367532690f8c4badc695edf8e04ab6a1e545"
+      }
+    },
+    {
+      "name": "emath",
+      "version": "0.37.0",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/emilk/egui/tree/main/crates/emath",
+      "declared_authors_not_a_copyright_assignment": [
+        "Emil Ernerfeldt <emil.ernerfeldt@gmail.com>"
+      ],
+      "features": [
+        "bytemuck"
+      ],
+      "notice_sections": {
+        "Apache-2.0 [egui release 0.37.0 workspace]": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90",
+        "MIT [egui release 0.37.0 workspace; standalone text omitted by some packages]": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c"
+      }
+    },
+    {
+      "name": "epaint",
+      "version": "0.37.0",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/emilk/egui/tree/main/crates/epaint",
+      "declared_authors_not_a_copyright_assignment": [
+        "Emil Ernerfeldt <emil.ernerfeldt@gmail.com>"
+      ],
+      "features": [
+        "bytemuck",
+        "default_fonts",
+        "epaint_default_fonts"
+      ],
+      "notice_sections": {
+        "Apache-2.0 [egui release 0.37.0 workspace]": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90",
+        "MIT [egui release 0.37.0 workspace; standalone text omitted by some packages]": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c"
+      }
+    },
+    {
+      "name": "epaint_default_fonts",
+      "version": "0.37.0",
+      "declared_license": "(MIT OR Apache-2.0) AND OFL-1.1 AND Ubuntu-font-1.0",
+      "repository": "https://github.com/emilk/egui/tree/main/crates/epaint_default_fonts",
+      "declared_authors_not_a_copyright_assignment": [
+        "Emil Ernerfeldt <emil.ernerfeldt@gmail.com>"
+      ],
+      "features": [
+        "default"
+      ],
+      "notice_sections": {
+        "Apache-2.0 [egui release 0.37.0 workspace]": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90",
+        "MIT [egui release 0.37.0 workspace; standalone text omitted by some packages]": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c",
+        "fonts/Hack-Regular.ttf [embedded copyright/license metadata]": "7a7e4ade36dfcd5bef726cc562d358b2e46d5b5f16c3a4a0cc805423b5e2ae9b",
+        "fonts/Hack-Regular.txt": "47c0cccbeec7e8614548cc485588b28149e7874188df5f41b36efebcee285c87",
+        "fonts/NotoEmoji-Regular.ttf [embedded copyright/license metadata]": "44a7b6f04fd0de7a2a3fe86816b5f04fdcef45a798401649e8f427a49fbec36a",
+        "fonts/OFL.txt": "6a73f9541c2de74158c0e7cf6b0a58ef774f5a780bf191f2d7ec9cc53efe2bf2",
+        "fonts/UFL.txt": "2f0015108d68627bd788d313f529c21ff4da2c2c42a5e1f3883acc83480f9002",
+        "fonts/Ubuntu-Light.ttf [embedded copyright/license metadata]": "702acfd44800eaf85b89812c9bbaab22ca169bf1c0969c422a2c909499c3e938",
+        "fonts/egui-icons.txt": "36dbbfd79d73974f864116879c17dd11559e1340277385f1ac52d8d29a5f5c79",
+        "fonts/emoji-icon-font-mit-license.txt": "b9d2c1d909aa149996fd4c91dcb92b2362a04431640c1d200959da94caf8cde1"
+      }
+    },
+    {
+      "name": "euclid",
+      "version": "0.22.14",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/servo/euclid",
+      "declared_authors_not_a_copyright_assignment": [
+        "The Servo Project Developers"
+      ],
+      "features": [
+        "std"
+      ],
+      "notice_sections": {
+        "COPYRIGHT": "ec82b96487e9e778ee610c7ab245162464782cfa1f555c2299333f8dbe5c036a",
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "62065228e42caebca7e7d7db1204cbb867033de5982ca4009928915e4095f3a3",
+        "src/angle.rs [source header]": "2fbe38f703d06698f2d09493155c196c2e562c052be30daadec275e559da4fc7",
+        "src/approxeq.rs [source header]": "2f37f0548464620c568727b5aec7a9fe9a433738ae5003e0bb2e8332f7dd5951",
+        "src/approxord.rs [source header]": "90f4550668e5c88797ec038895b669e520e043c98a7afe8a53d9b96de3d5fc26",
+        "src/box2d.rs [source header]": "2fbe38f703d06698f2d09493155c196c2e562c052be30daadec275e559da4fc7",
+        "src/box3d.rs [source header]": "2fbe38f703d06698f2d09493155c196c2e562c052be30daadec275e559da4fc7",
+        "src/homogen.rs [source header]": "6f04c7675535271a27fb59a285d148717f23a03ff02cf106861cb0030a028c56",
+        "src/length.rs [source header]": "2707ccf968ed1c711d02afc3af467f000a3e0e1da1ef9c723247b960623329fd",
+        "src/lib.rs [source header]": "2fbe38f703d06698f2d09493155c196c2e562c052be30daadec275e559da4fc7",
+        "src/macros.rs [source header]": "2fbe38f703d06698f2d09493155c196c2e562c052be30daadec275e559da4fc7",
+        "src/num.rs [source header]": "2707ccf968ed1c711d02afc3af467f000a3e0e1da1ef9c723247b960623329fd",
+        "src/point.rs [source header]": "2fbe38f703d06698f2d09493155c196c2e562c052be30daadec275e559da4fc7",
+        "src/rect.rs [source header]": "2fbe38f703d06698f2d09493155c196c2e562c052be30daadec275e559da4fc7",
+        "src/rotation.rs [source header]": "2fbe38f703d06698f2d09493155c196c2e562c052be30daadec275e559da4fc7",
+        "src/scale.rs [source header]": "f9fb34119e038fbaf290a7d865c8d91ecf661449739a80b9eee1bb6d6ea44592",
+        "src/side_offsets.rs [source header]": "7f21e47cb383181e4fa8cca7ece610bf9b247cc8331f8cc8608b90584f59f22d",
+        "src/size.rs [source header]": "2fbe38f703d06698f2d09493155c196c2e562c052be30daadec275e559da4fc7",
+        "src/transform2d.rs [source header]": "2fbe38f703d06698f2d09493155c196c2e562c052be30daadec275e559da4fc7",
+        "src/transform3d.rs [source header]": "2fbe38f703d06698f2d09493155c196c2e562c052be30daadec275e559da4fc7",
+        "src/translation.rs [source header]": "6f04c7675535271a27fb59a285d148717f23a03ff02cf106861cb0030a028c56",
+        "src/trig.rs [source header]": "72ce575a06a3c5a54bf062823520160260fad1223b2d7e0bc7791a570965fe7d",
+        "src/vector.rs [source header]": "2fbe38f703d06698f2d09493155c196c2e562c052be30daadec275e559da4fc7"
+      }
+    },
+    {
+      "name": "fdeflate",
+      "version": "0.3.7",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/image-rs/fdeflate",
+      "declared_authors_not_a_copyright_assignment": [
+        "The image-rs Developers"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE-APACHE": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594",
+        "LICENSE-MIT": "c77a4cf9da729987d0fe7ccd811e3bd27393914ddf3d23467c18cc22954513b3"
+      }
+    },
+    {
+      "name": "fearless_simd",
+      "version": "0.4.1",
+      "declared_license": "Apache-2.0 OR MIT",
+      "repository": "https://github.com/linebender/fearless_simd",
+      "declared_authors_not_a_copyright_assignment": [
+        "Raph Levien <raph.levien@gmail.com>"
+      ],
+      "features": [
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "a6cba85bc92e0cff7a450b1d873c0eaa2e9fc96bf472df0247a26bec77bf3ff9",
+        "LICENSE-MIT": "23c23145f6eac25c28cdcc03d38506a5712a9a8cffb5bd5301457f6173ea696e",
+        "examples/play.rs [source header]": "ae55f3d137c3b2bcd1dadc56e7d26e7da5feab6f53147de4ee83ae67c2d1e49e",
+        "examples/sigmoid.rs [source header]": "ae55f3d137c3b2bcd1dadc56e7d26e7da5feab6f53147de4ee83ae67c2d1e49e",
+        "examples/srgb.rs [source header]": "ae55f3d137c3b2bcd1dadc56e7d26e7da5feab6f53147de4ee83ae67c2d1e49e",
+        "src/core_arch/aarch64/mod.rs [source header]": "4937613250358a202c3bd10dc220632a08dbecddf5ed7c9cfd09268a765d179f",
+        "src/core_arch/fallback.rs [source header]": "16fbcb707edfbf203b95f376fb5acf0143613f8fc04f350b743caa355d7fc75f",
+        "src/core_arch/mod.rs [source header]": "6a0f5040288fe6b3d97aba98af2eb5734d08c1baf360ab6ce4af3ed17768f7f2",
+        "src/core_arch/wasm32/mod.rs [source header]": "bbed359e21524d7b73a499531212e8a4b05c4df1409cb783744bca3dd1040f58",
+        "src/core_arch/x86/avx.rs [source header]": "c7047d480505fea5fd31d657ee006957a3254b82cf54026d8c678103a96a8336",
+        "src/core_arch/x86/avx2.rs [source header]": "ae55f3d137c3b2bcd1dadc56e7d26e7da5feab6f53147de4ee83ae67c2d1e49e",
+        "src/core_arch/x86/fma.rs [source header]": "8c193100fd5361ab08e28ae480e2534539be909f542f94b933312cf0ea72c51d",
+        "src/core_arch/x86/mod.rs [source header]": "2f249465afa9fee3275f1b74aabf1e374cbf5610bd5b2707a75be0e3deb3462f",
+        "src/core_arch/x86/sse.rs [source header]": "32546716e1db2198da3e66a75746d71256efd9a51c7d051d0662f285cf5bdf15",
+        "src/core_arch/x86/sse2.rs [source header]": "c1dd8463f10e018964f630cef52d72adeaa30f8ff8c2c8550ebb279205cab752",
+        "src/core_arch/x86/sse3.rs [source header]": "0c8d2dbfb9b558ffc6d76e9f6e9d60f14381e551c0a87a16b2ee31b509cd3028",
+        "src/core_arch/x86/sse4_1.rs [source header]": "78bec4c1207675721e48bebbc9b9603c03d3cd86b24f5a6dc3ae6c25d28755a9",
+        "src/core_arch/x86/sse4_2.rs [source header]": "236ff0d86a7454d071d23aaaddbd396a36234a4a4c618b184fad45e2a0383919",
+        "src/core_arch/x86/ssse3.rs [source header]": "457d3363eb40d0d68af6782a918b2f9b162f7acf5ce18bcc3b439375c8b73131",
+        "src/generated.rs [source header]": "ee12c0048508856079c4f6a83303a538296bb3340d63b92cd98524bea8369515",
+        "src/generated/avx2.rs [source header]": "b7ad81843182030ac4388120e0b080a564960ee73efac174cb89dd91f04734fb",
+        "src/generated/fallback.rs [source header]": "b7ad81843182030ac4388120e0b080a564960ee73efac174cb89dd91f04734fb",
+        "src/generated/neon.rs [source header]": "b7ad81843182030ac4388120e0b080a564960ee73efac174cb89dd91f04734fb",
+        "src/generated/ops.rs [source header]": "b7ad81843182030ac4388120e0b080a564960ee73efac174cb89dd91f04734fb",
+        "src/generated/simd_trait.rs [source header]": "b7ad81843182030ac4388120e0b080a564960ee73efac174cb89dd91f04734fb",
+        "src/generated/simd_types.rs [source header]": "b7ad81843182030ac4388120e0b080a564960ee73efac174cb89dd91f04734fb",
+        "src/generated/sse4_2.rs [source header]": "b7ad81843182030ac4388120e0b080a564960ee73efac174cb89dd91f04734fb",
+        "src/generated/wasm.rs [source header]": "b7ad81843182030ac4388120e0b080a564960ee73efac174cb89dd91f04734fb",
+        "src/impl_macros.rs [source header]": "7fa20325f0825fff0c1fc326cb639866e2363cee16d8b9b31b504fcdb80e28b8",
+        "src/lib.rs [source header]": "a222098fca86bee02bd8b88fb6d5ca98abc9c692aa1efa7c2e77119a1ff9f258",
+        "src/macros.rs [source header]": "209675fa6aab3ece42bdb1f8cad4cdd4344037d0a57279bee93095aaba5509e7",
+        "src/support.rs [source header]": "ee12c0048508856079c4f6a83303a538296bb3340d63b92cd98524bea8369515",
+        "src/traits.rs [source header]": "ee12c0048508856079c4f6a83303a538296bb3340d63b92cd98524bea8369515"
+      }
+    },
+    {
+      "name": "flate2",
+      "version": "1.1.11",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/rust-lang/flate2-rs",
+      "declared_authors_not_a_copyright_assignment": [
+        "Alex Crichton <alex@alexcrichton.com>",
+        "Josh Triplett <josh@joshtriplett.org>"
+      ],
+      "features": [
+        "any_impl",
+        "default",
+        "miniz_oxide",
+        "runtime_detection",
+        "rust_backend"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "025436edff4cfcdde17a5811fdea78892d8482efd1abdec5a17872d07a4f2112",
+        "src/bufreader.rs [source header]": "8934a1d21e9e3eeba05eeba41e1fffe321f6593b2ac94cde6a7417ea5e9acd54"
+      }
+    },
+    {
+      "name": "foldhash",
+      "version": "0.2.0",
+      "declared_license": "Zlib",
+      "repository": "https://github.com/orlp/foldhash",
+      "declared_authors_not_a_copyright_assignment": [
+        "Orson Peters <orsonpeters@gmail.com>"
+      ],
+      "features": [
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE": "b1181a40b2a7b25cf66fd01481713bc1005df082c53ef73e851e55071b102744"
+      }
+    },
+    {
+      "name": "font-types",
+      "version": "0.12.7",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/googlefonts/fontations",
+      "declared_authors_not_a_copyright_assignment": [],
+      "features": [
+        "bytemuck",
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "eba684204073ed715c4abb48129acdfd2bff8ae48339e6a7da3b341d3027b7f0",
+        "LICENSE-MIT": "7b4c9a3946dfcea7967582760e963e27799e225dcf20565c8ef55324bb017427"
+      }
+    },
+    {
+      "name": "gl_generator",
+      "version": "0.14.0",
+      "declared_license": "Apache-2.0",
+      "repository": "https://github.com/brendanzab/gl-rs/",
+      "declared_authors_not_a_copyright_assignment": [
+        "Brendan Zabarauskas <bjzaba@yahoo.com.au>",
+        "Corey Richardson",
+        "Arseny Kapoulkine"
+      ],
+      "features": [],
+      "notice_sections": {
+        "Apache-2.0 [standard text; package declares Apache-2.0, source notices retained]": "a4445427440043e8ce6fadf7a43fb906cb0d7f6c573a560a9f142cf9f9bf8ff4",
+        "generators/debug_struct_gen.rs [source header]": "dcc82da0a685086cb0754c3f45211aa993732a9e3c158d3147973bc57aa2e45e",
+        "generators/global_gen.rs [source header]": "dcc82da0a685086cb0754c3f45211aa993732a9e3c158d3147973bc57aa2e45e",
+        "generators/mod.rs [source header]": "dcc82da0a685086cb0754c3f45211aa993732a9e3c158d3147973bc57aa2e45e",
+        "generators/static_gen.rs [source header]": "dcc82da0a685086cb0754c3f45211aa993732a9e3c158d3147973bc57aa2e45e",
+        "generators/static_struct_gen.rs [source header]": "dcc82da0a685086cb0754c3f45211aa993732a9e3c158d3147973bc57aa2e45e",
+        "generators/struct_gen.rs [source header]": "dcc82da0a685086cb0754c3f45211aa993732a9e3c158d3147973bc57aa2e45e",
+        "lib.rs [source header]": "419e2fb38d5d2637aa08dc0c8085e2e71192c090cc7db54d1f4ad5b7cff96b6d",
+        "registry/mod.rs [source header]": "ae6ea15a65b0a1f50e42881be36c75b05f0fabecd120a74107ddad72748f2bce",
+        "registry/parse.rs [source header]": "dcc82da0a685086cb0754c3f45211aa993732a9e3c158d3147973bc57aa2e45e"
+      }
+    },
+    {
+      "name": "glifo",
+      "version": "0.3.0",
+      "declared_license": "Apache-2.0 OR MIT",
+      "repository": "https://github.com/linebender/vello",
+      "declared_authors_not_a_copyright_assignment": [],
+      "features": [
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "LICENSE-MIT": "3252fc481fda4d2bad9e1ae675065889abd35c8abb500499ac01e70aaffa02b9",
+        "src/atlas/cache.rs [source header]": "afb0fb88ebe5b227143840a3b361cc88c377b1f5fa4d767ee6999cca871352df",
+        "src/atlas/commands.rs [source header]": "263a7293ac14412858d12c64428c4abdfa3569893a2b7905bf0fb678d6b36aed",
+        "src/atlas/key.rs [source header]": "efacc2074e261f13cebd7d72ba599e8ea69edfa24407016e569818bd879ce5e5",
+        "src/atlas/mod.rs [source header]": "4efc135729af06c6ab83e4feab46b4fb4465e0d992fbae56a161dca67553d5eb",
+        "src/atlas/region.rs [source header]": "504c44a868b3041014356721f0e35d2daf2486908b18c890216c04833ed029af",
+        "src/colr.rs [source header]": "2239fc57adb8aa36c5d79ecabe3a047b8691fb1c272d9845b1eccc63a4dda92c",
+        "src/glyph.rs [source header]": "05a43ef02db6e48d843601bdf9e7d97ffdf4ace21718f1cd54ff6ba8b61c4bda",
+        "src/interface.rs [source header]": "c00454609a189e2de8dcc19ee4d029d5e33436cb840d1d5a1f2bc2f46cd868b8",
+        "src/lib.rs [source header]": "611ea040f792608b3ca53e27bbc0ea821c3758485f4d4c82a00e50000f26e88b",
+        "src/renderer.rs [source header]": "56fc9297f5036da57e092759fed851cb5a25384ebe34828d24b678b049077a41",
+        "src/util.rs [source header]": "4b1667f64a083cc3cbeb1b0d88048fd910b8c8223591824a43345dfcb232f81d"
+      }
+    },
+    {
+      "name": "glow",
+      "version": "0.17.0",
+      "declared_license": "MIT OR Apache-2.0 OR Zlib",
+      "repository": "https://github.com/grovesNL/glow",
+      "declared_authors_not_a_copyright_assignment": [
+        "Joshua Groves <josh@joshgroves.com>",
+        "Dzmitry Malyshau <kvarkus@gmail.com>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE-APACHE": "b8601fc79bdf8d8088f0938bea861ffc63ed0eebbedf25f44ab2cf2e85bd7edc",
+        "LICENSE-MIT": "cdbd06e25b8c9c5d6019949d2de8123f56d29cee4166396423d2ba8c81700845",
+        "LICENSE-ZLIB": "636f644f1e149eb62961657c0e34953681eff64435653912e7bd19992666faa5"
+      }
+    },
+    {
+      "name": "glutin",
+      "version": "0.32.3",
+      "declared_license": "Apache-2.0",
+      "repository": "https://github.com/rust-windowing/glutin",
+      "declared_authors_not_a_copyright_assignment": [
+        "Kirill Chibisov <contact@kchibisov.com>"
+      ],
+      "features": [
+        "egl",
+        "glutin_egl_sys",
+        "glutin_wgl_sys",
+        "libloading",
+        "wgl",
+        "windows-sys"
+      ],
+      "notice_sections": {
+        "LICENSE": "a4445427440043e8ce6fadf7a43fb906cb0d7f6c573a560a9f142cf9f9bf8ff4"
+      }
+    },
+    {
+      "name": "glutin-winit",
+      "version": "0.5.0",
+      "declared_license": "MIT",
+      "repository": "https://github.com/rust-windowing/glutin",
+      "declared_authors_not_a_copyright_assignment": [
+        "Kirill Chibisov <contact@kchibisov.com>"
+      ],
+      "features": [
+        "egl",
+        "wgl"
+      ],
+      "notice_sections": {
+        "LICENSE": "d35629aec828ca86834f76e4c813bd6a6f0dda9005da898b0f49021f8042c5bd"
+      }
+    },
+    {
+      "name": "glutin_egl_sys",
+      "version": "0.7.1",
+      "declared_license": "Apache-2.0",
+      "repository": "https://github.com/rust-windowing/glutin",
+      "declared_authors_not_a_copyright_assignment": [
+        "Kirill Chibisov <contact@kchibisov.com>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE": "a4445427440043e8ce6fadf7a43fb906cb0d7f6c573a560a9f142cf9f9bf8ff4"
+      }
+    },
+    {
+      "name": "glutin_wgl_sys",
+      "version": "0.6.1",
+      "declared_license": "Apache-2.0",
+      "repository": "https://github.com/rust-windowing/glutin",
+      "declared_authors_not_a_copyright_assignment": [
+        "Kirill Chibisov <contact@kchibisov.com>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE": "a4445427440043e8ce6fadf7a43fb906cb0d7f6c573a560a9f142cf9f9bf8ff4"
+      }
+    },
+    {
+      "name": "guillotiere",
+      "version": "0.7.0",
+      "declared_license": "MIT/Apache-2.0",
+      "repository": "https://github.com/nical/guillotiere",
+      "declared_authors_not_a_copyright_assignment": [
+        "Nicolas Silva <nical@fastmail.com>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE-APACHE": "644d05561bc2dc5993f19d6602894315d925744d854a0413876e203f86c35830",
+        "LICENSE-MIT": "cab31b979edfb1d6ff72a9a84e1092a9b68954022fc3f253338e64879961b8d2"
+      }
+    },
+    {
+      "name": "harfrust",
+      "version": "0.12.0",
+      "declared_license": "MIT",
+      "repository": "https://github.com/harfbuzz/harfrust",
+      "declared_authors_not_a_copyright_assignment": [],
+      "features": [
+        "default",
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE": "3a7c3f0b887abb7c638faf022d29257418458614c6724b120ceeffb279f9c7d2"
+      }
+    },
+    {
+      "name": "hashbrown",
+      "version": "0.17.1",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/rust-lang/hashbrown",
+      "declared_authors_not_a_copyright_assignment": [],
+      "features": [
+        "default-hasher",
+        "raw-entry"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "ff8f68cb076caf8cefe7a6430d4ac086ce6af2ca8ce2c4e5a2004d4552ef52a2"
+      }
+    },
+    {
+      "name": "image",
+      "version": "0.25.10",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/image-rs/image",
+      "declared_authors_not_a_copyright_assignment": [
+        "The image-rs Developers"
+      ],
+      "features": [
+        "png"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594",
+        "LICENSE-MIT": "c77a4cf9da729987d0fe7ccd811e3bd27393914ddf3d23467c18cc22954513b3",
+        "src/codecs/jpeg/transform.rs [source header]": "bef8f808cf8583849854000167ff203e47e2e6373478881a48cd7f54fbc9fc7e"
+      }
+    },
+    {
+      "name": "itertools",
+      "version": "0.15.0",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/rust-itertools/itertools",
+      "declared_authors_not_a_copyright_assignment": [
+        "bluss"
+      ],
+      "features": [
+        "default",
+        "use_alloc",
+        "use_std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "7576269ea71f767b99297934c0b2367532690f8c4badc695edf8e04ab6a1e545",
+        "src/adaptors/mod.rs [source header]": "63182764288fc3a1f2895c545dcb9a59048c03aac11f65dd28527759c803a0fb",
+        "tests/test_core.rs [source header]": "0fe0711e6ea587cce9a24a92cdd7b0e0a6c4d740c93903099aa84bc9a3594afb"
+      }
+    },
+    {
+      "name": "khronos_api",
+      "version": "3.1.0",
+      "declared_license": "Apache-2.0",
+      "repository": "https://github.com/brendanzab/gl-rs/",
+      "declared_authors_not_a_copyright_assignment": [
+        "Brendan Zabarauskas <bjzaba@yahoo.com.au>",
+        "Corey Richardson",
+        "Arseny Kapoulkine",
+        "Pierre Krieger <pierre.krieger1708@gmail.com>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "Apache-2.0 [standard text; package declares Apache-2.0, source notices retained]": "a4445427440043e8ce6fadf7a43fb906cb0d7f6c573a560a9f142cf9f9bf8ff4",
+        "api/xml/gl.xml [legal comment 0]": "7da4f970dbddc732a045e82c6298655102cfdafe21db4f30635f0e8d8b5a215d",
+        "api/xml/glx.xml [legal comment 0]": "bb6d1433171e4a2cba5241101f2ace3db9df3bdbdead10f1a7ed7dd8a4fc5cae",
+        "api/xml/wgl.xml [legal comment 0]": "0e658e29afa1efb28879143fdba54dd347784b7b73ea0fe187d7ef5c26d1b435",
+        "api_angle/scripts/egl.xml [legal comment 0]": "2bb1070a6c73dfd28f509fa2d3380cc29999899bccd7487b29a0c88cc0270c02",
+        "api_angle/scripts/egl_angle_ext.xml [legal comment 0]": "fd2c1df341ac64aec9985e49a334f2f380f1af393e5a5f9052e7b4bb6ec8cecb",
+        "api_angle/scripts/gl.xml [legal comment 0]": "7da4f970dbddc732a045e82c6298655102cfdafe21db4f30635f0e8d8b5a215d",
+        "api_angle/scripts/gl_angle_ext.xml [legal comment 0]": "ce088b39d012e76928f81935bc2db10070cc0b8604b161feddf5e6ee7c5dad1b",
+        "api_angle/scripts/wgl.xml [legal comment 0]": "0e658e29afa1efb28879143fdba54dd347784b7b73ea0fe187d7ef5c26d1b435",
+        "api_egl/api/egl.xml [legal comment 0]": "2bb1070a6c73dfd28f509fa2d3380cc29999899bccd7487b29a0c88cc0270c02",
+        "build.rs [source header]": "b75d99c543855e28c9dcba92c9f0dd65d5e784b50a16b6a9e6111226dbe30543",
+        "src/lib.rs [source header]": "5f662e07664a0dd69a303aaaa84a8f609c4bd4513004b14aba8069d10e605b76"
+      }
+    },
+    {
+      "name": "kurbo",
+      "version": "0.13.1",
+      "declared_license": "Apache-2.0 OR MIT",
+      "repository": "https://github.com/linebender/kurbo",
+      "declared_authors_not_a_copyright_assignment": [],
+      "features": [
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "LICENSE-MIT": "23c23145f6eac25c28cdcc03d38506a5712a9a8cffb5bd5301457f6173ea696e",
+        "benches/cubic.rs [source header]": "79242f7313c0f53a65363fa8d2c1ed5c63093fb3d2cccd7e54121cbe6706aad5",
+        "benches/cubic_arclen.rs [source header]": "a26d509967a1b8283f069b77122167a8a3863ef4fd30ff30c1d29ae89155fc7b",
+        "benches/nearest.rs [source header]": "98141ae1327e878650e5ddfadd5e297b28768932124d76fdef40449ec4ba24ff",
+        "benches/quad_arclen.rs [source header]": "9f2126728caba05599c9220f1f6fec4fde9aba067b3c32c8de553d926457397f",
+        "benches/quartic.rs [source header]": "98141ae1327e878650e5ddfadd5e297b28768932124d76fdef40449ec4ba24ff",
+        "benches/rect_expand.rs [source header]": "8e5d7f3b44cd6db3c59cb54387509836cad6c6ec0eebce05ec6cb32794519de8",
+        "examples/arclen_accuracy.rs [source header]": "62e4d08f3ecc3eacdf79ac666d6c3fc0425ab4ee36f51683a8b6f9a9b7f896f3",
+        "examples/circle.rs [source header]": "0391b7998c144137c8ef9a24232980dbd019de718b801f65d6f993e1f4a3555c",
+        "examples/cubic_arclen.rs [source header]": "d9c1d181c2cd1fd7ee5647ca81c49e8b9381cb85229619128a0b166e9f034dc4",
+        "examples/ellipse.rs [source header]": "26fa791b6979a0b01227ec87d7370c6f42c44707dbaeb1ff498534e70a805d22",
+        "examples/fit_poly.rs [source header]": "a909d2eafd69b51a20916ce10c10ba54cce0645087d44c0da347464b7533def7",
+        "examples/quad_intersect.rs [source header]": "fd45164828731e48edb64570156c4cd2ce9ca0004fb192c3e0acbf778de3d86d",
+        "examples/simplify.rs [source header]": "1ea35178eddfa4315a8a5b2e4cd8c6652b5ba855b059aaf4c3caaa4a8cad95bc",
+        "examples/stroke.rs [source header]": "0b52a1cbff95664640d27788e042c9691b6f1084e5e4b992ec1a58d19e60d694",
+        "src/affine.rs [source header]": "eea7dbda091e30d015f120afa95a7071233858a4b9eae773f67dbe715fc16c2a",
+        "src/arc.rs [source header]": "f1ad15446bdd21af2eab618f57910a3a6d3023b29e20f3dc34a6737718d98fb7",
+        "src/axis.rs [source header]": "31803029cc9a1bee5de1862672c40372efe0fb269412fe25170e9320073ff4bf",
+        "src/bezpath.rs [source header]": "159615ddba757c14d7497e0307a237dd7a9ca67b32f78a8d806be4b54b7b6f25",
+        "src/circle.rs [source header]": "0c987436004de8772e6fafe8999fc7ce410c5e038e59d844eb881ad4ad9d813b",
+        "src/common.rs [source header]": "c107bb8136dda4f75a3a5d3e64c8b44c136663f73e9b1480fb48c5fd95f6b323",
+        "src/cubicbez.rs [source header]": "5e00d88a4912b17791f1931859d3ca73f80a02a208d3bc7ff27531884e1aff64",
+        "src/ellipse.rs [source header]": "66756e78ce2113a0b54ed57b6a65fa79feb829f94096105cd006d274519b8a9e",
+        "src/expand.rs [source header]": "6b6af3691918e0b2059d23b17dbe287f672e6a4336c1c5a66f90b48c989c5107",
+        "src/fit.rs [source header]": "fba0a158a3ed46168c44efc7473027eafbb71d28831907745513b09a9eb35f47",
+        "src/insets.rs [source header]": "b67200c00ca37cf900a1f70a5786369dad69ec4eed16caa406714b4c25b31e0c",
+        "src/interop_euclid.rs [source header]": "31803029cc9a1bee5de1862672c40372efe0fb269412fe25170e9320073ff4bf",
+        "src/lib.rs [source header]": "86922d863845aa9a52d481b96cb118bb2e123303613e6075e1cf1db37dcb175e",
+        "src/line.rs [source header]": "a3f43dc74ca554e12842c52b69707af92bb30270e3523f6df6a06728e916e34a",
+        "src/mindist.rs [source header]": "9ab1ad3b9806cc19cfffcdd50bad6e86b1b2d309a2463d9c7697ef39e6571f02",
+        "src/moments.rs [source header]": "31803029cc9a1bee5de1862672c40372efe0fb269412fe25170e9320073ff4bf",
+        "src/offset.rs [source header]": "b56093d1f27ae11d84bb8badec0ff560132b9560ea320053e31d30335e2a6e8c",
+        "src/param_curve.rs [source header]": "9c28865a190ff12544bd486b5c36e101f46b0581cd39d27251956ead6d528df6",
+        "src/point.rs [source header]": "dbdc0a32f58417b931fc1451d9647ad1c89b5945537d9a9e6a647e801ff060e0",
+        "src/quadbez.rs [source header]": "5cb365d06c184fcc5095865a89fa115865a98a84628502d54e4f6b6f903c434a",
+        "src/quadspline.rs [source header]": "3a432d8b699b2a6c357e029b469395fe028ee67c5ad41bd90eb1a1f4c51c021a",
+        "src/rect.rs [source header]": "74678c118815a20e59442131c45ab7b9377d19bba6a6d8c36192083db55374e0",
+        "src/rounded_rect.rs [source header]": "bfc912604ad784869612fd60506e6d6ebc2f60c88249fc7f979a85d98814bf2e",
+        "src/rounded_rect_radii.rs [source header]": "7f0bb5b46a21e0bbe3f4db9fd8c1cc46563fec4cc2db33248c5f0b1c405b7295",
+        "src/shape.rs [source header]": "82ebba5bf071b0c69467d4e9d43feb91ca83004bd7f986a36fc4a5d9723292a7",
+        "src/simplify.rs [source header]": "efd18734121cd1ced7ab93314bc4fcac99aaf859542c2af41ee7832a2b448535",
+        "src/size.rs [source header]": "6c11e037b9c01abc6a10612b537beb18cc00648688b9458301e1df6a7cd4f363",
+        "src/stroke.rs [source header]": "d1f20c69b8329ab1662510e1f95aefea3ad035b7814fa43fba41937735d41b97",
+        "src/svg.rs [source header]": "c770436fe1d6cc50c695e84b5c8df7c7137852a8f1c5c6f553f19bc03b33f40e",
+        "src/translate_scale.rs [source header]": "ce73676f09b80cd9601860faed89b458f6a1ad87959b236b9a7d6ab98e6ae63f",
+        "src/triangle.rs [source header]": "8cb1f0533893e7911854c2e469a429a47334ff1a4b797b101b2899640b0f1fa3",
+        "src/vec2.rs [source header]": "ec654191df65dabd1786a8e476024734102baab2f15588cfea16f945edb9a194"
+      }
+    },
+    {
+      "name": "libloading",
+      "version": "0.8.9",
+      "declared_license": "ISC",
+      "repository": "https://github.com/nagisa/rust_libloading/",
+      "declared_authors_not_a_copyright_assignment": [
+        "Simonas Kazlauskas <libloading@kazlauskas.me>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE": "b29f8b01452350c20dd1af16ef83b598fea3053578ccc1c7a0ef40e57be2620f"
+      }
+    },
+    {
+      "name": "linebender_resource_handle",
+      "version": "0.1.1",
+      "declared_license": "Apache-2.0 OR MIT",
+      "repository": "https://github.com/linebender/raw_resource_handle",
+      "declared_authors_not_a_copyright_assignment": [],
+      "features": [
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "a6cba85bc92e0cff7a450b1d873c0eaa2e9fc96bf472df0247a26bec77bf3ff9",
+        "LICENSE-MIT": "508a77d2e7b51d98adeed32648ad124b7b30241a8e70b2e72c99f92d8e5874d1",
+        "src/blob.rs [source header]": "66dd743316e63e428f64a0c2085c8c926d360f0202d143793a5e058e69c59e40",
+        "src/font.rs [source header]": "66dd743316e63e428f64a0c2085c8c926d360f0202d143793a5e058e69c59e40",
+        "src/lib.rs [source header]": "c3f04a480773363be11f4bed225322272be3e0b999a03594471c2941d736f4d4"
+      }
+    },
+    {
+      "name": "litrs",
+      "version": "1.0.1",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/LukasKalbertodt/litrs",
+      "declared_authors_not_a_copyright_assignment": [
+        "Lukas Kalbertodt <lukas.kalbertodt@gmail.com>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE-APACHE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "LICENSE-MIT": "7dc1552e88f49132cb358b1b962fc5e79fa42d70bcbb88c526d33e45b8e98036"
+      }
+    },
+    {
+      "name": "lock_api",
+      "version": "0.4.14",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/Amanieu/parking_lot",
+      "declared_authors_not_a_copyright_assignment": [
+        "Amanieu d'Antras <amanieu@gmail.com>"
+      ],
+      "features": [
+        "atomic_usize",
+        "default"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "c9a75f18b9ab2927829a208fc6aa2cf4e63b8420887ba29cdb265d6619ae82d5",
+        "src/lib.rs [source header]": "6695839daee35e88644636c400421c6a79f519bd2ed8577b27acdad1a9f7196f",
+        "src/mutex.rs [source header]": "79e91d3d5e8d643810df8f390e85c6740e87344ffb0bed2f74b62649975bf1fa",
+        "src/remutex.rs [source header]": "79e91d3d5e8d643810df8f390e85c6740e87344ffb0bed2f74b62649975bf1fa",
+        "src/rwlock.rs [source header]": "d11df1c162b4969482539c5d8cf807f8aaffa4811cf2ea9c9fac7c1f0757ae8d"
+      }
+    },
+    {
+      "name": "log",
+      "version": "0.4.35",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/rust-lang/log",
+      "declared_authors_not_a_copyright_assignment": [
+        "The Rust Project Developers"
+      ],
+      "features": [
+        "alloc",
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb",
+        "src/lib.rs [source header]": "7dd02652d0e11a4636e9acb2f63b7084ba7b370089ba62b4d8c63d4b785bf416",
+        "src/macros.rs [source header]": "2bd0bdd23faaf15426d501071f4e0859e67c407530a7c2c50b13a78a9372c94d"
+      }
+    },
+    {
+      "name": "miniz_oxide",
+      "version": "0.8.9",
+      "declared_license": "MIT OR Zlib OR Apache-2.0",
+      "repository": "https://github.com/Frommi/miniz_oxide/tree/master/miniz_oxide",
+      "declared_authors_not_a_copyright_assignment": [
+        "Frommi <daniil.liferenko@gmail.com>",
+        "oyvindln <oyvindln@users.noreply.github.com>",
+        "Rich Geldreich richgel99@gmail.com"
+      ],
+      "features": [
+        "default",
+        "simd",
+        "simd-adler32",
+        "with-alloc"
+      ],
+      "notice_sections": {
+        "LICENSE": "4108245a1f2df9d4e94df8abed5b4ba0759bb2f9b40a6b939f1be141077ae50b",
+        "LICENSE-APACHE.md": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594",
+        "LICENSE-MIT.md": "799e9ca9d179295ef372f25d3769cdda7d25bb2668add6a6a1e22d1e4c678b8d",
+        "LICENSE-ZLIB.md": "0a54e647fe54104658b5e563c04c6f9edf251710e47bce692e0bd990a4ddaa39"
+      }
+    },
+    {
+      "name": "miniz_oxide",
+      "version": "0.9.1",
+      "declared_license": "MIT OR Zlib OR Apache-2.0",
+      "repository": "https://github.com/Frommi/miniz_oxide/tree/master/miniz_oxide",
+      "declared_authors_not_a_copyright_assignment": [
+        "Frommi <daniil.liferenko@gmail.com>",
+        "oyvindln <oyvindln@users.noreply.github.com>",
+        "Rich Geldreich richgel99@gmail.com"
+      ],
+      "features": [
+        "default",
+        "simd",
+        "simd-adler32",
+        "with-alloc"
+      ],
+      "notice_sections": {
+        "LICENSE": "4108245a1f2df9d4e94df8abed5b4ba0759bb2f9b40a6b939f1be141077ae50b",
+        "LICENSE-APACHE.md": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594",
+        "LICENSE-MIT.md": "799e9ca9d179295ef372f25d3769cdda7d25bb2668add6a6a1e22d1e4c678b8d",
+        "LICENSE-ZLIB.md": "0a54e647fe54104658b5e563c04c6f9edf251710e47bce692e0bd990a4ddaa39"
+      }
+    },
+    {
+      "name": "moxcms",
+      "version": "0.8.1",
+      "declared_license": "BSD-3-Clause OR Apache-2.0",
+      "repository": "https://github.com/awxkee/moxcms.git",
+      "declared_authors_not_a_copyright_assignment": [
+        "Radzivon Bartoshyk"
+      ],
+      "features": [
+        "avx",
+        "avx_luts",
+        "avx_shaper_fixed_point_paths",
+        "avx_shaper_paths",
+        "default",
+        "lut",
+        "neon",
+        "neon_luts",
+        "neon_shaper_fixed_point_paths",
+        "neon_shaper_paths",
+        "sse",
+        "sse_luts",
+        "sse_shaper_fixed_point_paths",
+        "sse_shaper_paths"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE.md": "90bf2d659c43045111b65c733ab2a6d4cbcb422a098368c8c58a9ba3db4ed0c5",
+        "LICENSE.md": "2aa92cada6431e75615e3fe6cb1a9082c98f777d48ae1c087c0da0e37f7b8bff",
+        "src/chad.rs [source header]": "ff61832899ec7788f44d0855ebe4b5c1901749161a601f15d4ad5da7e69a69db",
+        "src/chromaticity.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/cicp.rs [source header]": "ff61832899ec7788f44d0855ebe4b5c1901749161a601f15d4ad5da7e69a69db",
+        "src/conversions/avx/interpolator.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/avx/interpolator_q0_15.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/avx/lut4_to_3.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/avx/lut4_to_3_q0_15.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/avx/mod.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/avx/rgb_xyz.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/avx/rgb_xyz_opt.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/avx/rgb_xyz_q2_13_opt.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/avx/t_lut3_to_3.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/avx/t_lut3_to_3_q0_15.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/avx512/mod.rs [source header]": "85783d84d376e6d837c3e2e6d302f010ae1eeb9e6168b3ca786ef073aefbf564",
+        "src/conversions/avx512/rgb_xyz_opt.rs [source header]": "85783d84d376e6d837c3e2e6d302f010ae1eeb9e6168b3ca786ef073aefbf564",
+        "src/conversions/avx512/rgb_xyz_q2_13_opt.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/bpc.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/gray2rgb.rs [source header]": "ff61832899ec7788f44d0855ebe4b5c1901749161a601f15d4ad5da7e69a69db",
+        "src/conversions/gray2rgb_extended.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/conversions/interpolator.rs [source header]": "ff61832899ec7788f44d0855ebe4b5c1901749161a601f15d4ad5da7e69a69db",
+        "src/conversions/katana/finalizers.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/conversions/katana/md3x3.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/conversions/katana/md4x3.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/conversions/katana/md_3xn.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/conversions/katana/md_nx3.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/conversions/katana/md_pipeline.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/conversions/katana/mod.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/conversions/katana/pcs_stages.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/conversions/katana/rgb_xyz.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/conversions/katana/stages.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/conversions/katana/xyz_lab.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/conversions/katana/xyz_rgb.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/conversions/lut3x3.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/lut3x4.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/lut4.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/lut_transforms.rs [source header]": "ff61832899ec7788f44d0855ebe4b5c1901749161a601f15d4ad5da7e69a69db",
+        "src/conversions/mab.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/mab4x3.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/mba3x4.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/md_lut.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/conversions/md_luts_factory.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/conversions/mod.rs [source header]": "ff61832899ec7788f44d0855ebe4b5c1901749161a601f15d4ad5da7e69a69db",
+        "src/conversions/neon/interpolator.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/neon/interpolator_q0_15.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/neon/lut4_to_3.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/neon/lut4_to_3_q0_15.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/neon/mod.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/neon/rgb_xyz.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/neon/rgb_xyz_opt.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/neon/rgb_xyz_q1_30_opt.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/neon/rgb_xyz_q2_13_opt.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/neon/t_lut3_to_3.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/neon/t_lut3_to_3_q0_15.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/prelude_lut_xyz_rgb.rs [source header]": "a7769db960c344fa701c96d10a78510a91a6f9ab440a1aae099d898e45cf7ba5",
+        "src/conversions/reduction.rs [source header]": "74b29b8e32d9e84f173f53664c9497a2f86a4cdc639a8272d828fee2a5764e03",
+        "src/conversions/rgb2gray.rs [source header]": "ff61832899ec7788f44d0855ebe4b5c1901749161a601f15d4ad5da7e69a69db",
+        "src/conversions/rgb2gray_extended.rs [source header]": "ff61832899ec7788f44d0855ebe4b5c1901749161a601f15d4ad5da7e69a69db",
+        "src/conversions/rgb_xyz_factory.rs [source header]": "a7769db960c344fa701c96d10a78510a91a6f9ab440a1aae099d898e45cf7ba5",
+        "src/conversions/rgbxyz.rs [source header]": "ff61832899ec7788f44d0855ebe4b5c1901749161a601f15d4ad5da7e69a69db",
+        "src/conversions/rgbxyz_fixed.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/rgbxyz_float.rs [source header]": "ff61832899ec7788f44d0855ebe4b5c1901749161a601f15d4ad5da7e69a69db",
+        "src/conversions/sse/interpolator.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/sse/interpolator_q0_15.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/sse/lut4_to_3.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/sse/lut4_to_3_q0_15.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/sse/mod.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/sse/rgb_xyz.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/sse/rgb_xyz_opt.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/sse/rgb_xyz_q2_13_opt.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/sse/t_lut3_to_3.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/sse/t_lut3_to_3_q0_15.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/transform_lut3_to_3.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/transform_lut3_to_4.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/transform_lut4_to_3.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/conversions/xyz_lab.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/dat.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/defaults.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/dt_ucs.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/err.rs [source header]": "ff61832899ec7788f44d0855ebe4b5c1901749161a601f15d4ad5da7e69a69db",
+        "src/gamma.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/gamut.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/helpers.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/ictcp.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/interceptors/cmyka.rs [source header]": "74b29b8e32d9e84f173f53664c9497a2f86a4cdc639a8272d828fee2a5764e03",
+        "src/interceptors/mod.rs [source header]": "74b29b8e32d9e84f173f53664c9497a2f86a4cdc639a8272d828fee2a5764e03",
+        "src/jzazbz.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/jzczhz.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/lab.rs [source header]": "ff61832899ec7788f44d0855ebe4b5c1901749161a601f15d4ad5da7e69a69db",
+        "src/lib.rs [source header]": "ff61832899ec7788f44d0855ebe4b5c1901749161a601f15d4ad5da7e69a69db",
+        "src/lut_hint.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/luv.rs [source header]": "76f5d7b5d307958b49b4041e46b0b47f8dc8a1cefb9a5cce8cd7bbd7418f82d9",
+        "src/matan/curve_shape.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/matan/degeneration.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/matan/discontinuity.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/matan/mod.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/matan/monotonic.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/matan/slope_limit.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/math/mod.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/matrix.rs [source header]": "ff61832899ec7788f44d0855ebe4b5c1901749161a601f15d4ad5da7e69a69db",
+        "src/mlaf.rs [source header]": "ff61832899ec7788f44d0855ebe4b5c1901749161a601f15d4ad5da7e69a69db",
+        "src/nd_array.rs [source header]": "ff61832899ec7788f44d0855ebe4b5c1901749161a601f15d4ad5da7e69a69db",
+        "src/oklab.rs [source header]": "76f5d7b5d307958b49b4041e46b0b47f8dc8a1cefb9a5cce8cd7bbd7418f82d9",
+        "src/oklch.rs [source header]": "76f5d7b5d307958b49b4041e46b0b47f8dc8a1cefb9a5cce8cd7bbd7418f82d9",
+        "src/profile.rs [source header]": "ff61832899ec7788f44d0855ebe4b5c1901749161a601f15d4ad5da7e69a69db",
+        "src/reader.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/rgb.rs [source header]": "76f5d7b5d307958b49b4041e46b0b47f8dc8a1cefb9a5cce8cd7bbd7418f82d9",
+        "src/safe_math.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/srlab2.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/tag.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/transform.rs [source header]": "ff61832899ec7788f44d0855ebe4b5c1901749161a601f15d4ad5da7e69a69db",
+        "src/trc.rs [source header]": "ff61832899ec7788f44d0855ebe4b5c1901749161a601f15d4ad5da7e69a69db",
+        "src/writer.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b",
+        "src/xyy.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/yrg.rs [source header]": "91451a88b0e571b9ee9af0fcbe57ea5fae2d99504c63e528e4a098c0b9afc28b"
+      }
+    },
+    {
+      "name": "nohash-hasher",
+      "version": "0.2.0",
+      "declared_license": "Apache-2.0 OR MIT",
+      "repository": "https://github.com/paritytech/nohash-hasher",
+      "declared_authors_not_a_copyright_assignment": [
+        "Parity Technologies <admin@parity.io>"
+      ],
+      "features": [
+        "default",
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "LICENSE-MIT": "ec353d4fecf7963b4c054384557e5dbc3c7a717997eb4a3815b315721a6aa75a",
+        "src/lib.rs [source header]": "6bb063a777d1cab83019fe21038e08db79c1625e31721fbc5f8025f63339ba6f"
+      }
+    },
+    {
+      "name": "num-traits",
+      "version": "0.2.19",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/rust-num/num-traits",
+      "declared_authors_not_a_copyright_assignment": [
+        "The Rust Project Developers"
+      ],
+      "features": [
+        "default",
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb",
+        "src/lib.rs [source header]": "1187fd261607a84b4006003649180bb468eb8b9a68c34eaf5e4655a4f429a868"
+      }
+    },
+    {
+      "name": "once_cell",
+      "version": "1.21.4",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/matklad/once_cell",
+      "declared_authors_not_a_copyright_assignment": [
+        "Aleksey Kladov <aleksey.kladov@gmail.com>"
+      ],
+      "features": [
+        "alloc",
+        "default",
+        "race",
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+      }
+    },
+    {
+      "name": "parking_lot",
+      "version": "0.12.5",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/Amanieu/parking_lot",
+      "declared_authors_not_a_copyright_assignment": [
+        "Amanieu d'Antras <amanieu@gmail.com>"
+      ],
+      "features": [
+        "default"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "c9a75f18b9ab2927829a208fc6aa2cf4e63b8420887ba29cdb265d6619ae82d5",
+        "src/condvar.rs [source header]": "d11df1c162b4969482539c5d8cf807f8aaffa4811cf2ea9c9fac7c1f0757ae8d",
+        "src/elision.rs [source header]": "d11df1c162b4969482539c5d8cf807f8aaffa4811cf2ea9c9fac7c1f0757ae8d",
+        "src/fair_mutex.rs [source header]": "d11df1c162b4969482539c5d8cf807f8aaffa4811cf2ea9c9fac7c1f0757ae8d",
+        "src/lib.rs [source header]": "76c5309cc4c19cbc3628a9eb2ac2e12a76fe716aab85d121dee4feb4b55f7be7",
+        "src/mutex.rs [source header]": "d11df1c162b4969482539c5d8cf807f8aaffa4811cf2ea9c9fac7c1f0757ae8d",
+        "src/once.rs [source header]": "d11df1c162b4969482539c5d8cf807f8aaffa4811cf2ea9c9fac7c1f0757ae8d",
+        "src/raw_fair_mutex.rs [source header]": "d11df1c162b4969482539c5d8cf807f8aaffa4811cf2ea9c9fac7c1f0757ae8d",
+        "src/raw_mutex.rs [source header]": "d11df1c162b4969482539c5d8cf807f8aaffa4811cf2ea9c9fac7c1f0757ae8d",
+        "src/raw_rwlock.rs [source header]": "d11df1c162b4969482539c5d8cf807f8aaffa4811cf2ea9c9fac7c1f0757ae8d",
+        "src/remutex.rs [source header]": "d11df1c162b4969482539c5d8cf807f8aaffa4811cf2ea9c9fac7c1f0757ae8d",
+        "src/rwlock.rs [source header]": "d11df1c162b4969482539c5d8cf807f8aaffa4811cf2ea9c9fac7c1f0757ae8d",
+        "src/util.rs [source header]": "d11df1c162b4969482539c5d8cf807f8aaffa4811cf2ea9c9fac7c1f0757ae8d"
+      }
+    },
+    {
+      "name": "parking_lot_core",
+      "version": "0.9.12",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/Amanieu/parking_lot",
+      "declared_authors_not_a_copyright_assignment": [
+        "Amanieu d'Antras <amanieu@gmail.com>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "c9a75f18b9ab2927829a208fc6aa2cf4e63b8420887ba29cdb265d6619ae82d5",
+        "src/lib.rs [source header]": "35edce1a75be5d5b99d095111fa0d7312656be2320984e58633fe0463f02d022",
+        "src/parking_lot.rs [source header]": "1dfeac2b788d56ff9f9e053197e95aeea3a66bbceefed4cced444623c2c1cdd9",
+        "src/spinwait.rs [source header]": "d11df1c162b4969482539c5d8cf807f8aaffa4811cf2ea9c9fac7c1f0757ae8d",
+        "src/thread_parker/generic.rs [source header]": "bbf886eba308b509eda0d9e09f91899eb81fb41ffdcf97e203ca6f1e8dce716f",
+        "src/thread_parker/linux.rs [source header]": "d11df1c162b4969482539c5d8cf807f8aaffa4811cf2ea9c9fac7c1f0757ae8d",
+        "src/thread_parker/redox.rs [source header]": "d11df1c162b4969482539c5d8cf807f8aaffa4811cf2ea9c9fac7c1f0757ae8d",
+        "src/thread_parker/sgx.rs [source header]": "d11df1c162b4969482539c5d8cf807f8aaffa4811cf2ea9c9fac7c1f0757ae8d",
+        "src/thread_parker/unix.rs [source header]": "d11df1c162b4969482539c5d8cf807f8aaffa4811cf2ea9c9fac7c1f0757ae8d",
+        "src/thread_parker/wasm.rs [source header]": "de54b6ddecbf27718af17763263f8c5ead4d98b5bc011b981cb3d1731367a678",
+        "src/thread_parker/wasm_atomic.rs [source header]": "d11df1c162b4969482539c5d8cf807f8aaffa4811cf2ea9c9fac7c1f0757ae8d",
+        "src/thread_parker/windows/keyed_event.rs [source header]": "d11df1c162b4969482539c5d8cf807f8aaffa4811cf2ea9c9fac7c1f0757ae8d",
+        "src/thread_parker/windows/mod.rs [source header]": "d11df1c162b4969482539c5d8cf807f8aaffa4811cf2ea9c9fac7c1f0757ae8d",
+        "src/thread_parker/windows/waitaddress.rs [source header]": "d11df1c162b4969482539c5d8cf807f8aaffa4811cf2ea9c9fac7c1f0757ae8d",
+        "src/util.rs [source header]": "68c1ac1fff6e1b0234722731139ad00b925425a67829b886b0c404c7df4a522e",
+        "src/word_lock.rs [source header]": "d11df1c162b4969482539c5d8cf807f8aaffa4811cf2ea9c9fac7c1f0757ae8d"
+      }
+    },
+    {
+      "name": "peniko",
+      "version": "0.6.1",
+      "declared_license": "Apache-2.0 OR MIT",
+      "repository": "https://github.com/linebender/peniko",
+      "declared_authors_not_a_copyright_assignment": [],
+      "features": [
+        "bytemuck",
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "f9946796a8a5bd5981565142fa42e3b0cc36aef6f80e86beaf5905b3c0fef1b5",
+        "LICENSE-MIT": "23c23145f6eac25c28cdcc03d38506a5712a9a8cffb5bd5301457f6173ea696e",
+        "src/blend.rs [source header]": "884b4815bbad182710f22a00c605169e9411f79793fb52d7d81ba96b52799275",
+        "src/brush.rs [source header]": "0e1c4845f1f06e77d67d0bfa622399e98a7c7a653b78e496d1d965b8ef50ed2e",
+        "src/gradient.rs [source header]": "0e1c4845f1f06e77d67d0bfa622399e98a7c7a653b78e496d1d965b8ef50ed2e",
+        "src/image.rs [source header]": "0e1c4845f1f06e77d67d0bfa622399e98a7c7a653b78e496d1d965b8ef50ed2e",
+        "src/impl_bytemuck.rs [source header]": "6be3359f3141a988dc54838cf41c8fdd3b1acd7a0d47000f8559998f06250ea4",
+        "src/lib.rs [source header]": "5df6eb794e356eec1ed514582a5a2c6b0448a1baa89ed923445b85076a696b30",
+        "src/style.rs [source header]": "0e1c4845f1f06e77d67d0bfa622399e98a7c7a653b78e496d1d965b8ef50ed2e"
+      }
+    },
+    {
+      "name": "pin-project-lite",
+      "version": "0.2.17",
+      "declared_license": "Apache-2.0 OR MIT",
+      "repository": "https://github.com/taiki-e/pin-project-lite",
+      "declared_authors_not_a_copyright_assignment": [],
+      "features": [],
+      "notice_sections": {
+        "LICENSE-APACHE": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594",
+        "LICENSE-MIT": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "src/lib.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/auxiliary/mod.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/compiletest.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/drop_order.rs [source header]": "b75348440ef11e25f90123342d2b4c85f14cbf654f3f14cf2d2b2e1cb51ba002",
+        "tests/expand/default/enum.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/expand/default/struct.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/expand/multifields/enum.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/expand/multifields/struct.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/expand/naming/enum-all.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/expand/naming/enum-mut.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/expand/naming/enum-none.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/expand/naming/enum-ref.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/expand/naming/struct-all.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/expand/naming/struct-mut.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/expand/naming/struct-none.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/expand/naming/struct-ref.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/expand/not_unpin/enum.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/expand/not_unpin/struct.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/expand/pinned_drop/enum.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/expand/pinned_drop/struct.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/expand/pub/enum.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/expand/pub/struct.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/expandtest.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/include/basic.rs [source header]": "53f8b3df0e8039d657c337599c1646eb938bb103845ba302eb8e4393b357b908",
+        "tests/proper_unpin.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/test.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/ui/not_unpin/conflict-unpin.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/ui/not_unpin/negative_impls_stable.rs [source header]": "5b31a743adc143e04daf5dece2e887977690ef2345f4887640bab0e3708b715a",
+        "tests/ui/pin_project/conflict-drop.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/ui/pin_project/conflict-unpin.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/ui/pin_project/invalid-bounds.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/ui/pin_project/invalid.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/ui/pin_project/negative_impls_stable.rs [source header]": "5b31a743adc143e04daf5dece2e887977690ef2345f4887640bab0e3708b715a",
+        "tests/ui/pin_project/overlapping_lifetime_names.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/ui/pin_project/overlapping_unpin_struct.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/ui/pin_project/packed.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/ui/pin_project/unpin_sneaky.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/ui/pin_project/unsupported.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/ui/pinned_drop/call-drop-inner.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1",
+        "tests/ui/pinned_drop/conditional-drop-impl.rs [source header]": "4c00572156602b0e3ac824fe3e95bc5d709adb3e64ad7efd537f92bc51eed7e1"
+      }
+    },
+    {
+      "name": "png",
+      "version": "0.18.1",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/image-rs/image-png",
+      "declared_authors_not_a_copyright_assignment": [
+        "The image-rs Developers"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "eaf40297c75da471f7cda1f3458e8d91b4b2ec866e609527a13acfa93b638652"
+      }
+    },
+    {
+      "name": "polycool",
+      "version": "0.4.0",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/linebender/kurbo",
+      "declared_authors_not_a_copyright_assignment": [],
+      "features": [
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "LICENSE-MIT": "23c23145f6eac25c28cdcc03d38506a5712a9a8cffb5bd5301457f6173ea696e",
+        "benches/cubic_roots.rs [source header]": "31803029cc9a1bee5de1862672c40372efe0fb269412fe25170e9320073ff4bf",
+        "benches/eval.rs [source header]": "31803029cc9a1bee5de1862672c40372efe0fb269412fe25170e9320073ff4bf",
+        "benches/quadratic_roots.rs [source header]": "31803029cc9a1bee5de1862672c40372efe0fb269412fe25170e9320073ff4bf",
+        "src/arbitrary.rs [source header]": "79806a486a4871d2aa2973222be75601528e11aa86a07f7a9b3eee75250509a3",
+        "src/cubic.rs [source header]": "31803029cc9a1bee5de1862672c40372efe0fb269412fe25170e9320073ff4bf",
+        "src/lib.rs [source header]": "176996ac8a5b9f800586288185c0a751c0c7ed43c85df288b0893a315ed543c7",
+        "src/libm_polyfill.rs [source header]": "31803029cc9a1bee5de1862672c40372efe0fb269412fe25170e9320073ff4bf",
+        "src/poly.rs [source header]": "31803029cc9a1bee5de1862672c40372efe0fb269412fe25170e9320073ff4bf",
+        "src/poly_dyn.rs [source header]": "394cb84e6eac84c577c0627b8b83fa1b360684aa98244f2a1e9bc09e90c5a138",
+        "src/quadratic.rs [source header]": "31803029cc9a1bee5de1862672c40372efe0fb269412fe25170e9320073ff4bf",
+        "src/yuksel.rs [source header]": "a8850509146751ad7519f099e462ad284cad30822e4b52a8ef84502da593ac26"
+      }
+    },
+    {
+      "name": "proc-macro2",
+      "version": "1.0.107",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/dtolnay/proc-macro2",
+      "declared_authors_not_a_copyright_assignment": [
+        "David Tolnay <dtolnay@gmail.com>",
+        "Alex Crichton <alex@alexcrichton.com>"
+      ],
+      "features": [
+        "default",
+        "proc-macro"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "LICENSE-MIT": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+      }
+    },
+    {
+      "name": "profiling",
+      "version": "1.0.18",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/aclysma/profiling",
+      "declared_authors_not_a_copyright_assignment": [
+        "Philip Degarmo <aclysma@gmail.com>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE-APACHE [published profiling VCS revision 8271551172eb6fa4cba47369aedd93790c623df9]": "10d30a673cd5e9349bdc02aeb48f14b3386d27d0da32df8f0a555d4aa16aa551",
+        "LICENSE-MIT [published profiling VCS revision 8271551172eb6fa4cba47369aedd93790c623df9]": "c8167fdeeed46d3f244d3f85c5bf998ce889343691c32be2c61a8bc4b5c08333"
+      }
+    },
+    {
+      "name": "pxfm",
+      "version": "0.1.30",
+      "declared_license": "BSD-3-Clause OR Apache-2.0",
+      "repository": "https://github.com/awxkee/pxfm",
+      "declared_authors_not_a_copyright_assignment": [
+        "Radzivon Bartoshyk"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE-APACHE.md": "90bf2d659c43045111b65c733ab2a6d4cbcb422a098368c8c58a9ba3db4ed0c5",
+        "LICENSE.md": "2aa92cada6431e75615e3fe6cb1a9082c98f777d48ae1c087c0da0e37f7b8bff",
+        "src/acos.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/acosf.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/acospi.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/acospif.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/asin.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/asin_eval_dyadic.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/asinf.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/asinpi.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/asinpif.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/bessel/alpha0.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/bessel/alpha1.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/bessel/bessel_exp.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/bessel/beta0.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/bessel/beta1.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/bessel/i0.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/i0e.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/i0ef.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/i0f.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/i1.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/i1e.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/i1ef.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/i1f.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/i2.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/bessel/i2f.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/bessel/j0.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/j0_coeffs_remez.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/j0_coeffs_taylor.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/bessel/j0f.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/j0f_coeffs.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/j1.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/j1_coeffs.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/j1_coeffs_taylor.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/bessel/j1f.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/j1f_coeffs.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/jincpi.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/jincpif.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/k0.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/bessel/k0e.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/bessel/k0ef.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/k0f.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/k1.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/bessel/k1e.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/bessel/k1ef.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/k1f.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/k2f.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/bessel/mod.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/trigo_bessel.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/bessel/y0.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/y0_coeffs.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/y0_coeffs_taylor.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/bessel/y0f.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/y0f_coeffs.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/y1.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/y1_coeffs.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/y1_coeffs_taylor.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/bessel/y1f.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bessel/y1f_coeffs.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/bits.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/common.rs [source header]": "a7769db960c344fa701c96d10a78510a91a6f9ab440a1aae099d898e45cf7ba5",
+        "src/compound/compound_d.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/compound/compound_m1.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/compound/compound_m1f.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/compound/compoundf.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/compound/mod.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/compound/powm1.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/compound/powm1f.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/cosm1.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/csc.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/cube_roots/cbrt.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/cube_roots/cbrtf.rs [source header]": "a7769db960c344fa701c96d10a78510a91a6f9ab440a1aae099d898e45cf7ba5",
+        "src/cube_roots/mod.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/cube_roots/rcbrt.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/cube_roots/rcbrtf.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/double_double.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/dyadic_float.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/err/erf.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/err/erf_poly.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/err/erfc.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/err/erfcx.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/err/erfcxf.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/err/erff.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/err/erffc.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/err/inverf.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/err/inverfc.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/err/inverfcf.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/err/inverff.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/err/mod.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/err/rerf.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/err/rerf_poly.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/err/rerff.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/exponents/auxiliary.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/exponents/exp.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/exponents/exp10.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/exponents/exp10f.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/exponents/exp10m1.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/exponents/exp10m1f.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/exponents/exp2.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/exponents/exp2f.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/exponents/exp2m1.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/exponents/exp2m1f.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/exponents/exp_f128.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/exponents/expf.rs [source header]": "a7769db960c344fa701c96d10a78510a91a6f9ab440a1aae099d898e45cf7ba5",
+        "src/exponents/expm1.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/exponents/expm1f.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/exponents/logistic.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/exponents/logisticf.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/exponents/mod.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/gamma/beta.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/gamma/betaf.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/gamma/betainc.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/gamma/betaincf.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/gamma/digamma.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/gamma/digamma_coeffs.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/gamma/digammaf.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/gamma/gamma_p.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/gamma/gamma_pf.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/gamma/gamma_q.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/gamma/gamma_qf.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/gamma/lgamma.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/gamma/lgamma_r.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/gamma/lgamma_rf.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/gamma/lgammaf.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/gamma/lnbeta.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/gamma/lnbetaf.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/gamma/mod.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/gamma/tgamma.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/gamma/tgammaf.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/gamma/trigamma.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/gamma/trigammaf.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/hyperbolic/acosh.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/hyperbolic/acoshf.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/hyperbolic/asinh.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/hyperbolic/asinhf.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/hyperbolic/atanh.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/hyperbolic/atanhf.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/hyperbolic/cosh.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/hyperbolic/coshf.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/hyperbolic/mod.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/hyperbolic/sinh.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/hyperbolic/sinhf.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/hyperbolic/tanh.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/hyperbolic/tanhf.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/lib.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/logs/fast_log.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/logs/fast_log_dd.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/logs/log.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/logs/log10.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/logs/log10dd.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/logs/log10dd_coeffs.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/logs/log10f.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/logs/log10p1.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/logs/log10p1_tables.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/logs/log10p1f.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/logs/log10td.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/logs/log10td_coeffs.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/logs/log1p.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/logs/log1p_dd.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/logs/log1p_dyadic.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/logs/log1p_dyadic_tables.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/logs/log1pf.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/logs/log1pmx.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/logs/log1pmxf.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/logs/log2.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/logs/log2dd.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/logs/log2dd_coeffs.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/logs/log2f.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/logs/log2p1.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/logs/log2p1_dyadic_tables.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/logs/log2p1_tables.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/logs/log2p1f.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/logs/log2td.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/logs/log2td_coeffs.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/logs/log_dd.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/logs/log_dd_coeffs.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/logs/log_dyadic.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/logs/log_range_reduction.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/logs/log_td.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/logs/log_td_table.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/logs/logf.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/logs/logit.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/logs/logitf.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/logs/mod.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/polyeval.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/pow.rs [source header]": "a7769db960c344fa701c96d10a78510a91a6f9ab440a1aae099d898e45cf7ba5",
+        "src/pow_exec.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/pow_tables.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/powf.rs [source header]": "a7769db960c344fa701c96d10a78510a91a6f9ab440a1aae099d898e45cf7ba5",
+        "src/powf_tables.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/rounding/ceil.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/rounding/floor.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/rounding/mod.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/rounding/rint.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/rounding/rintf.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/rounding/round.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/rounding/round_ties_even.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/rounding/trunc.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/rounding/truncf.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/sec.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/shared_eval.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/sin.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/sin_cosf/argument_reduction.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/sin_cosf/argument_reduction_pi.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/sin_cosf/cosf.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/sin_cosf/cosm1f.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/sin_cosf/cospif.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/sin_cosf/cscf.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/sin_cosf/mod.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/sin_cosf/secf.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/sin_cosf/sincf.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/sin_cosf/sincosf.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/sin_cosf/sincosf_eval.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/sin_cosf/sincospif.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/sin_cosf/sincpif.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/sin_cosf/sinf.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/sin_cosf/sinmxf.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/sin_cosf/sinpif.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/sin_helper.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/sin_table.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/sinc.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/sincos.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/sincos_dyadic.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/sincos_reduce.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/sincos_reduce_tables.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/sincospi.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/sincospi_tables.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/sincpi.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/sinmx.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/square_root/mod.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/square_root/rsqrt.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/square_root/rsqrtf.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/square_root/sqrt1pm1.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/square_root/sqrt1pm1f.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/square_root/sqrtf.rs [source header]": "a7769db960c344fa701c96d10a78510a91a6f9ab440a1aae099d898e45cf7ba5",
+        "src/tangent/atan.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/tangent/atan2.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/tangent/atan2f.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/tangent/atan2pi.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/tangent/atan2pif.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/tangent/atanf.rs [source header]": "a7769db960c344fa701c96d10a78510a91a6f9ab440a1aae099d898e45cf7ba5",
+        "src/tangent/atanpi.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/tangent/atanpif.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/tangent/cot.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/tangent/cotf.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/tangent/cotpi.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/tangent/cotpif.rs [source header]": "9744e1b79585acb050a87e128c15be5b92933f0cedb0a8c8ee3b48d27c15c9ac",
+        "src/tangent/evalf.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/tangent/mod.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/tangent/tan.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/tangent/tanf.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/tangent/tanpi.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e",
+        "src/tangent/tanpi_table.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/tangent/tanpif.rs [source header]": "c57b08e1be2c53dc513687a7cc45db108a387856f35541a7828a7819626d9e11",
+        "src/triangle/cathetus.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/triangle/cathetusf.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/triangle/hypot.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/triangle/hypot3f.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/triangle/hypotf.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/triangle/mod.rs [source header]": "0acba130150ee9f2a3ed90c6faf062ba55d2eeca2476fe7d411b8e84c2325286",
+        "src/triple_double.rs [source header]": "dd3523b3aa729f41879cdb11f8fc4b192763b91a23617a863859b5d05bb2e74e"
+      }
+    },
+    {
+      "name": "quote",
+      "version": "1.0.47",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/dtolnay/quote",
+      "declared_authors_not_a_copyright_assignment": [
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "features": [
+        "default",
+        "proc-macro"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "LICENSE-MIT": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+      }
+    },
+    {
+      "name": "raw-window-handle",
+      "version": "0.6.2",
+      "declared_license": "MIT OR Apache-2.0 OR Zlib",
+      "repository": "https://github.com/rust-windowing/raw-window-handle",
+      "declared_authors_not_a_copyright_assignment": [
+        "Osspial <osspial@gmail.com>"
+      ],
+      "features": [
+        "alloc",
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE.md": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594",
+        "LICENSE-MIT.md": "9c5a80639a57c1c945570e7ebbca0706305849ce3c098021325cca9db2f7acc4",
+        "LICENSE-ZLIB.md": "ae895c8576e682f310fb70d93d9f99b1dd82872094c54a8f6cdfe2ca5c2d6ecb"
+      }
+    },
+    {
+      "name": "read-fonts",
+      "version": "0.41.0",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/googlefonts/fontations",
+      "declared_authors_not_a_copyright_assignment": [],
+      "features": [
+        "experimental_font_api",
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "eba684204073ed715c4abb48129acdfd2bff8ae48339e6a7da3b341d3027b7f0",
+        "LICENSE-MIT": "7b4c9a3946dfcea7967582760e963e27799e225dcf20565c8ef55324bb017427"
+      }
+    },
+    {
+      "name": "scopeguard",
+      "version": "1.2.0",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/bluss/scopeguard",
+      "declared_authors_not_a_copyright_assignment": [
+        "bluss"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "fb77f0a9c53e473abe5103c8632ef9f0f2874d4fb3f17cb2d8c661aab9cee9d7"
+      }
+    },
+    {
+      "name": "self_cell",
+      "version": "1.3.0",
+      "declared_license": "Apache-2.0 OR GPL-2.0-only",
+      "repository": "https://github.com/Voultapher/self_cell",
+      "declared_authors_not_a_copyright_assignment": [
+        "Lukas Bergdoll <lukas.bergdoll@gmail.com>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE-APACHE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "LICENSE-GPLv2": "f9c375a1be4a41f7b70301dd83c91cb89e41567478859b77eef375a52d782505"
+      }
+    },
+    {
+      "name": "serde",
+      "version": "1.0.229",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/serde-rs/serde",
+      "declared_authors_not_a_copyright_assignment": [
+        "Erick Tryzelaar <erick.tryzelaar@gmail.com>",
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "features": [
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "LICENSE-MIT": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+      }
+    },
+    {
+      "name": "serde_core",
+      "version": "1.0.229",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/serde-rs/serde",
+      "declared_authors_not_a_copyright_assignment": [
+        "Erick Tryzelaar <erick.tryzelaar@gmail.com>",
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "features": [
+        "alloc",
+        "result",
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "LICENSE-MIT": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+      }
+    },
+    {
+      "name": "simd-adler32",
+      "version": "0.3.10",
+      "declared_license": "MIT",
+      "repository": "https://github.com/mcountryman/simd-adler32",
+      "declared_authors_not_a_copyright_assignment": [
+        "Marvin Countryman <me@maar.vin>"
+      ],
+      "features": [
+        "const-generics",
+        "default",
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE.md": "42a35170233e83e18856792e748de4c1ce4a63b2afce9a370c89ef3fe23f9f2d"
+      }
+    },
+    {
+      "name": "skrifa",
+      "version": "0.44.0",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/googlefonts/fontations",
+      "declared_authors_not_a_copyright_assignment": [],
+      "features": [
+        "autohint_shaping",
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "eba684204073ed715c4abb48129acdfd2bff8ae48339e6a7da3b341d3027b7f0",
+        "LICENSE-MIT": "7b4c9a3946dfcea7967582760e963e27799e225dcf20565c8ef55324bb017427"
+      }
+    },
+    {
+      "name": "smallvec",
+      "version": "1.16.5",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/servo/rust-smallvec",
+      "declared_authors_not_a_copyright_assignment": [
+        "The Servo Project Developers"
+      ],
+      "features": [
+        "const_generics",
+        "const_new"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "0b28172679e0009b655da42797c03fd163a3379d5cfa67ba1f1655e974a2a1a9",
+        "src/lib.rs [source header]": "dff6cafea4c15d1ccbd1b2af962ec363f8cb297526e5e0739297d850ae5041ad",
+        "src/specialization.rs [source header]": "61035e09beed58686f0d6d955e66193aca38c9bd7aa5c8858491354d80e34e24"
+      }
+    },
+    {
+      "name": "smol_str",
+      "version": "0.2.2",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/rust-analyzer/smol_str",
+      "declared_authors_not_a_copyright_assignment": [
+        "Aleksey Kladov <aleksey.kladov@gmail.com>"
+      ],
+      "features": [
+        "default",
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+      }
+    },
+    {
+      "name": "static_assertions",
+      "version": "1.1.0",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/nvzqz/static-assertions-rs",
+      "declared_authors_not_a_copyright_assignment": [
+        "Nikolai Vazquez"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE-APACHE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "LICENSE-MIT": "ea084a2373ebc1f0902c09266e7bf25a05ab3814c1805bb017ffa7308f90c061"
+      }
+    },
+    {
+      "name": "syn",
+      "version": "3.0.10",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/dtolnay/syn",
+      "declared_authors_not_a_copyright_assignment": [
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "features": [
+        "clone-impls",
+        "default",
+        "derive",
+        "extra-traits",
+        "full",
+        "parsing",
+        "printing",
+        "proc-macro",
+        "visit",
+        "visit-mut"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "LICENSE-MIT": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+      }
+    },
+    {
+      "name": "thiserror",
+      "version": "2.0.21",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/dtolnay/thiserror",
+      "declared_authors_not_a_copyright_assignment": [
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "features": [
+        "default",
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "LICENSE-MIT": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+      }
+    },
+    {
+      "name": "thiserror-impl",
+      "version": "2.0.21",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/dtolnay/thiserror",
+      "declared_authors_not_a_copyright_assignment": [
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE-APACHE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "LICENSE-MIT": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+      }
+    },
+    {
+      "name": "tracing",
+      "version": "0.1.44",
+      "declared_license": "MIT",
+      "repository": "https://github.com/tokio-rs/tracing",
+      "declared_authors_not_a_copyright_assignment": [
+        "Eliza Weisman <eliza@buoyant.io>",
+        "Tokio Contributors <team@tokio.rs>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE": "898b1ae9821e98daf8964c8d6c7f61641f5f5aa78ad500020771c0939ee0dea1"
+      }
+    },
+    {
+      "name": "tracing-core",
+      "version": "0.1.36",
+      "declared_license": "MIT",
+      "repository": "https://github.com/tokio-rs/tracing",
+      "declared_authors_not_a_copyright_assignment": [
+        "Tokio Contributors <team@tokio.rs>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE": "898b1ae9821e98daf8964c8d6c7f61641f5f5aa78ad500020771c0939ee0dea1",
+        "src/spin/LICENSE": "58545fed1565e42d687aecec6897d35c6d37ccb71479a137c0deb2203e125c79"
+      }
+    },
+    {
+      "name": "unicode-general-category",
+      "version": "1.1.0",
+      "declared_license": "Apache-2.0",
+      "repository": "https://github.com/yeslogic/unicode-general-category",
+      "declared_authors_not_a_copyright_assignment": [
+        "YesLogic Pty. Ltd. <info@yeslogic.com>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+      }
+    },
+    {
+      "name": "unicode-ident",
+      "version": "1.0.27",
+      "declared_license": "(MIT OR Apache-2.0) AND Unicode-3.0",
+      "repository": "https://github.com/dtolnay/unicode-ident",
+      "declared_authors_not_a_copyright_assignment": [
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE-APACHE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+        "LICENSE-MIT": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+        "LICENSE-UNICODE": "f7db81051789b729fea528a63ec4c938fdcb93d9d61d97dc8cc2e9df6d47f2a1"
+      }
+    },
+    {
+      "name": "unicode-properties",
+      "version": "0.1.5",
+      "declared_license": "(MIT OR Apache-2.0) AND Unicode-3.0",
+      "repository": "https://github.com/unicode-rs/unicode-properties",
+      "declared_authors_not_a_copyright_assignment": [
+        "Charles Lew <crlf0710@gmail.com>",
+        "Manish Goregaokar <manishsmail@gmail.com>"
+      ],
+      "features": [
+        "emoji"
+      ],
+      "notice_sections": {
+        "COPYRIGHT": "23860c2a7b5d96b21569afedf033469bab9fe14a1b24a35068b8641c578ce24d",
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "7b63ecd5f1902af1b63729947373683c32745c16a10e8e6292e2e2dcd7e90ae0",
+        "LICENSE-UNICODE": "e7a93b009565cfce55919a381437ac4db883e9da2126fa28b91d12732bc53d96",
+        "src/lib.rs [source header]": "a1e4e3593bfdc2d39d7b98fadc341a1d6deb6ca128aa97fcb8c87f8f62190514",
+        "src/tables.rs [source header]": "b85b757fd8ef54071c4b03d6d48e9fc45199c7c544d8f488af4f9af59ee6ee66"
+      }
+    },
+    {
+      "name": "unicode-segmentation",
+      "version": "1.13.3",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/unicode-rs/unicode-segmentation",
+      "declared_authors_not_a_copyright_assignment": [
+        "kwantam <kwantam@gmail.com>",
+        "Manish Goregaokar <manishsmail@gmail.com>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "COPYRIGHT": "23860c2a7b5d96b21569afedf033469bab9fe14a1b24a35068b8641c578ce24d",
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "7b63ecd5f1902af1b63729947373683c32745c16a10e8e6292e2e2dcd7e90ae0",
+        "src/grapheme.rs [source header]": "d96e6398ab6c2c8d3866e0ad1f342119dd73b21b6a017c3d0e823c4854a9e7f7",
+        "src/lib.rs [source header]": "5640741be8a9212454f80bd857b1844c2981447675833117f7e0d05c33fdc7e3",
+        "src/sentence.rs [source header]": "d96e6398ab6c2c8d3866e0ad1f342119dd73b21b6a017c3d0e823c4854a9e7f7",
+        "src/tables.rs [source header]": "d5bd36fd9241c2801958fc0a64ec6d3394de7d59d5dba5943fc50bd33c5a4881",
+        "src/word.rs [source header]": "d96e6398ab6c2c8d3866e0ad1f342119dd73b21b6a017c3d0e823c4854a9e7f7",
+        "tests/test.rs [source header]": "4caf6a76db5636b5e6e6c166440d3ffad45840d4feb1192bdc2fbb9d2e63d58f",
+        "tests/testdata/mod.rs [source header]": "d5bd36fd9241c2801958fc0a64ec6d3394de7d59d5dba5943fc50bd33c5a4881"
+      }
+    },
+    {
+      "name": "uuid",
+      "version": "1.29.2",
+      "declared_license": "Apache-2.0 OR MIT",
+      "repository": "https://github.com/uuid-rs/uuid",
+      "declared_authors_not_a_copyright_assignment": [],
+      "features": [],
+      "notice_sections": {
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "436bc5a105d8e57dcd8778730f3754f7bf39c14d2f530e4cde4bd2d17a83ec3d",
+        "src/builder.rs [source header]": "a0a7dfc9ca6d82eeb78e6d93236502213f3d546474347a404a252ef0e370606e",
+        "src/external/serde_support.rs [source header]": "c5facb954ccf0fa28f90f0be7c25b147e077cc8d17793b1e19305f2952fa4851",
+        "src/external/slog_support.rs [source header]": "c5facb954ccf0fa28f90f0be7c25b147e077cc8d17793b1e19305f2952fa4851",
+        "src/fmt.rs [source header]": "3d4e0da1210b9e705f3c5bcf280bac755cb249bb24fe5403338559ab33d7662e",
+        "src/lib.rs [source header]": "9cea63771e7a6e0e237073c663b5e90c2805efcb68ecf2136c4171c9cf18eca8",
+        "src/parser.rs [source header]": "13c3b569459094aacc0e8d8971a59007309cd38513bab7993db987afe4fbb4fc"
+      }
+    },
+    {
+      "name": "vello_common",
+      "version": "0.2.0",
+      "declared_license": "Apache-2.0 OR MIT",
+      "repository": "https://github.com/linebender/vello",
+      "declared_authors_not_a_copyright_assignment": [],
+      "features": [
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "a6cba85bc92e0cff7a450b1d873c0eaa2e9fc96bf472df0247a26bec77bf3ff9",
+        "LICENSE-MIT": "adf157330f722fe7cfd5964a2a6974eff851b718228c6735724a11706e6f4dec",
+        "src/blurred_rounded_rect.rs [source header]": "ddbf5dc6d1e7920fd7ec3483e168fd7e7a6b2bcc795ca95c181b09a3e872b394",
+        "src/clip.rs [source header]": "bd4270ce3d3b5742406baa1e4084fe09d7654659e831749eec5c13efb2c5678b",
+        "src/encode.rs [source header]": "9dd7ccc0fb994aefa902f2ccce3cfe97f35eb6227550df7e80ac31ecaf17c23a",
+        "src/filter/drop_shadow.rs [source header]": "df360cdb8193a13ab6852ec7a926c9a92b77ebac182f2d46e026327720d10345",
+        "src/filter/flood.rs [source header]": "79aa663bbcb2f29adb4a7dfa1c9fe8f05012b49fca09a7e36577290697ec2afe",
+        "src/filter/gaussian_blur.rs [source header]": "8efc7a3b39b687b6be5b1520fc83d258ca5496155e74e75e3a380f09e6fe7d83",
+        "src/filter/mod.rs [source header]": "e9b3dc33218ccfb834c005b994965015a7ac72fcff8be9165b62d52069c8cb28",
+        "src/filter/offset.rs [source header]": "fbf2016dda2e1a96715f92faf8c84f80111386c463e62e578f1e8806dc721933",
+        "src/filter_effects.rs [source header]": "eba34a2beb1f3dffa0f6e98e6924f490b2b5ec2a3940a459f14956f17f693cf3",
+        "src/flatten.rs [source header]": "73e7c3f5c727c8799da1439f2bbae4436d0d4f797140c2b27cc02fe8da337183",
+        "src/flatten_simd.rs [source header]": "d44e758dbb9a3b22d04435eee4da44431bfe2b4c83edd2eac8fee591356f44c4",
+        "src/geometry.rs [source header]": "92a463451ad27eaa3104e7dea3a7be65ff0a15b2dd9d250cd9f9abe76f07d758",
+        "src/image_cache.rs [source header]": "0477dc33b03b5372c9a06a71e8e18e7d7a82843b58e5e397066bb4be6bff1842",
+        "src/lib.rs [source header]": "ac568e040bbbb33e6b0fc5789b40cbc7f5e3ca5b15bed30035f9863a7ca91847",
+        "src/mask.rs [source header]": "98c481ae1a81d82bf2d3ce8934139d9a144e6d56cef70809026b030a70771954",
+        "src/math.rs [source header]": "4209506ec76d69f7bffb664be412efd742f3c4ba437ece47a256b5c175c85a48",
+        "src/multi_atlas.rs [source header]": "0a3ccf8efd2f7b2c9e0c9d3ac5642286bf280d8a22907cae9b98f368932537a1",
+        "src/paint.rs [source header]": "3286f7733453c9b09ed77f56f93a5f9d025e7c03ded07444b1fe61b321684c6f",
+        "src/pico_svg.rs [source header]": "724ce93b88d3c4ff590c256729695a1d632610f030d6c3ec93d9dc00c2eafd79",
+        "src/pixmap.rs [source header]": "ac4e7a59184f4f35afd9189b33e2d001bf834a6b5a31c367fe31fa14b62ae089",
+        "src/probe.rs [source header]": "09b5f183c25b79a519b8e97dadf232045e818d235f327e22fa667d4926e8eeca",
+        "src/record.rs [source header]": "7dc09fc6220ea6f7191c23be389aaffdfb80dd0b9e82e220fd1d743e04f20e57",
+        "src/rect.rs [source header]": "f8760e317fc5969a246fcfffa5be08917c69c307401c3395e86ca90c10824abf",
+        "src/render_state.rs [source header]": "3f6301e8a57c58b9e8f011b395cbd762effb1f93b85b99671c15b5439a977969",
+        "src/simd.rs [source header]": "267066571c4885f6c5dfbe69b968035bd30d180f2172d18946cb491d703c55f4",
+        "src/strip.rs [source header]": "87751488ead6056f06928fac492351f51ce8d1b883dd4f13b91320e809671e2a",
+        "src/strip_generator.rs [source header]": "afbb2a9c81a30dab1ce4c6edfc4b6448615a9625168ac8d74d9e5a87154a001a",
+        "src/tile.rs [source header]": "c8fc7b79a5999692ddc3feee831b2e948ee0d8bd7d6c40c9566a3dd09fec008a",
+        "src/transforms.rs [source header]": "016b81962e4784f42e0a87277d823c88e5ed9a69f668c1d84b5872b5fa9427f9",
+        "src/util.rs [source header]": "ccd24d61a011077119912e26da0e5cca2e77ecbebf95bb80492d2ce1b7dfd960",
+        "src/viewport.rs [source header]": "b4965de17849d980c1764ef46481d64a04f6feb6beb84e3f6d403090681795ce"
+      }
+    },
+    {
+      "name": "vello_cpu",
+      "version": "0.2.0",
+      "declared_license": "Apache-2.0 OR MIT",
+      "repository": "https://github.com/linebender/vello",
+      "declared_authors_not_a_copyright_assignment": [],
+      "features": [
+        "f32_pipeline",
+        "std",
+        "u8_pipeline"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "a6cba85bc92e0cff7a450b1d873c0eaa2e9fc96bf472df0247a26bec77bf3ff9",
+        "LICENSE-MIT": "adf157330f722fe7cfd5964a2a6974eff851b718228c6735724a11706e6f4dec",
+        "examples/basic.rs [source header]": "27544406d95aba51760acf1154e9f8cb81c8e97a30c87315564af1c4d71d69a8",
+        "examples/clipping.rs [source header]": "1f28692b4a6043b7eb2f7a1494834492a3e4f3f2306ed1944fbeded044648683",
+        "examples/masking.rs [source header]": "c25c4028258cd8184be8ba9dd3849adb1f678aa00ff79f9a3d37fff949500da7",
+        "examples/paints.rs [source header]": "01c2362b8a32f57654e0bfab00d4f811e7b8abbd2143175afc643036669c3ce8",
+        "src/coarse/bucketer.rs [source header]": "bf4da45af2b0e35d2a189dfcec5ab236efab749cf9b45149db5975654d585ef8",
+        "src/coarse/cmd.rs [source header]": "1951f8157c745ed1d8e0fb6e69fb88ecdc2a02b1f8318c31326650bf498ecd02",
+        "src/coarse/depth.rs [source header]": "90f17366ccfacd95450fdbb4d292182aa8cbe47579d3bb4db0af421a5715dfd3",
+        "src/coarse/mod.rs [source header]": "bf4da45af2b0e35d2a189dfcec5ab236efab749cf9b45149db5975654d585ef8",
+        "src/dispatch/mod.rs [source header]": "c88ea8b322607b8e62a4c45928cbe183e4108a955f2ed96d692a81cab5d52794",
+        "src/dispatch/multi_threaded.rs [source header]": "c88ea8b322607b8e62a4c45928cbe183e4108a955f2ed96d692a81cab5d52794",
+        "src/dispatch/multi_threaded/cost.rs [source header]": "a18a885216061d6992fcf79076fde7a4b869fa89343d8d9f868f0f4955a08514",
+        "src/dispatch/multi_threaded/worker.rs [source header]": "c88ea8b322607b8e62a4c45928cbe183e4108a955f2ed96d692a81cab5d52794",
+        "src/dispatch/single_threaded.rs [source header]": "c88ea8b322607b8e62a4c45928cbe183e4108a955f2ed96d692a81cab5d52794",
+        "src/filter/context.rs [source header]": "bf4da45af2b0e35d2a189dfcec5ab236efab749cf9b45149db5975654d585ef8",
+        "src/filter/drop_shadow.rs [source header]": "f857aa0cd63fec0d09d8992f31386433b6e7c88001a77edc1243b7fbc2872ae2",
+        "src/filter/flood.rs [source header]": "fa6154f714795ab944f62493fbc1563b94e56facae9f243c004af1bc7ffaf566",
+        "src/filter/gaussian_blur.rs [source header]": "d29cae02df5874c883bdd1cc00d2b0873588c3ee5ce97e03e0eba7686153707b",
+        "src/filter/mod.rs [source header]": "e22c213758326820dddacf1acc74e5c2d5d09c421177a09f1b0e9bcd5a15380d",
+        "src/filter/offset.rs [source header]": "38499dff10bf358e6dd01c172b942723f8bd8024014cda88c6783674b5646381",
+        "src/filter/shift.rs [source header]": "348a7e776d14c00b9b6304332f10305f447a19c81b541381dd343469a453cdf3",
+        "src/fine/common/gradient/linear.rs [source header]": "c88ea8b322607b8e62a4c45928cbe183e4108a955f2ed96d692a81cab5d52794",
+        "src/fine/common/gradient/mod.rs [source header]": "c88ea8b322607b8e62a4c45928cbe183e4108a955f2ed96d692a81cab5d52794",
+        "src/fine/common/gradient/radial.rs [source header]": "c88ea8b322607b8e62a4c45928cbe183e4108a955f2ed96d692a81cab5d52794",
+        "src/fine/common/gradient/sweep.rs [source header]": "c88ea8b322607b8e62a4c45928cbe183e4108a955f2ed96d692a81cab5d52794",
+        "src/fine/common/image.rs [source header]": "c88ea8b322607b8e62a4c45928cbe183e4108a955f2ed96d692a81cab5d52794",
+        "src/fine/common/mod.rs [source header]": "c88ea8b322607b8e62a4c45928cbe183e4108a955f2ed96d692a81cab5d52794",
+        "src/fine/common/rounded_blurred_rect.rs [source header]": "c9d06b599c3ff490ec4b0294ebd7d26c79a53210e0d040013e0441da50260b9e",
+        "src/fine/highp/blend.rs [source header]": "c88ea8b322607b8e62a4c45928cbe183e4108a955f2ed96d692a81cab5d52794",
+        "src/fine/highp/compose.rs [source header]": "c88ea8b322607b8e62a4c45928cbe183e4108a955f2ed96d692a81cab5d52794",
+        "src/fine/highp/mod.rs [source header]": "023b204966490db292c321c3ee9954e0671e05a6e8448a023d84dcd2085c5cb9",
+        "src/fine/lowp/blend.rs [source header]": "c88ea8b322607b8e62a4c45928cbe183e4108a955f2ed96d692a81cab5d52794",
+        "src/fine/lowp/compose.rs [source header]": "c88ea8b322607b8e62a4c45928cbe183e4108a955f2ed96d692a81cab5d52794",
+        "src/fine/lowp/gradient.rs [source header]": "c88ea8b322607b8e62a4c45928cbe183e4108a955f2ed96d692a81cab5d52794",
+        "src/fine/lowp/image.rs [source header]": "c88ea8b322607b8e62a4c45928cbe183e4108a955f2ed96d692a81cab5d52794",
+        "src/fine/lowp/mod.rs [source header]": "1463c00132bd3b22342e3b14d6d76aa4b78c3cf3fb3e1ab631a83b567f60fad3",
+        "src/fine/mod.rs [source header]": "89c59ed02efe2310c12820b7525b423fb235840b0688a181f80dd9a05c2451cc",
+        "src/lib.rs [source header]": "081d00b68bf565cbf1f81542892f834289db77e9221f68eede73f892053c4314",
+        "src/record.rs [source header]": "bf4da45af2b0e35d2a189dfcec5ab236efab749cf9b45149db5975654d585ef8",
+        "src/region.rs [source header]": "fd30b455007115c9c2239e2af02830f9626f4519be952b708eda1e3d029ef4e0",
+        "src/render.rs [source header]": "2ca42a47620ed08834f9c454feae71e4783c593681565e788a2eed83d350a683",
+        "src/text.rs [source header]": "b4c95fe47e39ac903a4f8f99aa241eb566079fcc31a5bba34698f750d190ba97",
+        "src/text_debug.rs [source header]": "e8081692dd73b0f7eb639f47aec6be91a4bb6bbda81f1cc426329137e47e8e82",
+        "src/util.rs [source header]": "c88ea8b322607b8e62a4c45928cbe183e4108a955f2ed96d692a81cab5d52794"
+      }
+    },
+    {
+      "name": "version_check",
+      "version": "0.9.5",
+      "declared_license": "MIT/Apache-2.0",
+      "repository": "https://github.com/SergioBenitez/version_check",
+      "declared_authors_not_a_copyright_assignment": [
+        "Sergio Benitez <sb@sergio.bz>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "b7e650f3fce5c53249d1cdc608b54df156a97edd636cf9d23498d0cfe7aec63e"
+      }
+    },
+    {
+      "name": "web-time",
+      "version": "1.1.0",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/daxpedda/web-time",
+      "declared_authors_not_a_copyright_assignment": [],
+      "features": [],
+      "notice_sections": {
+        "LICENSE-APACHE": "54a744942eb3fa63a74d8d359989ed6962c04f3f10ff20cfa08ff8aa7efbe4e6",
+        "LICENSE-MIT": "f428305bbf2e70fbd807af0f3c7ac1b7acfb95311640f451e9d2e48db6d7e96b",
+        "src/lib.rs [source header]": "dbefb261709e11962a69ca358fae46bc453dfcad21334ed231916bd2d7a2e677"
+      }
+    },
+    {
+      "name": "windows-link",
+      "version": "0.2.1",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "declared_authors_not_a_copyright_assignment": [],
+      "features": [],
+      "notice_sections": {
+        "license-apache-2.0": "c16f8dcf1a368b83be78d826ea23de4079fe1b4469a0ab9ee20563f37ff3d44b",
+        "license-mit": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+      }
+    },
+    {
+      "name": "windows-sys",
+      "version": "0.52.0",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "declared_authors_not_a_copyright_assignment": [
+        "Microsoft"
+      ],
+      "features": [
+        "Win32",
+        "Win32_Devices",
+        "Win32_Devices_HumanInterfaceDevice",
+        "Win32_Foundation",
+        "Win32_Globalization",
+        "Win32_Graphics",
+        "Win32_Graphics_Dwm",
+        "Win32_Graphics_Gdi",
+        "Win32_Graphics_OpenGL",
+        "Win32_Media",
+        "Win32_Security",
+        "Win32_System",
+        "Win32_System_Com",
+        "Win32_System_Com_StructuredStorage",
+        "Win32_System_LibraryLoader",
+        "Win32_System_Ole",
+        "Win32_System_SystemInformation",
+        "Win32_System_SystemServices",
+        "Win32_System_Threading",
+        "Win32_System_WindowsProgramming",
+        "Win32_UI",
+        "Win32_UI_Accessibility",
+        "Win32_UI_Controls",
+        "Win32_UI_HiDpi",
+        "Win32_UI_Input",
+        "Win32_UI_Input_Ime",
+        "Win32_UI_Input_KeyboardAndMouse",
+        "Win32_UI_Input_Pointer",
+        "Win32_UI_Input_Touch",
+        "Win32_UI_Shell",
+        "Win32_UI_TextServices",
+        "Win32_UI_WindowsAndMessaging",
+        "default"
+      ],
+      "notice_sections": {
+        "license-apache-2.0": "c16f8dcf1a368b83be78d826ea23de4079fe1b4469a0ab9ee20563f37ff3d44b",
+        "license-mit": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+      }
+    },
+    {
+      "name": "windows-sys",
+      "version": "0.61.2",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "declared_authors_not_a_copyright_assignment": [],
+      "features": [
+        "Wdk",
+        "Wdk_Foundation",
+        "Wdk_Storage",
+        "Wdk_Storage_FileSystem",
+        "Win32",
+        "Win32_Foundation",
+        "Win32_Graphics",
+        "Win32_Graphics_Dwm",
+        "Win32_Media",
+        "Win32_Media_Audio",
+        "Win32_Networking",
+        "Win32_Networking_WinSock",
+        "Win32_Security",
+        "Win32_Storage",
+        "Win32_Storage_FileSystem",
+        "Win32_System",
+        "Win32_System_Com",
+        "Win32_System_Console",
+        "Win32_System_Diagnostics",
+        "Win32_System_Diagnostics_Debug",
+        "Win32_System_IO",
+        "Win32_System_LibraryLoader",
+        "Win32_System_SystemInformation",
+        "Win32_System_Threading",
+        "Win32_System_WindowsProgramming",
+        "Win32_UI",
+        "Win32_UI_Controls",
+        "Win32_UI_Controls_Dialogs",
+        "Win32_UI_Input",
+        "Win32_UI_Input_KeyboardAndMouse",
+        "Win32_UI_Shell",
+        "Win32_UI_WindowsAndMessaging",
+        "default"
+      ],
+      "notice_sections": {
+        "license-apache-2.0": "c16f8dcf1a368b83be78d826ea23de4079fe1b4469a0ab9ee20563f37ff3d44b",
+        "license-mit": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+      }
+    },
+    {
+      "name": "windows-targets",
+      "version": "0.52.6",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "declared_authors_not_a_copyright_assignment": [
+        "Microsoft"
+      ],
+      "features": [],
+      "notice_sections": {
+        "license-apache-2.0": "c16f8dcf1a368b83be78d826ea23de4079fe1b4469a0ab9ee20563f37ff3d44b",
+        "license-mit": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+      }
+    },
+    {
+      "name": "windows_x86_64_msvc",
+      "version": "0.52.6",
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "declared_authors_not_a_copyright_assignment": [
+        "Microsoft"
+      ],
+      "features": [],
+      "notice_sections": {
+        "license-apache-2.0": "c16f8dcf1a368b83be78d826ea23de4079fe1b4469a0ab9ee20563f37ff3d44b",
+        "license-mit": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+      }
+    },
+    {
+      "name": "winit",
+      "version": "0.30.13",
+      "declared_license": "Apache-2.0",
+      "repository": "https://github.com/rust-windowing/winit",
+      "declared_authors_not_a_copyright_assignment": [
+        "The winit contributors",
+        "Pierre Krieger <pierre.krieger1708@gmail.com>"
+      ],
+      "features": [
+        "rwh_06"
+      ],
+      "notice_sections": {
+        "LICENSE": "6dc0e068dcf3a5bc8e054205b85b7720e1d49265bbc64bf515d2cf79197df69a",
+        "src/keyboard.rs [source header]": "0457d99e2c8a0a82cc929fde71f9a022f8846e5ddb49ba99e622389424551a28",
+        "src/platform_impl/linux/x11/activation.rs [source header]": "21ea939175a0cf0aa648856eb369044cf3feffbb9f47f552c40ec6f8c508734f"
+      }
+    },
+    {
+      "name": "xml-rs",
+      "version": "0.8.29",
+      "declared_license": "MIT",
+      "repository": "https://github.com/kornelski/xml-rs",
+      "declared_authors_not_a_copyright_assignment": [
+        "Vladimir Matveev <vmatveev@citrine.cc>"
+      ],
+      "features": [],
+      "notice_sections": {
+        "LICENSE": "0dc18d924dc0a5f41172a393012843a5eaaef338e795b3645da9cc3b6068220b"
+      }
+    },
+    {
+      "name": "zerocopy",
+      "version": "0.8.63",
+      "declared_license": "BSD-2-Clause OR Apache-2.0 OR MIT",
+      "repository": "https://github.com/google/zerocopy",
+      "declared_authors_not_a_copyright_assignment": [],
+      "features": [
+        "simd"
+      ],
+      "notice_sections": {
+        "LICENSE-APACHE": "9d185ac6703c4b0453974c0d85e9eee43e6941009296bb1f5eb0b54e2329e9f3",
+        "LICENSE-BSD": "83c1763356e822adde0a2cae748d938a73fdc263849ccff6b27776dff213bd32",
+        "LICENSE-MIT": "1a2f5c12ddc934d58956aa5dbdd3255fe55fd957633ab7d0d39e4f0daa73f7df",
+        "benches/ref_type_bytes_dynamic_padding.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_bytes_dynamic_size.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_bytes_mut_dynamic_padding.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_bytes_mut_dynamic_size.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_bytes_mut_static_size.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_bytes_static_size.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_deref_dynamic_padding.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_deref_dynamic_size.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_deref_mut_dynamic_size.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_deref_mut_static_size.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_deref_static_size.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_from_bytes_dynamic_padding.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_from_bytes_dynamic_size.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_from_bytes_static_size.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_from_bytes_with_elems_dynamic_padding.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_from_bytes_with_elems_dynamic_size.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_from_prefix_dynamic_padding.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_from_prefix_dynamic_size.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_from_prefix_static_size.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_from_prefix_with_elems_dynamic_padding.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_from_prefix_with_elems_dynamic_size.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_from_suffix_dynamic_padding.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_from_suffix_dynamic_size.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_from_suffix_static_size.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_from_suffix_with_elems_dynamic_padding.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_from_suffix_with_elems_dynamic_size.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_into_mut_dynamic_size.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_into_mut_static_size.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_into_ref_dynamic_padding.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_into_ref_dynamic_size.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_into_ref_static_size.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_read_static_size.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "benches/ref_type_write_static_size.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "build.rs [source header]": "0862572566f0bb9cf35504f4ecf45daaa056412ceff14d48b66a0dd6eeee7782",
+        "src/byte_slice.rs [source header]": "a1d3e4b767c45c9fcaf02398905179424fcfec3d4b7ca71140ecb500d27a3e91",
+        "src/byteorder.rs [source header]": "77fe19e6a2ca06acfcf2cf724424d22bdcce7f9c8e9ba297fbb01774345a58e7",
+        "src/deprecated.rs [source header]": "923e66f146d7c87b0250bd9bd4dd87e52ff78069c1f77195d0b04aaebfefff67",
+        "src/doctests.rs [source header]": "b0e909da27a759353f75a8012b932a0baf92e1756a9f994d188f681df22133bd",
+        "src/error.rs [source header]": "0a8566fbb16518edd904028f900fea300331bc6c6564edd0a124e565c6d638a1",
+        "src/impls.rs [source header]": "e224cfd0b26072c1c71c1b243d06571697005eb3ff1f9ad9049c9222e80e29ab",
+        "src/layout.rs [source header]": "e224cfd0b26072c1c71c1b243d06571697005eb3ff1f9ad9049c9222e80e29ab",
+        "src/lib.rs [source header]": "8939a42e9cb68f5b4a1717d149c78638d0bcce1b8aa40094407b98b4d2960016",
+        "src/macros.rs [source header]": "a2c8dcd8fdb53f07301c094594aa34bf763778dbf59c33bd5619bcf59a4219fa",
+        "src/pointer/inner.rs [source header]": "21aa7e4343cdc9b2ba0404c764083bb242e50aa7159b6746d5895dd72d1d5ed7",
+        "src/pointer/invariant.rs [source header]": "21aa7e4343cdc9b2ba0404c764083bb242e50aa7159b6746d5895dd72d1d5ed7",
+        "src/pointer/mod.rs [source header]": "e235ffb046b9d1dbefdaf00769334e350668276ec2205274dbbbdecc4ff7ae49",
+        "src/pointer/ptr.rs [source header]": "e878582555c49a71412244c22b009dd3256a40724e5ececba96325f6d5444d86",
+        "src/pointer/transmute.rs [source header]": "7965a4d795d95fb267e4a754ca36dda9dced89e9f15068470ac9c5bbc99822dc",
+        "src/ref.rs [source header]": "12be7051cc7f7e11f992c70c25b5e23b5e459ee4f5cad31f03227df0e32f7714",
+        "src/split_at.rs [source header]": "b0e909da27a759353f75a8012b932a0baf92e1756a9f994d188f681df22133bd",
+        "src/util/macro_util.rs [source header]": "01b28a93fde1bf466aa35e9fd2d0044c109212fb05b362f9cb7f3ef09bb9b279",
+        "src/util/macros.rs [source header]": "c753e51115cc94ccd8d4b78ff14cee9040d2e47c15df6380e8049bb07cf90c7e",
+        "src/util/mod.rs [source header]": "e878582555c49a71412244c22b009dd3256a40724e5ececba96325f6d5444d86",
+        "src/wrappers.rs [source header]": "e878582555c49a71412244c22b009dd3256a40724e5ececba96325f6d5444d86",
+        "tests/codegen.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "tests/include.rs [source header]": "83cdf886cf274dd616bd159ee83a44174595ff69f2faf4f17879ec8b24e681e4",
+        "tests/ui.rs [source header]": "50dd5884adfef87c43252e0ae714c723f8303345dc7a31364b2ebb2e0c1a5596",
+        "tests/ui/diagnostic-not-implemented.rs [source header]": "955aaaeb2e5f9686cc44cec52119b45854312e8d9b98853ca473e30ec6b36827",
+        "tests/ui/include_value.rs [source header]": "91dee37aca7db4d6ece1a7cf97f28105f7b52dfab1f7272fffd0a48cad6e67fc",
+        "tests/ui/late-compile-pass.rs [source header]": "e5232b722428e68aaee5a295f044a462f0376cfb8d27f7dd09aa1bc8b47e92d4",
+        "tests/ui/max-align.rs [source header]": "91dee37aca7db4d6ece1a7cf97f28105f7b52dfab1f7272fffd0a48cad6e67fc",
+        "tests/ui/ptr-is-invariant-over-v.rs [source header]": "229917008b78d96118f34eefb20a40cc57d5ce051d4d3a5f8f20e8e88abc4d3f",
+        "tests/ui/transmute-ptr-to-usize.rs [source header]": "955aaaeb2e5f9686cc44cec52119b45854312e8d9b98853ca473e30ec6b36827",
+        "tests/ui/transmute.rs [source header]": "955aaaeb2e5f9686cc44cec52119b45854312e8d9b98853ca473e30ec6b36827",
+        "tests/ui/transmute_mut.rs [source header]": "91dee37aca7db4d6ece1a7cf97f28105f7b52dfab1f7272fffd0a48cad6e67fc",
+        "tests/ui/transmute_ref.rs [source header]": "91dee37aca7db4d6ece1a7cf97f28105f7b52dfab1f7272fffd0a48cad6e67fc",
+        "tests/ui/try_transmute.rs [source header]": "955aaaeb2e5f9686cc44cec52119b45854312e8d9b98853ca473e30ec6b36827",
+        "tests/ui/try_transmute_mut.rs [source header]": "f9964af9e17d68ff974d520db52c4487d9ade94a87faccd48ab9e8c1b4ff66f6",
+        "tests/ui/try_transmute_ref.rs [source header]": "f9964af9e17d68ff974d520db52c4487d9ade94a87faccd48ab9e8c1b4ff66f6"
+      }
+    },
+    {
+      "name": "zlib-rs",
+      "version": "0.6.8",
+      "declared_license": "Zlib",
+      "repository": "https://github.com/trifectatechfoundation/zlib-rs",
+      "declared_authors_not_a_copyright_assignment": [],
+      "features": [
+        "rust-allocator",
+        "std"
+      ],
+      "notice_sections": {
+        "LICENSE": "e72111c52b7d96ebe25348dee19f0744f444d3c95ae6b1ecb6ccaecc5bce05ba"
+      }
+    }
+  ]
+}

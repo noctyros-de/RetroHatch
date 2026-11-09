@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-FileCopyrightText: 2026 Noktyros
+// Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Versioned full-machine states. Explicit little-endian fields; never raw Rust memory.
 use super::{profile::DeviceProfile, tamagotchi::Tamagotchi};
 pub type Result<T> = std::result::Result<T, String>;
@@ -80,6 +83,7 @@ pub fn profile_code(p: DeviceProfile) -> u8 {
         DeviceProfile::Angel => 2,
         DeviceProfile::Morino => 3,
         DeviceProfile::Umino => 4,
+        DeviceProfile::P2 => 5,
     }
 }
 pub fn fingerprint(words: &[u16]) -> [u8; 32] {
@@ -384,5 +388,29 @@ mod tests {
             assert!(other.restored(&saved).is_err());
             assert_eq!(other.save_state().unwrap(), before);
         }
+    }
+    #[test]
+    fn p2_appends_code_five_and_cannot_load_identical_program_p1_states() {
+        assert_eq!(profile_code(DeviceProfile::P2), 5);
+        for (p, code) in [
+            (DeviceProfile::P1, 0),
+            (DeviceProfile::Genjintch, 1),
+            (DeviceProfile::Angel, 2),
+            (DeviceProfile::Morino, 3),
+            (DeviceProfile::Umino, 4),
+        ] {
+            assert_eq!(profile_code(p), code);
+        }
+        let p1 = synthetic(DeviceProfile::P1);
+        let p2 = synthetic(DeviceProfile::P2);
+        assert_eq!(p1.rom_hash, p2.rom_hash);
+        assert_ne!(p1.identity(), p2.identity());
+        let a = p1.save_state().unwrap();
+        let b = p2.save_state().unwrap();
+        assert_eq!(b[12], 5);
+        assert!(p1.restored(&b).is_err());
+        assert!(p2.restored(&a).is_err());
+        assert_eq!(p1.save_state().unwrap(), a);
+        assert_eq!(p2.save_state().unwrap(), b);
     }
 }

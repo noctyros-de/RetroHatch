@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-FileCopyrightText: 2026 Noktyros
+// Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Minimal themed device view; all machine state and disk I/O belong to the host worker.
 mod library_ui;
 use crate::lcd_geometry::{ICON_BITS, ICON_SPANS, LCD_SIZE, PIXELS};
@@ -70,7 +73,7 @@ impl RetroHatchApp {
                     }
                 } else {
                     app.local_error = Some(
-                        "Use --profile p1, genjintch, angel, morino or umino followed by a local ROM path.".into(),
+                        "Use --profile p1, p2, genjintch, angel, morino or umino followed by a local ROM path.".into(),
                     );
                 }
             } else {
@@ -878,7 +881,7 @@ fn paint_profile_lcd(
     profile: DeviceProfile,
 ) -> egui::Response {
     let (lcd_size, pixels, _icon_bits, _legacy_spans) = match profile {
-        DeviceProfile::P1 => (LCD_SIZE, PIXELS, ICON_BITS, ICON_SPANS),
+        DeviceProfile::P1 | DeviceProfile::P2 => (LCD_SIZE, PIXELS, ICON_BITS, ICON_SPANS),
         DeviceProfile::Genjintch => {
             use crate::genjintch_lcd_geometry as g;
             (g::LCD_SIZE, g::PIXELS, g::ICON_BITS, g::ICON_SPANS)
@@ -1420,6 +1423,7 @@ mod tests {
         std::fs::create_dir_all(&folder).unwrap();
         for profile in [
             DeviceProfile::P1,
+            DeviceProfile::P2,
             DeviceProfile::Morino,
             DeviceProfile::Umino,
         ] {
@@ -1583,7 +1587,7 @@ mod tests {
         for profile in DeviceProfile::ALL {
             let source = crate::lcd_render::masks(profile);
             let expected = match profile {
-                DeviceProfile::P1 => ICON_BITS,
+                DeviceProfile::P1 | DeviceProfile::P2 => ICON_BITS,
                 DeviceProfile::Genjintch => crate::genjintch_lcd_geometry::ICON_BITS,
                 DeviceProfile::Angel => crate::angel_lcd_geometry::ICON_BITS,
                 DeviceProfile::Morino => g::ICON_BITS,
@@ -1643,6 +1647,13 @@ mod tests {
     }
     #[test]
     fn unidentified_rom_workflow_selects_umino_explicitly_and_loads_the_actual_worker() {
+        unidentified_rom_workflow(DeviceProfile::Umino);
+    }
+    #[test]
+    fn unidentified_p1_sized_rom_can_select_p2_and_start_from_the_persistent_library() {
+        unidentified_rom_workflow(DeviceProfile::P2);
+    }
+    fn unidentified_rom_workflow(profile: DeviceProfile) {
         fn find(shape: &egui::epaint::Shape, label: &str) -> Option<egui::Pos2> {
             match shape {
                 egui::epaint::Shape::Text(t) if t.galley.text() == label => {
@@ -1708,11 +1719,14 @@ mod tests {
             );
             frame(ctx, app, vec![])
         }
-        let folder =
-            std::env::temp_dir().join(format!("retrohatch-umino-picker-{}", std::process::id()));
+        let folder = std::env::temp_dir().join(format!(
+            "retrohatch-{}-picker-{}",
+            profile.id(),
+            std::process::id()
+        ));
         std::fs::create_dir_all(&folder).unwrap();
         let path = folder.join("misleading-p1-filename.bin");
-        let bytes: Vec<_> = (0..DeviceProfile::Umino.rom_bytes() / 2)
+        let bytes: Vec<_> = (0..profile.rom_bytes() / 2)
             .flat_map(|_| 0xFF8u16.to_be_bytes())
             .collect();
         std::fs::write(&path, bytes).unwrap();
@@ -1730,9 +1744,9 @@ mod tests {
         let out = frame(&ctx, &mut app, vec![]);
         let pos = center(&out, "Select model...");
         let out = click(&ctx, &mut app, pos);
-        let pos = center(&out, "Tamagotchi Umino (Ocean)");
+        let pos = center(&out, profile.name());
         let out = click(&ctx, &mut app, pos);
-        let _ = center(&out, "Tamagotchi Umino (Ocean)");
+        let _ = center(&out, profile.name());
         let pos = center(&out, "Import and Start");
         click(&ctx, &mut app, pos);
         let deadline = Instant::now() + Duration::from_secs(3);
@@ -1740,13 +1754,13 @@ mod tests {
             frame(&ctx, &mut app, vec![]);
             let snapshot = app.controller.snapshot();
             if snapshot.loaded {
-                assert_eq!(snapshot.profile, DeviceProfile::Umino);
+                assert_eq!(snapshot.profile, profile);
                 assert!(snapshot.error.is_none());
                 break;
             }
             assert!(
                 Instant::now() < deadline,
-                "Umino load did not finish: {:?}",
+                "Confirmed profile load did not finish: {:?}",
                 snapshot.error
             );
             std::thread::sleep(Duration::from_millis(5));
@@ -1767,7 +1781,7 @@ mod tests {
             assert!(Instant::now() < deadline);
             std::thread::sleep(Duration::from_millis(2));
         }
-        assert_eq!(app.controller.snapshot().profile, DeviceProfile::Umino);
+        assert_eq!(app.controller.snapshot().profile, profile);
         assert!(
             !app.library.blocked(),
             "One-click start asked for the model again"

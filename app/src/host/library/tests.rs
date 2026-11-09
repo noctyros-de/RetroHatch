@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-FileCopyrightText: 2026 Noktyros
+// Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 use super::*;
 struct Temp(PathBuf);
 impl Temp {
@@ -43,7 +46,7 @@ fn detection_uses_verified_hashes_and_never_promotes_filenames_size_or_crc_to_id
     assert!(!p.candidates.contains(&DeviceProfile::P1));
     assert!(lib.automatic(&p).is_none());
     let small = inspect_bytes(program(DeviceProfile::P1), "Ocean.bin".into()).unwrap();
-    assert_eq!(small.candidates, vec![DeviceProfile::P1]);
+    assert_eq!(small.candidates, vec![DeviceProfile::P1, DeviceProfile::P2]);
     assert!(lib.automatic(&small).is_none());
     assert!(inspect_bytes(vec![0; 12], "x".into()).is_err());
     let mut bad = program(DeviceProfile::P1);
@@ -51,6 +54,7 @@ fn detection_uses_verified_hashes_and_never_promotes_filenames_size_or_crc_to_id
     assert!(inspect_bytes(bad, "x".into()).is_err());
     for profile in [
         DeviceProfile::P1,
+        DeviceProfile::P2,
         DeviceProfile::Genjintch,
         DeviceProfile::Angel,
         DeviceProfile::Morino,
@@ -327,4 +331,34 @@ fn pending_device_cannot_be_forced_through_confirmation_or_modify_the_library() 
     assert_eq!(lib.entries(), vec![existing]);
     assert_eq!(std::fs::read_dir(lib.root.join("roms")).unwrap().count(), 1);
     assert!(!lib.blob(&pending.hash).unwrap().exists());
+}
+
+#[test]
+fn unknown_p1_sized_content_requires_confirmation_and_remembers_p2_without_save_mixing() {
+    let root = Temp::new();
+    let p = inspect_bytes(program(DeviceProfile::P2), "P1-misleading-name.bin".into()).unwrap();
+    let mut lib = Library::open(&root.0).unwrap();
+    assert_eq!(p.candidates, vec![DeviceProfile::P1, DeviceProfile::P2]);
+    assert!(lib.automatic(&p).is_none());
+    let p2 = lib.import(&p, assignment(DeviceProfile::P2)).unwrap();
+    let mut again = Library::open(&root.0).unwrap();
+    assert_eq!(again.automatic(&p).unwrap().profile, DeviceProfile::P2);
+    again
+        .update(&p2.key, assignment(DeviceProfile::P1), true)
+        .unwrap();
+    assert!(again.automatic(&p).is_none());
+    assert_eq!(again.entries().len(), 2);
+    assert_eq!(
+        std::fs::read_dir(again.root.join("roms")).unwrap().count(),
+        1
+    );
+    let p2_path = root
+        .0
+        .join("saves")
+        .join(format!("{}-{}", DeviceProfile::P2.id(), p.hash));
+    let p1_path = root
+        .0
+        .join("saves")
+        .join(format!("{}-{}", DeviceProfile::P1.id(), p.hash));
+    assert_ne!(p1_path, p2_path);
 }

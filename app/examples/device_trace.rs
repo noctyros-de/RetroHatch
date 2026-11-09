@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-FileCopyrightText: 2026 Noktyros
+// Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Local firmware diagnostic: record deterministic states for comparison with BrickEmuPy.
 //! Usage: cargo run --release --locked --example device_trace -- PROFILE ROM TRACE [--gameplay]
 //! The trace is private diagnostic state; firmware must be supplied by the user.
@@ -14,7 +17,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let profile = args
         .next()
         .and_then(|v| v.to_str().and_then(DeviceProfile::parse))
-        .ok_or("Specify p1, genjintch, angel, morino or umino")?;
+        .ok_or("Specify p1, p2, genjintch, angel, morino or umino")?;
     let path = args.next().ok_or("Provide a local ROM path")?;
     let target = args.next().ok_or("Provide a private trace output path")?;
     let gameplay = match args.next() {
@@ -22,14 +25,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some(value) if value == "--angel-gameplay" || value == "--gameplay" => true,
         _ => {
             return Err(
-                "Unknown option; use --gameplay for the extended sensor-device acceptance sequence"
-                    .into(),
+                "Unknown option; use --gameplay for the extended button acceptance sequence".into(),
             );
         }
     };
-    if gameplay && !profile.has_knock() {
-        return Err("The extended gameplay sequence requires a sensor-equipped profile".into());
-    }
     let mut out = BufWriter::new(std::fs::File::create(target)?);
     let rom = roms::load_for_profile(std::path::Path::new(&path), profile)?;
     let mut d = Tamagotchi::new(&rom)?;

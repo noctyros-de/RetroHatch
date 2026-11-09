@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-FileCopyrightText: 2026 Noktyros
+// Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Tamagotchi P1 profile from BrickEmuPy's TamagotchiP1.brick (CC0).
 use super::profile::DeviceProfile;
 use std::fmt;
@@ -16,7 +19,7 @@ impl fmt::Display for RomError {
         match self {
             Self::Size(size) => write!(
                 f,
-                "Invalid ROM size: {size} bytes. Expected 12288 bytes for P1 or 16384 bytes for Genjintch/Angel/Morino/Umino, as selected (big-endian 16-bit words). Packed 12-bit dumps are not supported."
+                "Invalid ROM size: {size} bytes. Expected 12288 bytes for P1/P2 or 16384 bytes for Genjintch/Angel/Morino/Umino, as selected (big-endian 16-bit words). Packed 12-bit dumps are not supported."
             ),
             Self::Word { offset, value } => write!(
                 f,

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-FileCopyrightText: 2026 Noktyros
+// Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Exercise the actual Windows queue with producer scheduling stalls, without firmware.
 use retrohatch::host::audio::AudioSink;
 use std::time::{Duration, Instant};

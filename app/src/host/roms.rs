@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-FileCopyrightText: 2026 Noktyros
+// Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! User-owned local ROM discovery and bounded loading.
 use crate::core::{p1::RomImage, profile::DeviceProfile};
 use std::io::Read;

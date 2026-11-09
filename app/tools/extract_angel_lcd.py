@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# SPDX-FileCopyrightText: 2026 Noktyros
 """Extract Angel display geometry only; derived icon provenance remains uncertain.
 
 No shell, screen-frame artwork, branding, buttons or firmware is included.

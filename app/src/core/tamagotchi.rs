@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-FileCopyrightText: 2026 Noktyros
+// Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Shared E0C6200 Tamagotchi device; profile-specific wiring never enters the CPU.
 use super::cpu::e0c6200::{CpuError, CpuState};
 use super::device::{Button, Descriptor, Device, DisplaySnapshot};
@@ -288,5 +291,34 @@ mod tests {
         let mut malformed = vec![0; 16384];
         malformed[0] = 0x10;
         assert!(RomImage::decode_for_profile(&malformed, DeviceProfile::Umino).is_err());
+    }
+    #[test]
+    fn p2_uses_p1_hardware_with_distinct_identity_and_no_sensor() {
+        assert_eq!(DeviceProfile::parse("p2"), Some(DeviceProfile::P2));
+        assert_eq!(DeviceProfile::P2.rom_bytes(), 12_288);
+        assert_eq!(DeviceProfile::P2.osc2_hz(), 1_600_000);
+        assert!(!DeviceProfile::P2.has_knock());
+        let mut p2 = device(DeviceProfile::P2);
+        assert_eq!(p2.descriptor().id, "tamagotchi-p2");
+        for (button, mask) in [(Button::A, 4), (Button::B, 2), (Button::C, 1)] {
+            p2.set_button(button, true);
+            assert_eq!(p2.mcu.read(0xF40), Ok(15 ^ mask));
+            p2.set_button(Button::Knock, true);
+            assert_eq!(p2.mcu.read(0xF40), Ok(15 ^ mask));
+            p2.release_inputs();
+            assert_eq!(p2.mcu.read(0xF40), Ok(15));
+        }
+        p2.mcu.write(0xF71, 0).unwrap();
+        p2.mcu.write(0xE10, 5).unwrap();
+        assert_eq!(p2.display().nibbles[16], 5);
+        assert_eq!(p2.mcu.read(0xE50), Err(CpuError::UnsupportedAddress(0xE50)));
+        p2.set_button(Button::B, true);
+        p2.reset();
+        assert_eq!(p2.cpu_state(), &CpuState::default());
+        assert_eq!(p2.mcu.read(0xF40), Ok(15));
+        assert!(RomImage::decode_for_profile(&vec![0; 16_384], DeviceProfile::P2).is_err());
+        let mut bad = vec![0; DeviceProfile::P2.rom_bytes()];
+        bad[0x200] = 16;
+        assert!(RomImage::decode_for_profile(&bad, DeviceProfile::P2).is_err());
     }
 }

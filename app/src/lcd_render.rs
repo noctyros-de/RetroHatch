@@ -1,9 +1,12 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-FileCopyrightText: 2026 Noktyros
+// Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! DPI-aware area sampling of exact Qt SVG coverage; square matrix pixels stay geometric.
 use crate::lcd_masks::{Icon, Masks};
 use retrohatch::core::profile::DeviceProfile;
 pub fn masks(p: DeviceProfile) -> &'static Masks {
     match p {
-        DeviceProfile::P1 => &crate::lcd_masks::P1,
+        DeviceProfile::P1 | DeviceProfile::P2 => &crate::lcd_masks::P1,
         DeviceProfile::Genjintch => &crate::lcd_masks::GENJINTCH,
         DeviceProfile::Angel => &crate::lcd_masks::ANGEL,
         DeviceProfile::Morino => &crate::lcd_masks::MORINO,
@@ -77,7 +80,7 @@ pub fn paint(
     let physical_width = (rect.width() * ppp).round() as u32;
     let key = (
         match profile {
-            DeviceProfile::P1 => 0,
+            DeviceProfile::P1 | DeviceProfile::P2 => 0,
             DeviceProfile::Genjintch => 1,
             DeviceProfile::Angel => 2,
             DeviceProfile::Morino => 3,

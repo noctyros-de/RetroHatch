@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-FileCopyrightText: 2026 Noktyros
+// Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Local-only real-ROM library and previous-save migration acceptance.
 //! Usage: library_acceptance ROM_FOLDER PREVIOUS_QA_SAVE_ROOT NEW_PRIVATE_ROOT
 use retrohatch::{
@@ -39,6 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut lib = Library::open(root)?;
     for (i, (profile, name)) in [
         (DeviceProfile::P1, "TamagotchiP1Japanese.bin"),
+        (DeviceProfile::P2, "TamagotchiP2.bin"),
         (DeviceProfile::Genjintch, "TamagotchiGenjintch.bin"),
         (DeviceProfile::Angel, "TamagotchiAngel.bin"),
         (DeviceProfile::Morino, "TamagotchiMorino.bin"),
@@ -126,14 +130,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     }
     let reopened = Library::open(root)?;
-    assert_eq!(reopened.entries().len(), 5);
+    assert_eq!(reopened.entries().len(), 6);
     assert!(reopened.entries().iter().all(|e| e.problem.is_none()));
     assert_eq!(
         std::fs::read_dir(root.join(library::DIRECTORY).join("roms"))?.count(),
-        5
+        6
     );
     println!(
-        "Five persistent, verified entries; five internal ROM copies; no changes to original ROMs or previous saves."
+        "Six persistent, verified entries; six internal ROM copies; no changes to original ROMs or previous saves."
     );
     Ok(())
 }

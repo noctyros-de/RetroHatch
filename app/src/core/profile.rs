@@ -1,16 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-FileCopyrightText: 2026 Noktyros
+// Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Device configurations transcribed from the unchanged BrickEmuPy .brick profiles.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum DeviceProfile {
     #[default]
     P1,
+    P2,
     Genjintch,
     Angel,
     Morino,
     Umino,
 }
 impl DeviceProfile {
-    pub const ALL: [Self; 5] = [
+    pub const ALL: [Self; 6] = [
         Self::P1,
+        Self::P2,
         Self::Genjintch,
         Self::Angel,
         Self::Morino,
@@ -19,6 +24,7 @@ impl DeviceProfile {
     pub const fn id(self) -> &'static str {
         match self {
             Self::P1 => "tamagotchi-p1",
+            Self::P2 => "tamagotchi-p2",
             Self::Genjintch => "tamagotchi-genjintch",
             Self::Angel => "tamagotchi-angel",
             Self::Morino => "tamagotchi-morino",
@@ -28,6 +34,7 @@ impl DeviceProfile {
     pub const fn name(self) -> &'static str {
         match self {
             Self::P1 => "Tamagotchi P1",
+            Self::P2 => "Tamagotchi P2",
             Self::Genjintch => "Tamagotchi Genjintch",
             Self::Angel => "Tamagotchi Angel (Angelgotchi)",
             Self::Morino => "Tamagotchi Morino",
@@ -36,13 +43,13 @@ impl DeviceProfile {
     }
     pub const fn rom_bytes(self) -> usize {
         match self {
-            Self::P1 => 0x3000,
+            Self::P1 | Self::P2 => 0x3000,
             Self::Genjintch | Self::Angel | Self::Morino | Self::Umino => 0x4000,
         }
     }
     pub const fn osc2_hz(self) -> u32 {
         match self {
-            Self::P1 => 1_600_000,
+            Self::P1 | Self::P2 => 1_600_000,
             Self::Genjintch | Self::Angel | Self::Morino | Self::Umino => 1_060_000,
         }
     }
@@ -55,6 +62,7 @@ impl DeviceProfile {
     pub fn parse(value: &str) -> Option<Self> {
         match value {
             "p1" | "tamagotchi-p1" => Some(Self::P1),
+            "p2" | "tamagotchi-p2" => Some(Self::P2),
             "genjintch" | "tamagotchi-genjintch" => Some(Self::Genjintch),
             "angel" | "angelgotchi" | "tamagotchi-angel" => Some(Self::Angel),
             "morino" | "tamagotchi-morino" => Some(Self::Morino),
@@ -62,6 +70,6 @@ impl DeviceProfile {
             _ => None,
         }
     }
-    // All five reference profiles use RAM=768, K0/K1 pull-ups=15 and P3 dedicated=0.
+    // All six reference profiles use RAM=768, K0/K1 pull-ups=15 and P3 dedicated=0.
     // These are the existing MCU mask defaults; no other masks are implied supported.
 }

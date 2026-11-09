@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# SPDX-FileCopyrightText: 2026 Noktyros
 """Extract only technical P1 LCD geometry from the local BrickEmuPy SVG.
 
 No shell, branding, backdrop, button graphics, firmware, or SVG renderer is bundled.

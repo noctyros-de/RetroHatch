@@ -1,5 +1,8 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-FileCopyrightText: 2026 Noktyros
+// Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Repeatable E0C6200 Tamagotchi timing probe. Firmware must be supplied by the user.
-//! Usage: cargo run --release --locked --example p1_performance -- ROM --seconds 60 [--audio] [--device p1|genjintch|angel|morino|umino] [--profile] [--unpaced]
+//! Usage: cargo run --release --locked --example p1_performance -- ROM --seconds 60 [--audio] [--device p1|p2|genjintch|angel|morino|umino] [--profile] [--unpaced]
 use retrohatch::core::{
     device::Device, mcu::MASTER_HZ, profile::DeviceProfile, tamagotchi::Tamagotchi,
 };
@@ -31,11 +34,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Some("--device") => {
                 let value = args
                     .next()
-                    .ok_or("--device requires p1, genjintch, angel, morino or umino")?;
+                    .ok_or("--device requires p1, p2, genjintch, angel, morino or umino")?;
                 device_profile = value
                     .to_str()
                     .and_then(DeviceProfile::parse)
-                    .ok_or("Unknown profile; use p1, genjintch, angel, morino or umino")?;
+                    .ok_or("Unknown profile; use p1, p2, genjintch, angel, morino or umino")?;
             }
             Some("--audio") => audio = true,
             Some("--profile") => profile = true,
