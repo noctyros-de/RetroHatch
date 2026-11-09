@@ -270,3 +270,64 @@ impl Io {
         }
     }
 }
+
+impl Io {
+    pub(crate) fn encode_state(&self, e: &mut crate::core::state::Encoder) {
+        e.bytes(&self.registers);
+        e.bytes(&self.low);
+        e.bytes(&self.high);
+        e.bytes(&self.latch);
+        e.u8(self.timer);
+        e.bytes(&self.stopwatch);
+        e.u8(self.programmable);
+        e.u8(self.reload);
+        e.u8(self.serial);
+        e.i32(self.timer_phase);
+        e.u64(self.stopwatch_phase_bits);
+        e.i32(self.programmable_phase);
+        self.buzzer.encode_state(e);
+    }
+    pub(crate) fn decode_state(
+        &mut self,
+        d: &mut crate::core::state::Decoder<'_>,
+    ) -> crate::core::state::Result<()> {
+        self.registers = d.array::<127>()?;
+        self.low = d.array::<11>()?;
+        self.high = d.array::<11>()?;
+        self.latch = d.array::<11>()?;
+        self.timer = d.u8()?;
+        self.stopwatch = d.array::<2>()?;
+        self.programmable = d.u8()?;
+        self.reload = d.u8()?;
+        self.serial = d.u8()?;
+        self.timer_phase = d.i32()?;
+        self.stopwatch_phase_bits = d.u64()?;
+        self.programmable_phase = d.i32()?;
+        self.buzzer.decode_state(d)?;
+        use crate::core::state::require;
+        require(
+            self.registers
+                .iter()
+                .chain(&self.low)
+                .chain(&self.high)
+                .chain(&self.latch)
+                .all(|&v| v <= 15)
+                && self.stopwatch.iter().all(|&v| v < 10),
+            "Invalid peripheral registers",
+        )?;
+        require(
+            self.low.iter().zip(self.high).all(|(&a, b)| a & b == 0),
+            "Invalid external pin levels",
+        )?;
+        require(
+            (0..=128).contains(&self.timer_phase) && (0..=128).contains(&self.programmable_phase),
+            "Invalid timer phase",
+        )?;
+        let phase = f64::from_bits(self.stopwatch_phase_bits);
+        require(
+            phase.is_finite() && (0.0..=328.0).contains(&phase),
+            "Invalid stopwatch phase",
+        )?;
+        Ok(())
+    }
+}

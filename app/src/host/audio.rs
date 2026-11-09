@@ -158,3 +158,29 @@ impl AudioSink {
     }
     pub fn clear(&mut self) {}
 }
+
+/// User volume is a host-only gain. MCU waveform phase and saved PCM remain untouched.
+pub fn apply_volume(samples: &mut [i16], volume: u8) {
+    let gain = i32::from(volume.min(100));
+    if gain != 100 {
+        for s in samples {
+            *s = (i32::from(*s) * gain / 100) as i16;
+        }
+    }
+}
+#[cfg(test)]
+mod gain_tests {
+    #[test]
+    fn host_volume_preserves_sign_and_never_changes_the_input_waveform_source() {
+        let source = [-32768, -655, -100, 0, 100, 655, 32767];
+        let mut quiet = source;
+        super::apply_volume(&mut quiet, 25);
+        assert_eq!(quiet, [-8192, -163, -25, 0, 25, 163, 8191]);
+        let mut silent = source;
+        super::apply_volume(&mut silent, 0);
+        assert_eq!(silent, [0; 7]);
+        let mut full = source;
+        super::apply_volume(&mut full, 100);
+        assert_eq!(full, source);
+    }
+}

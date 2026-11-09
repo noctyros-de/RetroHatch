@@ -5,3 +5,5 @@ pub mod mcu;
 pub mod p1;
 pub mod profile;
 pub mod tamagotchi;
+
+pub mod state;

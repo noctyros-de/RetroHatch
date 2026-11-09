@@ -150,3 +150,44 @@ mod tests {
         assert_eq!(retuned.sample(44100), 0);
     }
 }
+
+impl Buzzer {
+    pub(crate) fn encode_state(&self, e: &mut crate::core::state::Encoder) {
+        e.u8(self.frequency);
+        e.u8(self.output_frequency);
+        e.u8(self.step);
+        e.bool(self.envelope);
+        e.u16(self.cycle);
+        e.u16(self.envelope_counter);
+        e.u16(self.one_shot);
+        e.bool(self.sound_on);
+        e.u8(self.level);
+        e.u64(self.phase);
+    }
+    pub(crate) fn decode_state(
+        &mut self,
+        d: &mut crate::core::state::Decoder<'_>,
+    ) -> crate::core::state::Result<()> {
+        self.frequency = d.u8()?;
+        self.output_frequency = d.u8()?;
+        self.step = d.u8()?;
+        self.envelope = d.bool()?;
+        self.cycle = d.u16()?;
+        self.envelope_counter = d.u16()?;
+        self.one_shot = d.u16()?;
+        self.sound_on = d.bool()?;
+        self.level = d.u8()?;
+        self.phase = d.u64()?;
+        crate::core::state::require(
+            self.frequency < 8
+                && self.output_frequency < 8
+                && self.step <= 7
+                && self.level <= 7
+                && [2048, 4096].contains(&self.cycle)
+                && self.envelope_counter <= 4096
+                && self.one_shot <= 2048,
+            "Invalid buzzer state",
+        )?;
+        Ok(())
+    }
+}

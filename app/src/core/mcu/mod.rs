@@ -230,3 +230,85 @@ impl Mcu {
 
 #[cfg(test)]
 mod tests;
+
+impl Mcu {
+    pub(crate) fn encode_state(
+        &self,
+        e: &mut crate::core::state::Encoder,
+    ) -> crate::core::state::Result<()> {
+        crate::core::state::require(self.audio.len() <= 441000, "Too much undrained PCM to save")?;
+        self.cpu.encode_state(e);
+        e.u64(self.now);
+        e.u64(self.next_osc1);
+        e.u64(self.next_sample);
+        e.u64(self.instructions);
+        e.u64(self.interrupts);
+        e.bool(self.reset_held);
+        e.u64(self.osc2_remainder);
+        self.counters.encode_state(e);
+        e.u32(self.audio.len() as u32);
+        for &sample in &self.audio {
+            e.u16(sample as u16);
+        }
+        Ok(())
+    }
+    pub(crate) fn decode_state(
+        &mut self,
+        d: &mut crate::core::state::Decoder<'_>,
+    ) -> crate::core::state::Result<()> {
+        use crate::core::state::require;
+        self.cpu.decode_state(d)?;
+        self.now = d.u64()?;
+        self.next_osc1 = d.u64()?;
+        self.next_sample = d.u64()?;
+        self.instructions = d.u64()?;
+        self.interrupts = d.u64()?;
+        self.reset_held = d.bool()?;
+        self.osc2_remainder = d.u64()?;
+        self.counters.decode_state(d)?;
+        require(
+            [
+                self.instructions,
+                self.interrupts,
+                self.counters.instructions,
+                self.counters.halt,
+                self.counters.interrupts,
+                self.counters.reset,
+                self.counters.fast,
+                self.counters.slow,
+                self.counters.osc1_edges,
+                self.counters.audio_samples,
+                self.counters.clock_calls,
+            ]
+            .iter()
+            .all(|v| *v < u64::MAX / 64),
+            "Invalid execution counters",
+        )?;
+        require(
+            self.now < u64::MAX - MASTER_HZ * 60
+                && self.next_osc1 >= self.now
+                && self.next_osc1 - self.now <= OSC1_TICKS,
+            "Invalid oscillator schedule",
+        )?;
+        let sample_at =
+            (u128::from(self.next_sample) * u128::from(MASTER_HZ)).div_ceil(u128::from(AUDIO_RATE));
+        require(
+            sample_at > u128::from(self.now)
+                && sample_at <= u128::from(self.now + MASTER_HZ / u64::from(AUDIO_RATE) + 1),
+            "Invalid audio sample schedule",
+        )?;
+        require(
+            self.osc2_remainder < u64::from(self.osc2_hz),
+            "Invalid fractional oscillator phase",
+        )?;
+        let n = d.u32()? as usize;
+        require(n <= 441000, "Invalid PCM buffer size")?;
+        self.audio.clear();
+        for _ in 0..n {
+            let sample = d.u16()? as i16;
+            require((-655..=655).contains(&sample), "Invalid MCU PCM sample")?;
+            self.audio.push(sample);
+        }
+        Ok(())
+    }
+}

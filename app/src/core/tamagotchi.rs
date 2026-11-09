@@ -8,12 +8,24 @@ use super::profile::DeviceProfile;
 pub struct Tamagotchi {
     pub profile: DeviceProfile,
     pub mcu: Mcu,
+    pub(crate) rom_hash: [u8; 32],
 }
 impl Tamagotchi {
     pub fn new(rom: &RomImage) -> Result<Self, CpuError> {
         Ok(Self {
             mcu: Mcu::for_profile(&rom.words, rom.profile)?,
             profile: rom.profile,
+            rom_hash: crate::core::state::fingerprint(&rom.words),
+        })
+    }
+    pub(crate) fn new_from_program(
+        words: &[u16],
+        profile: DeviceProfile,
+    ) -> crate::core::state::Result<Self> {
+        Ok(Self {
+            mcu: Mcu::for_profile(words, profile).map_err(|e| e.to_string())?,
+            profile,
+            rom_hash: crate::core::state::fingerprint(words),
         })
     }
 }

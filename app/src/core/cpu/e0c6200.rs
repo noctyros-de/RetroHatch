@@ -1128,3 +1128,77 @@ impl Cpu {
 #[cfg(test)]
 #[path = "e0c6200_tests.rs"]
 mod tests;
+
+impl CpuState {
+    pub(crate) fn encode_state(&self, e: &mut crate::core::state::Encoder) {
+        e.u8(self.a);
+        e.u8(self.b);
+        e.u16(self.ix);
+        e.u16(self.iy);
+        e.u8(self.sp);
+        e.u16(self.pc);
+        e.u16(self.npc);
+        e.bool(self.carry);
+        e.bool(self.zero);
+        e.bool(self.decimal);
+        e.bool(self.interrupt_enable);
+        e.bool(self.interrupt_delay);
+        e.bool(self.halted);
+    }
+    pub(crate) fn decode_state(
+        &mut self,
+        d: &mut crate::core::state::Decoder<'_>,
+    ) -> crate::core::state::Result<()> {
+        self.a = d.u8()?;
+        self.b = d.u8()?;
+        self.ix = d.u16()?;
+        self.iy = d.u16()?;
+        self.sp = d.u8()?;
+        self.pc = d.u16()?;
+        self.npc = d.u16()?;
+        self.carry = d.bool()?;
+        self.zero = d.bool()?;
+        self.decimal = d.bool()?;
+        self.interrupt_enable = d.bool()?;
+        self.interrupt_delay = d.bool()?;
+        self.halted = d.bool()?;
+        crate::core::state::require(
+            self.a <= 15
+                && self.b <= 15
+                && self.ix <= 0xFFF
+                && self.iy <= 0xFFF
+                && self.pc <= 0x1FFF
+                && self.npc <= 0x1FFF,
+            "Invalid CPU registers",
+        )?;
+        Ok(())
+    }
+}
+
+impl Cpu {
+    pub(crate) fn program_words(&self) -> &[u16] {
+        &self.program
+    }
+    pub(crate) fn encode_state(&self, e: &mut crate::core::state::Encoder) {
+        self.state.encode_state(e);
+        e.bytes(&self.ram);
+        e.bytes(&self.lcd);
+        self.io().encode_state(e);
+    }
+    pub(crate) fn decode_state(
+        &mut self,
+        d: &mut crate::core::state::Decoder<'_>,
+    ) -> crate::core::state::Result<()> {
+        self.state.decode_state(d)?;
+        self.ram = d.array()?;
+        self.lcd = d.array()?;
+        crate::core::state::require(
+            self.ram.iter().chain(&self.lcd).all(|&v| v <= 15),
+            "Invalid RAM/LCD nibble",
+        )?;
+        let mut io = self.io().clone();
+        io.decode_state(d)?;
+        self.with_io(|v| *v = io);
+        Ok(())
+    }
+}

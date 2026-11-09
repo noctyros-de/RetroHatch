@@ -11,8 +11,8 @@ mod ui;
 fn main() -> eframe::Result {
     let options = eframe::NativeOptions {
         viewport: eframe::egui::ViewportBuilder::default()
-            .with_inner_size([480.0, 620.0])
-            .with_min_inner_size([360.0, 500.0]),
+            .with_inner_size([440.0, 530.0])
+            .with_min_inner_size([350.0, 430.0]),
         renderer: eframe::Renderer::Glow,
         ..Default::default()
     };

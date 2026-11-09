@@ -14,3 +14,11 @@
 /saves/
 /app/roms/
 /app/saves/
+# RetroHatch user state and settings
+*.rhstate
+*.rhstate.bak
+settings.rhc
+*.rhstate.*.tmp
+settings.rhc.bak
+.settings.rhc.*.tmp
+.settings.rhc.bak.*.tmp

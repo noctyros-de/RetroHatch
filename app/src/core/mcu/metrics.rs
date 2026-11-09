@@ -24,3 +24,33 @@ pub struct CoreProfile {
     pub timers_ns: u64,
     pub pcm_ns: u64,
 }
+
+impl CycleCounters {
+    pub(crate) fn encode_state(&self, e: &mut crate::core::state::Encoder) {
+        e.u64(self.instructions);
+        e.u64(self.halt);
+        e.u64(self.interrupts);
+        e.u64(self.reset);
+        e.u64(self.fast);
+        e.u64(self.slow);
+        e.u64(self.osc1_edges);
+        e.u64(self.audio_samples);
+        e.u64(self.clock_calls);
+    }
+    pub(crate) fn decode_state(
+        &mut self,
+        d: &mut crate::core::state::Decoder<'_>,
+    ) -> crate::core::state::Result<()> {
+        self.instructions = d.u64()?;
+        self.halt = d.u64()?;
+        self.interrupts = d.u64()?;
+        self.reset = d.u64()?;
+        self.fast = d.u64()?;
+        self.slow = d.u64()?;
+        self.osc1_edges = d.u64()?;
+        self.audio_samples = d.u64()?;
+        self.clock_calls = d.u64()?;
+
+        Ok(())
+    }
+}

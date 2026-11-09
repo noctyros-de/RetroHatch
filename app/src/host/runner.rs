@@ -2,7 +2,11 @@
 use super::performance::{
     CsvLog, Pacer, Performance, Telemetry, UiReads, WORK_TICKS, milliseconds,
 };
-use super::{audio::AudioSink, roms};
+use super::{
+    audio::AudioSink,
+    roms,
+    saves::{SavePolicy, SaveTarget, Saves},
+};
 use crate::core::cpu::e0c6200::CpuState;
 use crate::core::device::{Button, Device, DisplaySnapshot};
 use crate::core::mcu::metrics::{CoreProfile, CycleCounters};
@@ -22,6 +26,14 @@ pub enum Command {
     ReleaseInputs,
     Audio(bool),
     Profiling(bool),
+    Save(SaveTarget),
+    LoadSave(SaveTarget),
+    Export(PathBuf),
+    Import(PathBuf),
+    SavePolicy(SavePolicy),
+    PrepareExit,
+    DiscardExit,
+    ClearSaveError,
     Quit,
 }
 
@@ -51,6 +63,15 @@ pub struct Snapshot {
     pub core_profile: CoreProfile,
     pub detailed_profiling: bool,
     pub diagnostics_error: Option<String>,
+    pub save_error: Option<String>,
+    pub save_message: Option<String>,
+    pub saving: bool,
+    pub loading: bool,
+    pub exit_ready: bool,
+    pub save_count: u64,
+    pub restores: u64,
+    pub loads: u64,
+    pub slots: [bool; 3],
 }
 impl Default for Snapshot {
     fn default() -> Self {
@@ -74,6 +95,15 @@ impl Default for Snapshot {
             core_profile: CoreProfile::default(),
             detailed_profiling: false,
             diagnostics_error: None,
+            save_error: None,
+            save_message: None,
+            saving: false,
+            loading: false,
+            exit_ready: false,
+            save_count: 0,
+            restores: 0,
+            loads: 0,
+            slots: [false; 3],
         }
     }
 }
@@ -86,6 +116,12 @@ pub struct Controller {
 }
 impl Controller {
     pub fn new(audio_enabled: bool) -> Self {
+        Self::start(audio_enabled, None)
+    }
+    pub fn with_storage(audio_enabled: bool, root: PathBuf, policy: SavePolicy) -> Self {
+        Self::start(audio_enabled, Some((root, policy)))
+    }
+    fn start(audio_enabled: bool, storage: Option<(PathBuf, SavePolicy)>) -> Self {
         let (sender, receiver) = mpsc::channel();
         let latest = Arc::new(Mutex::new(Snapshot::default()));
         let shared = latest.clone();
@@ -93,7 +129,7 @@ impl Controller {
         let worker_ui_reads = ui_reads.clone();
         let worker = thread::Builder::new()
             .name("RetroHatch MCU".into())
-            .spawn(move || run(receiver, shared, worker_ui_reads, audio_enabled))
+            .spawn(move || run(receiver, shared, worker_ui_reads, audio_enabled, storage))
             .expect("cannot start emulation worker");
         Self {
             sender,
@@ -172,7 +208,11 @@ fn run(
     latest: Arc<Mutex<Snapshot>>,
     ui_reads: Arc<UiReads>,
     mut enabled: bool,
+    storage: Option<(PathBuf, SavePolicy)>,
 ) {
+    let mut saves = storage.map(|(root, policy)| Saves::new(root, policy));
+    let mut exit_requested = false;
+    let mut volume = saves.as_ref().map_or(100, |s| s.policy.volume);
     let mut device: Option<Tamagotchi> = None;
     let mut running = false;
     let mut state = Snapshot::default();
@@ -191,6 +231,39 @@ fn run(
         }
     };
     loop {
+        if let Some(store) = &mut saves {
+            if store.poll(&mut device, &mut state, &mut running) {
+                if let Some(d) = &mut device {
+                    d.mcu.set_profiling(detailed);
+                    let now = Instant::now();
+                    pacer = Pacer::new(now, d.time());
+                    telemetry = Telemetry::new(d.time());
+                    if running {
+                        telemetry.resume(now);
+                    }
+                    if let Some(audio) = &mut audio {
+                        audio.clear();
+                    }
+                }
+                if let Some(log) = &mut log {
+                    log.reset_epoch();
+                }
+            }
+            if exit_requested && !state.loading {
+                exit_requested = false;
+                running = false;
+                telemetry.pause(Instant::now());
+                if let Err(e) = store.exit(device.as_ref()) {
+                    state.save_error = Some(e);
+                }
+            }
+            if let Some(d) = &device
+                && let Err(e) = store.automatic_due(d, running && !state.loading)
+            {
+                state.save_error = Some(e);
+                store.reset_timer();
+            }
+        }
         // A Windows timeout may wake after ~15.6 ms. Never sleep again while behind.
         let wait = if running {
             device
@@ -226,6 +299,15 @@ fn run(
             telemetry.observe_command(envelope.sent, Instant::now());
             match envelope.command {
                 Command::Quit => {
+                    if let Some(store) = &mut saves {
+                        if !state.exit_ready {
+                            if let Err(e) = store.exit(device.as_ref()) {
+                                state.save_error = Some(e);
+                            }
+                        }
+                        store.finish();
+                        store.poll(&mut device, &mut state, &mut running);
+                    }
                     telemetry.pause(Instant::now());
                     publish(
                         &latest,
@@ -249,6 +331,10 @@ fn run(
                     return;
                 }
                 command @ (Command::Load(_) | Command::LoadProfile(..)) => {
+                    if state.loading || exit_requested {
+                        state.save_error=Some("Please wait for saved progress to finish loading before switching ROMs.".into());
+                        continue;
+                    }
                     let (path, profile) = match command {
                         Command::Load(path) => (path, DeviceProfile::P1),
                         Command::LoadProfile(path, profile) => (path, profile),
@@ -263,6 +349,15 @@ fn run(
                     });
                     match prepared {
                         Ok((mut p1, crc, known)) => {
+                            if let Some(store) = &mut saves
+                                && store.policy.save_on_exit
+                                && store.can_capture()
+                                && let Some(old) = &device
+                                && let Err(e) = store.save(old, SaveTarget::Autosave)
+                            {
+                                state.save_error = Some(e);
+                                continue;
+                            }
                             if let Some(audio) = &mut audio {
                                 audio.clear();
                             }
@@ -278,10 +373,24 @@ fn run(
                             state.crc32 = Some(crc);
                             state.known_world_p1 = known;
                             state.profile = profile;
+                            state.loads += 1;
+                            state.exit_ready = false;
+                            state.save_error = None;
+                            state.slots = [false; 3];
+                            if let Some(store) = &mut saves {
+                                running = false;
+                                state.loading = true;
+                                if let Err(e) = store.start(device.as_ref().unwrap(), &mut state) {
+                                    state.save_error = Some(e);
+                                    state.loading = false;
+                                }
+                            }
                             let now = Instant::now();
                             pacer = Pacer::new(now, 0);
                             telemetry = Telemetry::new(0);
-                            telemetry.resume(now);
+                            if running {
+                                telemetry.resume(now);
+                            }
                             if let Some(log) = &mut log {
                                 log.reset_epoch();
                             }
@@ -290,7 +399,13 @@ fn run(
                     }
                 }
                 Command::Run => {
-                    if !running && let Some(p1) = &device {
+                    if !running
+                        && !state.loading
+                        && let Some(p1) = &device
+                    {
+                        if let Some(store) = &mut saves {
+                            store.allow_fresh_session();
+                        }
                         let now = Instant::now();
                         running = true;
                         pacer = Pacer::new(now, p1.time());
@@ -308,6 +423,10 @@ fn run(
                     }
                 }
                 Command::Reset => {
+                    if let Some(store) = &mut saves {
+                        store.cancel_restore();
+                    }
+                    state.loading = false;
                     if let Some(p1) = &mut device {
                         p1.reset();
                         running = true;
@@ -342,6 +461,82 @@ fn run(
                     if value {
                         attempted_audio = false;
                     }
+                }
+                Command::Save(target) => {
+                    let result = match (&mut saves, &device) {
+                        (Some(store), Some(d)) => store.save(d, target),
+                        _ => Err("No persistent device is loaded".into()),
+                    };
+                    if let Err(e) = result {
+                        state.save_error = Some(e);
+                    }
+                }
+                Command::LoadSave(target) => {
+                    let result = match (&mut saves, &device) {
+                        (Some(store), Some(d)) => target
+                            .filename()
+                            .and_then(|n| store.load(d, store.directory(d).join(n), false)),
+                        _ => Err("No persistent device is loaded".into()),
+                    };
+                    if let Err(e) = result {
+                        state.save_error = Some(e);
+                    }
+                }
+                Command::Export(path) => {
+                    let result = match (&mut saves, &device) {
+                        (Some(store), Some(d)) => store.export(d, path),
+                        _ => Err("No persistent device is loaded".into()),
+                    };
+                    if let Err(e) = result {
+                        state.save_error = Some(e);
+                    }
+                }
+                Command::Import(path) => {
+                    let result = match (&mut saves, &device) {
+                        (Some(store), Some(d)) => store.load(d, path, false),
+                        _ => Err("No persistent device is loaded".into()),
+                    };
+                    if let Err(e) = result {
+                        state.save_error = Some(e);
+                    }
+                }
+                Command::SavePolicy(policy) => {
+                    volume = policy.volume.min(100);
+                    if let Some(store) = &mut saves {
+                        store.configure(policy);
+                    }
+                }
+                Command::PrepareExit => {
+                    running = false;
+                    telemetry.pause(Instant::now());
+                    state.exit_ready = false;
+                    state.save_error = None;
+                    if let Some(audio) = &mut audio {
+                        audio.clear();
+                    }
+                    if state.loading {
+                        exit_requested = true;
+                    } else if let Some(store) = &mut saves {
+                        if let Err(e) = store.exit(device.as_ref()) {
+                            state.save_error = Some(e);
+                        }
+                    } else {
+                        state.exit_ready = true;
+                    }
+                }
+                Command::DiscardExit => {
+                    exit_requested = false;
+                    if let Some(store) = &mut saves {
+                        store.finish();
+                        store.poll(&mut device, &mut state, &mut running);
+                    }
+                    running = false;
+                    state.save_error = None;
+                    state.exit_ready = true;
+                }
+                Command::ClearSaveError => {
+                    state.save_error = None;
+                    state.error = None;
                 }
                 Command::Profiling(value) => {
                     detailed = value;
@@ -379,7 +574,8 @@ fn run(
                 }
                 telemetry.values.core_ms += milliseconds(core_start);
                 let audio_start = Instant::now();
-                let samples = p1.drain_audio();
+                let mut samples = p1.drain_audio();
+                super::audio::apply_volume(&mut samples, volume);
                 if enabled && !attempted_audio {
                     attempted_audio = true;
                     match AudioSink::new() {
@@ -412,7 +608,7 @@ fn run(
                 telemetry.values.audio_ms += milliseconds(audio_start);
             }
         }
-        if changed || (running && last_publish.elapsed() >= Duration::from_millis(16)) {
+        if changed || last_publish.elapsed() >= Duration::from_millis(16) {
             publish(
                 &latest,
                 &mut state,
@@ -677,5 +873,152 @@ mod tests {
         drop(c);
         std::fs::remove_file(path).unwrap();
         std::fs::remove_dir(folder).unwrap();
+    }
+}
+
+#[cfg(test)]
+mod save_tests {
+    use super::*;
+    fn wait(c: &Controller, condition: impl Fn(&Snapshot) -> bool) -> Snapshot {
+        let end = Instant::now() + Duration::from_secs(5);
+        loop {
+            let s = c.snapshot();
+            if condition(&s) {
+                return s;
+            }
+            assert!(
+                Instant::now() < end,
+                "State did not arrive: running={}, loading={}, saves={}, restored={}, error={:?}",
+                s.running,
+                s.loading,
+                s.save_count,
+                s.restores,
+                s.save_error
+            );
+            thread::sleep(Duration::from_millis(5));
+        }
+    }
+    #[test]
+    fn real_worker_slots_export_import_failed_write_and_restart_resume_are_transactional() {
+        let root =
+            std::env::temp_dir().join(format!("retrohatch-state-worker-{}", std::process::id()));
+        std::fs::create_dir_all(&root).unwrap();
+        let path = root.join("synthetic.bin");
+        let mut rom = vec![0; 0x4000];
+        rom[0x200..0x202].copy_from_slice(&0xFF8u16.to_be_bytes());
+        std::fs::write(&path, rom).unwrap();
+        let policy = SavePolicy {
+            autosave_minutes: 0,
+            save_on_exit: true,
+            volume: 100,
+        };
+        let c = Controller::with_storage(false, root.clone(), policy.clone());
+        c.send(Command::LoadProfile(path.clone(), DeviceProfile::Angel));
+        wait(&c, |s| s.loaded && !s.loading && s.state.halted);
+        c.send(Command::Pause);
+        let paused = wait(&c, |s| !s.running);
+        for slot in 1..=3 {
+            c.send(Command::Save(SaveTarget::Slot(slot)));
+            wait(&c, |s| s.save_count >= u64::from(slot));
+        }
+        let exported = root.join("export.rhstate");
+        c.send(Command::Export(exported.clone()));
+        wait(&c, |s| s.save_count >= 4);
+        let saved = std::fs::read(&exported).unwrap();
+        c.send(Command::Reset);
+        wait(&c, |s| s.running && s.ticks > paused.ticks);
+        c.send(Command::Pause);
+        wait(&c, |s| !s.running);
+        c.send(Command::LoadSave(SaveTarget::Slot(2)));
+        let loaded = wait(&c, |s| s.restores >= 1);
+        assert_eq!(loaded.ticks, paused.ticks);
+        assert_eq!(loaded.state, paused.state);
+        assert!(!loaded.running);
+        c.send(Command::Export(root.join("roundtrip.rhstate")));
+        wait(&c, |s| s.save_count >= 5);
+        assert_eq!(
+            saved,
+            std::fs::read(root.join("roundtrip.rhstate")).unwrap()
+        );
+        c.send(Command::Import(exported));
+        wait(&c, |s| s.restores >= 2);
+        let rom_before = std::fs::read(&path).unwrap();
+        c.send(Command::Export(path.clone()));
+        let bad = wait(&c, |s| s.save_error.is_some());
+        assert_eq!(bad.ticks, paused.ticks);
+        assert_eq!(std::fs::read(&path).unwrap(), rom_before);
+        c.send(Command::ClearSaveError);
+        c.send(Command::PrepareExit);
+        wait(&c, |s| s.exit_ready);
+        drop(c);
+        let again = Controller::with_storage(false, root.clone(), policy);
+        again.send(Command::LoadProfile(path.clone(), DeviceProfile::Angel));
+        let resumed = wait(&again, |s| s.restores >= 1 && !s.loading);
+        assert!(resumed.ticks >= paused.ticks);
+        assert!(resumed.ticks - paused.ticks < crate::core::mcu::MASTER_HZ / 5);
+        assert_eq!(resumed.state, paused.state);
+        again.send(Command::PrepareExit);
+        wait(&again, |s| s.exit_ready);
+        drop(again);
+        assert_eq!(root.parent(), Some(std::env::temp_dir().as_path()));
+        std::fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn corrupt_autosave_is_kept_on_failed_resume_and_exit_does_not_replace_it() {
+        use crate::core::p1::RomImage;
+        let root =
+            std::env::temp_dir().join(format!("retrohatch-corrupt-save-{}", std::process::id()));
+        let mut bytes = vec![0; 0x3000];
+        bytes[0x200..0x202].copy_from_slice(&0xFF8u16.to_be_bytes());
+        let d = Tamagotchi::new(&RomImage::decode(&bytes).unwrap()).unwrap();
+        let dir = root.join("saves").join(d.identity());
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = root.join("synthetic.bin");
+        std::fs::write(&path, bytes).unwrap();
+        let mut bad = d.save_state().unwrap();
+        bad[100] ^= 1;
+        let auto = dir.join("autosave.rhstate");
+        std::fs::write(&auto, &bad).unwrap();
+        let c = Controller::with_storage(false, root.clone(), SavePolicy::default());
+        c.send(Command::Load(path));
+        let failed = wait(&c, |s| s.save_error.is_some() && !s.loading);
+        assert!(!failed.running);
+        c.send(Command::PrepareExit);
+        let exit = wait(&c, |s| {
+            s.save_error
+                .as_ref()
+                .is_some_and(|e| e.contains("not restored"))
+        });
+        assert!(!exit.exit_ready);
+        drop(c);
+        assert_eq!(std::fs::read(auto).unwrap(), bad);
+        assert_eq!(root.parent(), Some(std::env::temp_dir().as_path()));
+        std::fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn closing_while_auto_resume_is_pending_saves_restored_progress_instead_of_reset_state() {
+        use crate::core::p1::RomImage;
+        let root =
+            std::env::temp_dir().join(format!("retrohatch-early-close-{}", std::process::id()));
+        let mut bytes = vec![0; 0x3000];
+        bytes[0x200..0x202].copy_from_slice(&0xFF8u16.to_be_bytes());
+        let mut d = Tamagotchi::new(&RomImage::decode(&bytes).unwrap()).unwrap();
+        d.advance_to(crate::core::mcu::MASTER_HZ / 10).unwrap();
+        d.drain_audio();
+        let saved = d.save_state().unwrap();
+        let dir = root.join("saves").join(d.identity());
+        std::fs::create_dir_all(&dir).unwrap();
+        let auto = dir.join("autosave.rhstate");
+        std::fs::write(&auto, &saved).unwrap();
+        let path = root.join("synthetic.bin");
+        std::fs::write(&path, bytes).unwrap();
+        let c = Controller::with_storage(false, root.clone(), SavePolicy::default());
+        c.send(Command::Load(path));
+        c.send(Command::PrepareExit);
+        wait(&c, |s| s.exit_ready);
+        drop(c);
+        assert_eq!(std::fs::read(auto).unwrap(), saved);
+        assert_eq!(root.parent(), Some(std::env::temp_dir().as_path()));
+        std::fs::remove_dir_all(root).unwrap();
     }
 }
