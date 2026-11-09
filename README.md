@@ -14,6 +14,26 @@ Unresolved LCD artwork provenance currently blocks public distribution of the
 affected source assets and binaries. See [third-party licensing](THIRD_PARTY_LICENSES.md)
 and the [release checklist](developer/RELEASE.md).
 
+## Installation
+
+1. Open [GitHub Releases](https://github.com/Noktyros/RetroHatch/releases).
+2. Download the latest **`RetroHatch-v<version>-windows-x86_64.zip`** under
+   **Assets**. The source ZIP is intended for developers.
+3. Extract the entire archive into a folder of your choice.
+4. Double-click **`RetroHatch.exe`**.
+
+**No Rust or Visual Studio installation is required.** The portable package
+targets 64-bit Windows 10/11 with an OpenGL 3.3-capable graphics driver. Keep the
+included license and attribution files with the executable. ROMs are not
+included; import firmware that you have the appropriate rights to use after
+starting the application. Settings, imported ROMs and saves are stored in your
+Windows user-data directory, outside the extracted application folder.
+
+Release downloads are available only to people with access while the repository
+is private. If no release has been published yet, there is no Windows ZIP to
+download; developers can [build from source](#build-from-source). Preparing the
+workflow does not resolve the artwork-provenance blockers described above.
+
 ## Supported devices
 
 | Device | Implemented and locally verified |
@@ -32,16 +52,15 @@ and board settings are unresolved. Recognized TamaOtch firmware is refused with
 an explanation; another device's display is not substituted. Tamagotchi
 Connection/ON/Meets and other MCU families are not implemented.
 
-## Build and run on Windows
+## Build from source
 
-There is no public binary download provided by this preparation task. To build
-an authorized local source checkout:
+These instructions are for developers. Downloaded Windows release packages do
+not require a Rust toolchain or Visual Studio.
 
-1. Install stable Rust with rustup, including the MSVC Windows target, and
-   Visual Studio Build Tools with Desktop development with C++ and a Windows SDK.
-2. Use an ordinary writable checkout. The validated toolchain is Rust 1.99.1;
-   the locked GUI dependencies declare their own minimum compiler requirements.
-3. In PowerShell, from the repository root:
+1. Install Rust 1.99.1 with rustup and the `x86_64-pc-windows-msvc` target.
+2. Install Visual Studio Build Tools with **Desktop development with C++** and
+   a Windows SDK.
+3. Open PowerShell in a writable source checkout:
 
 ```powershell
 cd app
@@ -49,12 +68,18 @@ cargo build --release --locked
 ./target/release/RetroHatch.exe
 ```
 
-Use the optimized build for gameplay. Future distribution candidates must also
-use the build-path privacy wrapper described in [developer/RELEASE.md](developer/RELEASE.md). No ROM, private reference checkout or
-private documentation is needed to compile. Cargo downloads the dependencies
-specified in Cargo.lock on the first online build. Native Windows dialogs and
-audio are the supported host integrations; other operating systems are not
-validated release targets. See [CONTRIBUTING.md](CONTRIBUTING.md) for checks.
+Use an optimized build for gameplay. For a distribution candidate, run
+`powershell -NoProfile -ExecutionPolicy Bypass -File app/tools/build_release.ps1`
+from the repository root instead. This runs the same locked release build with
+build-path privacy remapping and a statically linked C runtime. The
+[release guide](developer/RELEASE.md) explains packaging and tag automation.
+
+No ROM, private reference checkout or private documentation is needed to
+compile. Cargo downloads locked dependencies on the first online build. The
+matching source ZIP attached to a release also includes vendored dependencies
+for offline Cargo builds. Native Windows dialogs and audio are the supported
+host integrations; other operating systems are not validated release targets.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for checks.
 
 ## Import your own firmware
 

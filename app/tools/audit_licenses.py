@@ -101,7 +101,7 @@ def generate():
     if missing:
         raise RuntimeError(f"No notices located: {missing}")
     inventory = {"target": TARGET, "scope": "Locked default Windows normal/build dependencies; not other targets or toolchains",
-        "cargo_lock_sha256": hashlib.sha256((ROOT/"app/Cargo.lock").read_bytes()).hexdigest(), "packages": records}
+        "cargo_lock_sha256": hashlib.sha256((ROOT/"app/Cargo.lock").read_text(encoding="utf-8").encode("utf-8")).hexdigest(), "packages": records}
     outputs = {ROOT/"LICENSES/CARGO_PACKAGES.json": json.dumps(inventory, indent=2, ensure_ascii=False)+"\n",
         ROOT/"LICENSES/CARGO_NOTICES.txt": "".join(sections)}
     table = ["# Locked Windows dependency inventory\n",
@@ -123,7 +123,7 @@ if __name__ == "__main__":
     for path, text in outputs.items():
         encoded = text.encode("utf-8")
         if args.check:
-            assert path.read_bytes() == encoded, f"Stale dependency evidence: {path.name}"
+            assert path.read_bytes().replace(b"\r\n", b"\n") == encoded.replace(b"\r\n", b"\n"), f"Stale dependency evidence: {path.name}"
         else:
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(encoded)

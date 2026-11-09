@@ -3,10 +3,12 @@
 
 # Release and redistribution checklist
 
-This is a preparation checklist, not permission to publish. The repository
-remains private. Do not push, create a release, change visibility or alter owner
-settings as part of running local checks. Known LCD artwork provenance and
-preferred-source gaps currently block public distribution.
+The repository remains private. Local build and packaging commands never push,
+publish or change repository visibility. The tag-triggered workflow described
+below **does publish a GitHub Release** when an authorized maintainer pushes a
+matching `v*` version tag. Resolve the known LCD artwork provenance and
+preferred-source gaps before authorizing distribution; automation is not legal
+clearance.
 
 ## Gates before any public source or binary distribution
 
@@ -27,8 +29,9 @@ preferred-source gaps currently block public distribution.
   saves or user configuration. Record the exact source revision, toolchain,
   target, features, build command and artifact hashes. Re-run the license
   inventory when Cargo.lock, features, target or toolchain changes.
-- Obtain the owner's explicit release authorization after reviewing the final
-  artifacts and unresolved-risk report. This task grants no such authorization.
+- Obtain the owner's release authorization after reviewing the final artifacts
+  and unresolved-risk report, before pushing the version tag. A tag push starts
+  publication automatically; local packaging does not.
 
 ## GPL-3.0-only binaries and matching source
 
@@ -85,7 +88,7 @@ python -B app/tools/audit_licenses.py --check
 
 This reads cached dependency sources and writes only public notice evidence.
 It is not a legal approval, security vulnerability scan or all-platform audit.
-No public release automation or GitHub setting changes are included.
+GitHub settings and repository visibility are never changed by these tools.
 
 
 ## Build-path privacy
@@ -98,11 +101,68 @@ prefixes in the ordinary executable. For a future distribution candidate, use:
 powershell -NoProfile -ExecutionPolicy Bypass -File app/tools/build_release.ps1
 ```
 
-This local-only wrapper uses dynamically discovered path-prefix remapping for
-the user home, project and Rust toolchain. It restores the process environment
+This build wrapper statically links the Microsoft C runtime and uses dynamically
+discovered path-prefix remapping for the user home, project and Rust toolchain. It restores the process environment
 after building, respects an existing CARGO_TARGET_DIR, and never uploads or
 authorizes distribution. Custom flags use CARGO_ENCODED_RUSTFLAGS to avoid
 whitespace/quoting errors. Re-scan the actual binary for personal paths after
 changing the toolchain or build location. Remapping addresses a privacy issue,
 not the outstanding asset/licensing release gates. See the
 [rustc path-remapping documentation](https://doc.rust-lang.org/rustc/command-line-arguments.html#--remap-path-prefix-remap-source-names-in-output).
+
+## Windows tag workflow
+
+`.github/workflows/windows-release.yml` runs only when a `v*` tag is pushed.
+The tag must equal `v` plus the version in `app/Cargo.toml`, for example `v0.1.0`.
+It uses Windows Server 2025, the audited Rust 1.99.1 MSVC toolchain, formatting,
+locked check/test/build commands, license-inventory checks and packaging tests.
+The actual build command is `cargo build --release --locked` from `app/`, with
+the wrapper's path-remapping and static-C-runtime flags configured first.
+
+The packager uses an explicit source allowlist, creates a matching source ZIP
+with `cargo vendor --locked` dependencies and an offline Cargo configuration,
+and checks that the Windows EXE has no non-system DLL imports. An independent
+offline release build of the extracted source must succeed before publication.
+The binary ZIP includes the EXE, README, GPL text, copyright and third-party
+notices, public developer guides and `SOURCE.md` with the exact revision and
+build information. Fonts and LCD masks are embedded in the executable; external
+ROMs, settings and saves are not needed to launch it and are never packaged.
+
+The final step uses the runner's GitHub CLI with the workflow token's
+`contents: write` permission. It verifies that the tag already exists, uploads
+both ZIPs and `SHA256SUMS.txt`, then publishes the release. A version containing
+`-` is marked as a prerelease. Published releases are not overwritten. If an
+upload fails, inspect any remaining draft before retrying the workflow. No
+personal access token is required. Actions must be enabled and repository or
+organization policy must permit the workflow token to write release contents.
+
+Private repository releases remain access-controlled. This workflow neither
+makes the repository public nor grants access to additional people. Do not push
+a release tag until the rights/provenance gates above are resolved. There is no
+separate approval prompt after a matching tag has been pushed.
+
+## Local package verification
+
+From the root, after building and committing the intended source in your normal
+maintainer workflow:
+
+```powershell
+python -B app/tools/test_package_release.py
+python -B app/tools/package_release.py --tag v0.1.0 --output dist
+```
+
+Packaging normally refuses tracked changes or untracked publication files.
+For an uncommitted local verification only, add `--allow-dirty`; the manifest
+then explicitly labels the result as a local draft, not an exact tagged build.
+`--offline` uses only cached crates. Existing output archives are never replaced.
+The scripts do not create tags, commits or releases. They do not read original
+ROMs, AppData libraries, private references or saves. Review the resulting ZIPs
+and hashes; do not upload the temporary staging directory or `.git` metadata.
+
+Extract the Windows ZIP to a separate directory and launch `RetroHatch.exe`
+with no source checkout beside it. Use a temporary `RETROHATCH_DATA_DIR` during
+smoke tests to avoid touching personal libraries and saves. Test an actual
+Windows desktop with a suitable OpenGL driver; hosted CI cannot establish every
+GPU, clean-machine or gameplay compatibility claim. The portable package does
+not require Rust, Visual Studio or a separate MSVC runtime installer. SmartScreen
+may warn about unsigned downloads; these builds are not code-signed.

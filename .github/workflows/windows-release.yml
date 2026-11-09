@@ -1,0 +1,102 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# SPDX-FileCopyrightText: 2026 Noktyros
+name: Windows release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build, verify and publish Windows ZIP
+    runs-on: windows-2025
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      RELEASE_TAG: ${{ github.ref_name }}
+      CARGO_TERM_COLOR: always
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Check out the tagged source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Install the audited Rust toolchain
+        run: |
+          rustup toolchain install 1.99.1 --profile minimal --component rustfmt --target x86_64-pc-windows-msvc
+          if ($LASTEXITCODE -ne 0) { throw 'Rust installation failed' }
+          rustup default 1.99.1
+          if ($LASTEXITCODE -ne 0) { throw 'Rust selection failed' }
+
+      - name: Validate the version tag
+        working-directory: app
+        run: |
+          $metadata = cargo metadata --no-deps --format-version 1 --locked | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot read package version' }
+          $version = ($metadata.packages | Where-Object name -eq 'retrohatch').version
+          if ($env:RELEASE_TAG -cne "v$version") { throw 'The tag must match the Cargo.toml package version exactly' }
+
+      - name: Check, test and build the Windows executable
+        working-directory: app
+        run: |
+          & ./tools/build_release.ps1 -ConfigureOnly
+          cargo fmt --check
+          if ($LASTEXITCODE -ne 0) { throw 'Formatting check failed' }
+          cargo check --locked
+          if ($LASTEXITCODE -ne 0) { throw 'Cargo check failed' }
+          cargo test --locked
+          if ($LASTEXITCODE -ne 0) { throw 'Rust tests failed' }
+          cargo build --release --locked
+          if ($LASTEXITCODE -ne 0) { throw 'Windows release build failed' }
+          python -B tools/audit_licenses.py --check
+          if ($LASTEXITCODE -ne 0) { throw 'Dependency notice inventory is stale' }
+          python -B tools/test_package_release.py
+          if ($LASTEXITCODE -ne 0) { throw 'Packaging tests failed' }
+
+      - name: Package Windows and matching source archives
+        run: |
+          python -B app/tools/package_release.py --tag $env:RELEASE_TAG --output dist
+          if ($LASTEXITCODE -ne 0) { throw 'Release packaging failed' }
+
+      - name: Verify an independent offline source build
+        run: |
+          $sourceZip = Get-Item "dist/RetroHatch-$env:RELEASE_TAG-source.zip"
+          $sourceRoot = Join-Path $env:RUNNER_TEMP 'retrohatch-source-check'
+          Expand-Archive -LiteralPath $sourceZip.FullName -DestinationPath $sourceRoot
+          Push-Location (Join-Path $sourceRoot 'app')
+          try {
+            $env:CARGO_TARGET_DIR = Join-Path $env:RUNNER_TEMP 'retrohatch-source-target'
+            & ./tools/build_release.ps1 -ConfigureOnly
+            cargo build --release --locked --offline
+            if ($LASTEXITCODE -ne 0) { throw 'Independent source build failed' }
+          } finally { Pop-Location }
+
+      - name: Publish the verified release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          $assets = @(
+            "dist/RetroHatch-$env:RELEASE_TAG-windows-x86_64.zip",
+            "dist/RetroHatch-$env:RELEASE_TAG-source.zip",
+            'dist/SHA256SUMS.txt'
+          )
+          $arguments = @('release', 'create', $env:RELEASE_TAG, '--verify-tag',
+            '--title', "RetroHatch $env:RELEASE_TAG", '--notes-file', 'dist/RELEASE_NOTES.md')
+          if ($env:RELEASE_TAG.Contains('-')) { $arguments += '--prerelease' }
+          # The CLI uploads assets into a draft before publishing. Failed uploads do not publish it.
+          & gh @arguments @assets
+          if ($LASTEXITCODE -ne 0) { throw 'Release publication failed; inspect any remaining draft before retrying' }
