@@ -168,7 +168,7 @@ fn arithmetic_may_form_unmapped_addresses_but_followup_access_fails_atomically()
 
 #[test]
 fn neighboring_index_related_groups_remain_explicitly_unsupported() {
-    for opcode in [0x900, 0xAF0, 0xE80, 0xE90, 0xF28, 0xF2C, 0xF38, 0xF3C] {
+    for opcode in [0x900, 0xAF0, 0xE80, 0xE90, 0xF20, 0xF27, 0xF30, 0xF37] {
         let mut cpu = program(&[opcode]);
         cpu.state.ix = 0xE4F;
         cpu.state.iy = 0xECF;

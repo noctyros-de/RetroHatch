@@ -120,6 +120,7 @@ def decoder_inventory(namespace, tables, source):
         "_or_r_q", "_xor_r_q", "_cp_r_q", "_fan_r_q",
         "_adc_xh_i", "_adc_xl_i", "_adc_yh_i", "_adc_yl_i",
         "_cp_xh_i", "_cp_xl_i", "_cp_yh_i", "_cp_yl_i",
+        "_acpx_mx_r", "_acpy_my_r", "_scpx_mx_r", "_scpy_my_r",
     }
     cpu = machine(namespace, tables, [0x100, 0x100, 0, 0, 0, 0, 0, 0])
     handlers = [handler.__name__ for handler in cpu._execute]
@@ -264,6 +265,71 @@ def index_alu_matrix(namespace, tables, source):
     return lines, cases
 
 
+def post_increment_matrix(namespace, tables, source):
+    """Original memory arithmetic with old-pointer reads and page-local increment."""
+    lines = ["# E0C6200.py SHA256 " + hashlib.sha256(source).hexdigest(),
+             "# opcode|layout|initial_flags|left|right_values|cycles|next_pc|next_npc|next_ix|next_iy|delay|result_flags_pairs (hex)"]
+    layouts = ((0x20, 0x21), (0x20, 0x20), (0x2FF, 0x1FF),
+               (0xE4F, 0xECF), (0xE4F, 0xE4F), (0x2FF, 0xE4F), (0xECF, 0x2FF))
+    ram_seed = [(i * 3 + 1) & 15 for i in range(0x300)]
+    lcd_seed = [(i + 5) & 15 for i in range(0xA0)]
+    starts = (0x100, 0xFFF, 0x1FFF, 0x10FF)
+    cases = 0
+    for base in (0xF28, 0xF2C, 0xF38, 0xF3C):
+        is_x = base in (0xF28, 0xF38)
+        for operand in range(4):
+            opcode = base | operand
+            for layout, (ix, iy) in enumerate(layouts):
+                address = ix if is_x else iy
+                alias = operand >= 2 and (ix if operand == 2 else iy) == address
+                for initial_flags in range(16):
+                    start = starts[initial_flags & 3]
+                    cpu = machine(namespace, tables, [start, 0x1A00, 3, 5, ix, iy, 0xA5, initial_flags])
+                    for left in range(16):
+                        right_values = (left,) if alias else range(16)
+                        outcomes = []
+                        metadata = None
+                        for right in right_values:
+                            cpu._A, cpu._B = 3, 5
+                            cpu._IX, cpu._IY = ix, iy
+                            cpu._PC, cpu._NPC = start, 0x1A00
+                            cpu._CF, cpu._ZF, cpu._DF, cpu._IF = (
+                                bool(initial_flags & (1 << bit)) for bit in range(4))
+                            cpu._RAM, cpu._VRAM = ram_seed.copy(), lcd_seed.copy()
+                            cpu.set_mem(address, left)
+                            cpu._set_abmxmy_tbl[operand](cpu, right)
+                            assert cpu.get_mem(address) == left
+                            assert cpu._get_abmxmy_tbl[operand](cpu) == right
+                            before_ram, before_lcd = cpu._RAM.copy(), cpu._VRAM.copy()
+                            before_a, before_b = cpu._A, cpu._B
+                            cpu._if_delay = False
+                            cycles = cpu._execute[opcode](cpu, opcode)
+                            result = cpu.get_mem(address)  # Read the OLD destination, not M(X/Y) after increment.
+                            if address < 0x300:
+                                before_ram[address] = result
+                            else:
+                                index = address - 0xE00 if address < 0xE50 else address - 0xE80 + 0x50
+                                before_lcd[index] = result
+                            assert cpu._RAM == before_ram and cpu._VRAM == before_lcd
+                            assert (cpu._A, cpu._B, cpu._SP, cpu._HALT) == (before_a, before_b, 0xA5, 0)
+                            assert (cpu._IY if is_x else cpu._IX) == (iy if is_x else ix)
+                            assert ((cpu._IX if is_x else cpu._IY) & 0xF00) == (address & 0xF00)
+                            assert (cpu._DF, cpu._IF) == (bool(initial_flags & 4), bool(initial_flags & 8))
+                            assert cycles == 7 and not cpu._if_delay
+                            current = (cycles, cpu._PC, cpu._NPC, cpu._IX, cpu._IY, int(cpu._if_delay))
+                            if metadata is not None:
+                                assert current == metadata
+                            metadata = current
+                            outcomes.append(f"{result:X}{flags(cpu):X}")
+                            cases += 1
+                        lines.append("|".join([
+                            *(f"{v:X}" for v in (opcode, layout, initial_flags, left)),
+                            "".join(f"{v:X}" for v in right_values),
+                            *(f"{v:X}" for v in metadata), "".join(outcomes)]))
+    assert cases == 320512
+    return lines, cases
+
+
 def emit(name, lines, check):
     path = DATA / name
     content = "\n".join(lines) + "\n"
@@ -321,10 +387,13 @@ def main():
     emit("e0c6200_two_operand_alu_reference.txt", two_operand, args.check)
     index, index_cases = index_alu_matrix(namespace, tables, source)
     emit("e0c6200_index_alu_reference.txt", index, args.check)
+    post_increment, post_cases = post_increment_matrix(namespace, tables, source)
+    emit("e0c6200_post_increment_reference.txt", post_increment, args.check)
     action = "Verified" if args.check else "Generated"
     print(f"{action} {count} instruction snapshots from {programs} synthetic programs, "
           "512 legacy ADD cases, 131072 direct immediate ALU cases and "
-          f"{two_operand_cases} direct two-operand ALU cases and {index_cases} direct index cases.")
+          f"{two_operand_cases} direct two-operand ALU cases, {index_cases} direct index cases and "
+          f"{post_cases} direct post-increment cases.")
 
 
 if __name__ == "__main__":

@@ -62,11 +62,11 @@ EF0|EFF|_ldpy_r_q|0
 F00|F0F|_cp_r_q|1
 F10|F1F|_fan_r_q|1
 F20|F27|_dummy|0
-F28|F2B|_acpx_mx_r|0
-F2C|F2F|_acpy_my_r|0
+F28|F2B|_acpx_mx_r|1
+F2C|F2F|_acpy_my_r|1
 F30|F37|_dummy|0
-F38|F3B|_scpx_mx_r|0
-F3C|F3F|_scpy_my_r|0
+F38|F3B|_scpx_mx_r|1
+F3C|F3F|_scpy_my_r|1
 F40|F4F|_set_f_i|0
 F50|F5F|_rst_f_i|0
 F60|F6F|_inc_mn|0

@@ -118,6 +118,10 @@ pub enum Instruction {
     Alu(AluOperation, Operand, Operand),
     AdcIndex(IndexNibble, u8),
     CompareIndex(IndexNibble, u8),
+    AdcPostX(Operand),
+    AdcPostY(Operand),
+    SbcPostX(Operand),
+    SbcPostY(Operand),
     LoadImmediate(Operand, u8),
     SetPage(u8),
     StoreIncrementX(u8),
@@ -204,6 +208,10 @@ impl Instruction {
                 Operand::from_bits(opcode >> 2),
                 Operand::from_bits(opcode),
             )),
+            0xF28..=0xF2B => Some(Self::AdcPostX(Operand::from_bits(opcode))),
+            0xF2C..=0xF2F => Some(Self::AdcPostY(Operand::from_bits(opcode))),
+            0xF38..=0xF3B => Some(Self::SbcPostX(Operand::from_bits(opcode))),
+            0xF3C..=0xF3F => Some(Self::SbcPostY(Operand::from_bits(opcode))),
             0xFFB => Some(Self::Nop5),
             0xFFF => Some(Self::Nop7),
             _ => None,
@@ -533,6 +541,52 @@ impl Cpu {
                     self.state.zero = nibble == u16::from(immediate);
                     self.state.carry = nibble < u16::from(immediate);
                 }
+                self.next_pc();
+                7
+            }
+            Instruction::AdcPostX(source)
+            | Instruction::AdcPostY(source)
+            | Instruction::SbcPostX(source)
+            | Instruction::SbcPostY(source) => {
+                let is_x = matches!(
+                    instruction,
+                    Instruction::AdcPostX(_) | Instruction::SbcPostX(_)
+                );
+                let subtract = matches!(
+                    instruction,
+                    Instruction::SbcPostX(_) | Instruction::SbcPostY(_)
+                );
+                let address = if is_x { self.state.ix } else { self.state.iy };
+                // Read both operands through the old pointers, including aliases.
+                let left = self.read_memory(address)?;
+                let right = self.read_operand(source)?;
+                let (result, carry) = if subtract {
+                    let mut difference =
+                        i16::from(left) - i16::from(right) - i16::from(self.state.carry);
+                    let borrow = difference < 0;
+                    if self.state.decimal && borrow {
+                        difference += 10;
+                    }
+                    ((difference & 15) as u8, borrow)
+                } else {
+                    let mut sum = left + right + u8::from(self.state.carry);
+                    let mut carry = sum > 15;
+                    if self.state.decimal && sum > 9 {
+                        sum += 6;
+                        carry = true;
+                    }
+                    (sum & 15, carry)
+                };
+                // Commit only after the old destination was successfully written.
+                self.write_memory(address, result)?;
+                let next_address = (address & 0xF00) | ((address + 1) & 0xFF);
+                if is_x {
+                    self.state.ix = next_address;
+                } else {
+                    self.state.iy = next_address;
+                }
+                self.state.carry = carry;
+                self.state.zero = result == 0;
                 self.next_pc();
                 7
             }
