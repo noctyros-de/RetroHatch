@@ -120,6 +120,10 @@ pub enum Instruction {
     CompareIndex(IndexNibble, u8),
     RotateLeft(Operand),
     RotateRight(Operand),
+    IncrementMemory(u8),
+    DecrementMemory(u8),
+    IncrementStackPointer,
+    DecrementStackPointer,
     AdcPostX(Operand),
     AdcPostY(Operand),
     SbcPostX(Operand),
@@ -216,6 +220,10 @@ impl Instruction {
             0xF2C..=0xF2F => Some(Self::AdcPostY(Operand::from_bits(opcode))),
             0xF38..=0xF3B => Some(Self::SbcPostX(Operand::from_bits(opcode))),
             0xF3C..=0xF3F => Some(Self::SbcPostY(Operand::from_bits(opcode))),
+            0xF60..=0xF6F => Some(Self::IncrementMemory((opcode & 15) as u8)),
+            0xF70..=0xF7F => Some(Self::DecrementMemory((opcode & 15) as u8)),
+            0xFCB => Some(Self::DecrementStackPointer),
+            0xFDB => Some(Self::IncrementStackPointer),
             0xFFB => Some(Self::Nop5),
             0xFFF => Some(Self::Nop7),
             _ => None,
@@ -612,6 +620,27 @@ impl Cpu {
                 // Unlike ALU instructions, rotations preserve Z as well as D/I.
                 self.next_pc();
                 cycles
+            }
+            Instruction::IncrementMemory(address) | Instruction::DecrementMemory(address) => {
+                // The immediate nibble is a direct RAM address, independent of IX/IY.
+                let old = i16::from(self.read_memory(u16::from(address))?);
+                let increment = matches!(instruction, Instruction::IncrementMemory(_));
+                let result = if increment { old + 1 } else { old - 1 };
+                self.write_memory(u16::from(address), (result & 15) as u8)?;
+                self.state.zero = if increment { result == 16 } else { result == 0 };
+                self.state.carry = if increment { result > 15 } else { result < 0 };
+                self.next_pc();
+                7
+            }
+            Instruction::IncrementStackPointer | Instruction::DecrementStackPointer => {
+                // SP arithmetic wraps at eight bits and preserves every flag.
+                self.state.sp = if matches!(instruction, Instruction::IncrementStackPointer) {
+                    self.state.sp.wrapping_add(1)
+                } else {
+                    self.state.sp.wrapping_sub(1)
+                };
+                self.next_pc();
+                5
             }
             Instruction::Nop5 => {
                 self.next_pc();

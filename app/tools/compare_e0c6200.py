@@ -122,6 +122,7 @@ def decoder_inventory(namespace, tables, source):
         "_cp_xh_i", "_cp_xl_i", "_cp_yh_i", "_cp_yl_i",
         "_acpx_mx_r", "_acpy_my_r", "_scpx_mx_r", "_scpy_my_r",
         "_rlc_r", "_rrc_r",
+        "_inc_mn", "_dec_mn", "_inc_sp", "_dec_sp",
     }
     cpu = machine(namespace, tables, [0x100, 0x100, 0, 0, 0, 0, 0, 0])
     handlers = [handler.__name__ for handler in cpu._execute]
@@ -388,6 +389,57 @@ def rotation_matrix(namespace, tables, source):
     return lines, cases
 
 
+def inc_dec_matrix(namespace, tables, source):
+    """All direct nibble-RAM values and all eight-bit SP values with every flag combination."""
+    lines = ["# E0C6200.py SHA256 " + hashlib.sha256(source).hexdigest(),
+             "# opcode|initial_flags|cycles|next_pc|next_npc|delay|result_flags_groups (hex; 2 result digits + 1 flags digit per input)"]
+    ram_seed = [(i * 3 + 1) & 15 for i in range(0x300)]
+    lcd_seed = [(i + 5) & 15 for i in range(0xA0)]
+    starts = (0x100, 0xFFF, 0x1FFF, 0x10FF)
+    cases = [0, 0]
+    for opcode in (*range(0xF60, 0xF80), 0xFCB, 0xFDB):
+        is_sp = opcode in (0xFCB, 0xFDB)
+        for initial_flags in range(16):
+            start = starts[initial_flags & 3]
+            # Invalid IX/IY must never be dereferenced by these direct/SP instructions.
+            cpu = machine(namespace, tables, [start, 0x1A00, 3, 5, 0xF00, 0xE50, 0xA5, initial_flags])
+            outcomes = []
+            metadata = None
+            for value in range(256 if is_sp else 16):
+                cpu._PC, cpu._NPC = start, 0x1A00
+                cpu._CF, cpu._ZF, cpu._DF, cpu._IF = (
+                    bool(initial_flags & (1 << bit)) for bit in range(4))
+                cpu._SP = value if is_sp else 0xA5
+                cpu._RAM, cpu._VRAM = ram_seed.copy(), lcd_seed.copy()
+                if not is_sp:
+                    cpu.set_mem(opcode & 15, value)
+                expected_ram = cpu._RAM.copy()
+                cpu._if_delay = False
+                cycles = cpu._execute[opcode](cpu, opcode)
+                result = cpu._SP if is_sp else cpu.get_mem(opcode & 15)
+                if is_sp:
+                    assert flags(cpu) == initial_flags  # SP wrapping changes no flags.
+                else:
+                    expected_ram[opcode & 15] = result
+                    assert cpu._SP == 0xA5
+                assert cpu._RAM == expected_ram and cpu._VRAM == lcd_seed
+                assert (cpu._A, cpu._B, cpu._IX, cpu._IY, cpu._HALT) == (3, 5, 0xF00, 0xE50, 0)
+                assert (cpu._DF, cpu._IF) == (bool(initial_flags & 4), bool(initial_flags & 8))
+                assert cycles == (5 if is_sp else 7)
+                assert not cpu._if_delay
+                current = (cycles, cpu._PC, cpu._NPC, int(cpu._if_delay))
+                if metadata is not None:
+                    assert current == metadata
+                metadata = current
+                outcomes.append(f"{result:02X}{flags(cpu):X}")
+                cases[int(is_sp)] += 1
+            lines.append("|".join([
+                *(f"{v:X}" for v in (opcode, initial_flags, *metadata)),
+                "".join(outcomes)]))
+    assert cases == [8192, 8192]
+    return lines, sum(cases)
+
+
 def emit(name, lines, check):
     path = DATA / name
     content = "\n".join(lines) + "\n"
@@ -449,11 +501,14 @@ def main():
     emit("e0c6200_post_increment_reference.txt", post_increment, args.check)
     rotations, rotation_cases = rotation_matrix(namespace, tables, source)
     emit("e0c6200_rotation_reference.txt", rotations, args.check)
+    inc_dec, inc_dec_cases = inc_dec_matrix(namespace, tables, source)
+    emit("e0c6200_inc_dec_reference.txt", inc_dec, args.check)
     action = "Verified" if args.check else "Generated"
     print(f"{action} {count} instruction snapshots from {programs} synthetic programs, "
           "512 legacy ADD cases, 131072 direct immediate ALU cases and "
           f"{two_operand_cases} direct two-operand ALU cases, {index_cases} direct index cases and "
-          f"{post_cases} direct post-increment cases and {rotation_cases} direct rotation cases.")
+          f"{post_cases} direct post-increment cases, {rotation_cases} direct rotation cases and "
+          f"{inc_dec_cases} direct INC/DEC cases.")
 
 
 if __name__ == "__main__":
