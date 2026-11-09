@@ -145,8 +145,8 @@ fn stack_pointer_wraps_without_memory_access_or_flag_changes() {
 }
 
 #[test]
-fn neighboring_flag_load_and_stack_opcodes_remain_atomic_errors() {
-    for opcode in [0xF5F, 0xF80, 0xFCA, 0xFCC, 0xFDA, 0xFDC] {
+fn neighboring_reserved_load_and_stack_opcodes_remain_atomic_errors() {
+    for opcode in [0xF37, 0xF80, 0xFCA, 0xFCC, 0xFDA, 0xFDC] {
         let mut cpu = program(&[opcode]);
         cpu.state.sp = 0xFF;
         cpu.state.npc = 0x1A00;

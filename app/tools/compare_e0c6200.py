@@ -123,6 +123,7 @@ def decoder_inventory(namespace, tables, source):
         "_acpx_mx_r", "_acpy_my_r", "_scpx_mx_r", "_scpy_my_r",
         "_rlc_r", "_rrc_r",
         "_inc_mn", "_dec_mn", "_inc_sp", "_dec_sp",
+        "_set_f_i", "_rst_f_i",
     }
     cpu = machine(namespace, tables, [0x100, 0x100, 0, 0, 0, 0, 0, 0])
     handlers = [handler.__name__ for handler in cpu._execute]
@@ -440,6 +441,36 @@ def inc_dec_matrix(namespace, tables, source):
     return lines, sum(cases)
 
 
+def flag_control_matrix(namespace, tables, source):
+    """Every SET/RST encoding, input flag combination, incoming delay, and PC layout."""
+    lines = ["# E0C6200.py SHA256 " + hashlib.sha256(source).hexdigest(),
+             "# opcode|initial_flags|initial_delay|pc|cycles|flags|delay|next_pc|next_npc (hex)"]
+    ram_seed = [(i * 3 + 1) & 15 for i in range(0x300)]
+    lcd_seed = [(i + 5) & 15 for i in range(0xA0)]
+    cases = 0
+    for opcode in range(0xF40, 0xF60):
+        for initial_flags in range(16):
+            for initial_delay in range(2):
+                for pc in (0x100, 0xFFF, 0x1FFF, 0x10FF):
+                    # Invalid indirect addresses must not be accessed by flag control.
+                    cpu = machine(namespace, tables, [pc, 0x1A00, 3, 5, 0xF00, 0xE50, 0xA5, initial_flags])
+                    cpu._RAM, cpu._VRAM = ram_seed.copy(), lcd_seed.copy()
+                    cpu._if_delay = bool(initial_delay)
+                    # clock() clears the old delay before dispatch; do not execute IRQs.
+                    cpu._if_delay = False
+                    cycles = cpu._execute[opcode](cpu, opcode)
+                    assert cycles == 7
+                    assert (cpu._A, cpu._B, cpu._IX, cpu._IY, cpu._SP, cpu._HALT) == (
+                        3, 5, 0xF00, 0xE50, 0xA5, 0)
+                    assert cpu._RAM == ram_seed and cpu._VRAM == lcd_seed
+                    lines.append("|".join(f"{int(v):X}" for v in (
+                        opcode, initial_flags, initial_delay, pc, cycles, flags(cpu),
+                        cpu._if_delay, cpu._PC, cpu._NPC)))
+                    cases += 1
+    assert cases == 4096
+    return lines, cases
+
+
 def emit(name, lines, check):
     path = DATA / name
     content = "\n".join(lines) + "\n"
@@ -503,12 +534,14 @@ def main():
     emit("e0c6200_rotation_reference.txt", rotations, args.check)
     inc_dec, inc_dec_cases = inc_dec_matrix(namespace, tables, source)
     emit("e0c6200_inc_dec_reference.txt", inc_dec, args.check)
+    flag_control, flag_cases = flag_control_matrix(namespace, tables, source)
+    emit("e0c6200_flag_reference.txt", flag_control, args.check)
     action = "Verified" if args.check else "Generated"
     print(f"{action} {count} instruction snapshots from {programs} synthetic programs, "
           "512 legacy ADD cases, 131072 direct immediate ALU cases and "
           f"{two_operand_cases} direct two-operand ALU cases, {index_cases} direct index cases and "
           f"{post_cases} direct post-increment cases, {rotation_cases} direct rotation cases and "
-          f"{inc_dec_cases} direct INC/DEC cases.")
+          f"{inc_dec_cases} direct INC/DEC cases and {flag_cases} direct flag-control cases.")
 
 
 if __name__ == "__main__":

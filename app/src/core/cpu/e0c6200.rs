@@ -124,6 +124,8 @@ pub enum Instruction {
     DecrementMemory(u8),
     IncrementStackPointer,
     DecrementStackPointer,
+    SetFlags(u8),
+    ResetFlags(u8),
     AdcPostX(Operand),
     AdcPostY(Operand),
     SbcPostX(Operand),
@@ -220,6 +222,8 @@ impl Instruction {
             0xF2C..=0xF2F => Some(Self::AdcPostY(Operand::from_bits(opcode))),
             0xF38..=0xF3B => Some(Self::SbcPostX(Operand::from_bits(opcode))),
             0xF3C..=0xF3F => Some(Self::SbcPostY(Operand::from_bits(opcode))),
+            0xF40..=0xF4F => Some(Self::SetFlags((opcode & 15) as u8)),
+            0xF50..=0xF5F => Some(Self::ResetFlags((opcode & 15) as u8)),
             0xF60..=0xF6F => Some(Self::IncrementMemory((opcode & 15) as u8)),
             0xF70..=0xF7F => Some(Self::DecrementMemory((opcode & 15) as u8)),
             0xFCB => Some(Self::DecrementStackPointer),
@@ -364,6 +368,8 @@ impl Cpu {
             .ok_or(CpuError::MissingInstruction { pc })?;
         let instruction =
             Instruction::decode(opcode).ok_or(CpuError::UnsupportedOpcode { pc, opcode })?;
+        // Keep delay changes local until the instruction has completed successfully.
+        let mut next_interrupt_delay = matches!(instruction, Instruction::SetPage(_));
         let cycles = match instruction {
             Instruction::Jump(target) => {
                 self.state.pc = (self.state.npc & 0x1F00) | u16::from(target);
@@ -642,6 +648,25 @@ impl Cpu {
                 self.next_pc();
                 5
             }
+            Instruction::SetFlags(mask) => {
+                // Delay applies only to a new I=0 -> I=1 transition.
+                next_interrupt_delay = mask & 8 != 0 && !self.state.interrupt_enable;
+                self.state.carry |= mask & 1 != 0;
+                self.state.zero |= mask & 2 != 0;
+                self.state.decimal |= mask & 4 != 0;
+                self.state.interrupt_enable |= mask & 8 != 0;
+                self.next_pc();
+                7
+            }
+            Instruction::ResetFlags(mask) => {
+                // RST uses a keep mask (F &= i), not an inverted clear mask.
+                self.state.carry &= mask & 1 != 0;
+                self.state.zero &= mask & 2 != 0;
+                self.state.decimal &= mask & 4 != 0;
+                self.state.interrupt_enable &= mask & 8 != 0;
+                self.next_pc();
+                7
+            }
             Instruction::Nop5 => {
                 self.next_pc();
                 5
@@ -651,7 +676,7 @@ impl Cpu {
                 7
             }
         };
-        self.state.interrupt_delay = matches!(instruction, Instruction::SetPage(_));
+        self.state.interrupt_delay = next_interrupt_delay;
         Ok(Step { pc, opcode, cycles })
     }
 }

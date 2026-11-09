@@ -67,8 +67,8 @@ F2C|F2F|_acpy_my_r|1
 F30|F37|_dummy|0
 F38|F3B|_scpx_mx_r|1
 F3C|F3F|_scpy_my_r|1
-F40|F4F|_set_f_i|0
-F50|F5F|_rst_f_i|0
+F40|F4F|_set_f_i|1
+F50|F5F|_rst_f_i|1
 F60|F6F|_inc_mn|1
 F70|F7F|_dec_mn|1
 F80|F8F|_ld_mn_a|0
