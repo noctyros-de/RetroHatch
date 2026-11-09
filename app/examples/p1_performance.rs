@@ -1,5 +1,5 @@
 //! Repeatable E0C6200 Tamagotchi timing probe. Firmware must be supplied by the user.
-//! Usage: cargo run --release --locked --example p1_performance -- ROM --seconds 60 [--audio] [--device p1|genjintch|angel] [--profile] [--unpaced]
+//! Usage: cargo run --release --locked --example p1_performance -- ROM --seconds 60 [--audio] [--device p1|genjintch|angel|morino] [--profile] [--unpaced]
 use retrohatch::core::{
     device::Device, mcu::MASTER_HZ, profile::DeviceProfile, tamagotchi::Tamagotchi,
 };
@@ -31,11 +31,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Some("--device") => {
                 let value = args
                     .next()
-                    .ok_or("--device requires p1, genjintch or angel")?;
+                    .ok_or("--device requires p1, genjintch, angel or morino")?;
                 device_profile = value
                     .to_str()
                     .and_then(DeviceProfile::parse)
-                    .ok_or("Unknown profile; use p1, genjintch or angel")?;
+                    .ok_or("Unknown profile; use p1, genjintch, angel or morino")?;
             }
             Some("--audio") => audio = true,
             Some("--profile") => profile = true,

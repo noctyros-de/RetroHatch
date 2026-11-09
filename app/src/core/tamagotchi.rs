@@ -194,4 +194,49 @@ mod tests {
         malformed[0] = 0x10;
         assert!(RomImage::decode_for_profile(&malformed, DeviceProfile::Angel).is_err());
     }
+    #[test]
+    fn morino_profile_rom_inputs_reset_and_display_share_real_mcu_behavior() {
+        let mut morino = device(DeviceProfile::Morino);
+        assert_eq!(morino.descriptor().id, "tamagotchi-morino");
+        assert_eq!(morino.profile.osc2_hz(), 1_060_000);
+        assert_eq!(morino.profile.rom_bytes(), 16384);
+        assert_eq!(morino.mcu.read(0xF42), Ok(15));
+        for (button, mask) in [
+            (Button::A, 4),
+            (Button::B, 2),
+            (Button::C, 1),
+            (Button::Knock, 8),
+        ] {
+            morino.set_button(button, true);
+            assert_eq!(morino.mcu.read(0xF40), Ok(15 ^ mask));
+            morino.set_button(button, false);
+            assert_eq!(morino.mcu.read(0xF40), Ok(15));
+        }
+        morino.set_button(Button::A, true);
+        morino.set_button(Button::Knock, true);
+        assert_eq!(morino.mcu.read(0xF40), Ok(3));
+        morino.release_inputs();
+        assert_eq!(morino.mcu.read(0xF40), Ok(15));
+        morino.set_button(Button::Knock, true);
+        morino
+            .advance_to(morino.time() + crate::core::mcu::MASTER_HZ / 10)
+            .unwrap();
+        assert_eq!(morino.mcu.read(0xF40), Ok(7)); // No invented automatic sensor pulse.
+        morino.set_button(Button::Knock, false);
+        morino
+            .advance_to(morino.time() + crate::core::mcu::MASTER_HZ / 10)
+            .unwrap();
+        assert_eq!(morino.mcu.read(0xF40), Ok(15));
+        morino.mcu.write(0xE10, 5).unwrap();
+        morino.mcu.write(0xF71, 0).unwrap();
+        assert_eq!(morino.display().nibbles[16], 5);
+        morino.set_button(Button::Knock, true);
+        morino.reset();
+        assert_eq!(morino.mcu.read(0xF40), Ok(15));
+        assert_eq!(morino.display(), DisplaySnapshot::default());
+        assert!(RomImage::decode_for_profile(&vec![0; 12288], DeviceProfile::Morino).is_err());
+        let mut malformed = vec![0; 16384];
+        malformed[0] = 0x10;
+        assert!(RomImage::decode_for_profile(&malformed, DeviceProfile::Morino).is_err());
+    }
 }

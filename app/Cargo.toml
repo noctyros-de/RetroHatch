@@ -2,7 +2,7 @@
 name = "retrohatch"
 version = "0.1.0"
 edition = "2024"
-description = "Native Windows Tamagotchi P1, Genjintch and Angel emulator with a deterministic Rust core"
+description = "Native Windows Tamagotchi P1, Genjintch, Angel and Morino emulator with a deterministic Rust core"
 
 [[bin]]
 name = "RetroHatch"

@@ -466,7 +466,7 @@ impl Cpu {
         self.attach_io();
     }
 
-    /// Genjintch/Angel MCU profiles use the reference policy for disconnected LCD
+    /// Sensor-equipped MCU profiles use the reference policy for disconnected LCD
     /// addresses and unregistered F7C. BrickEmuPy reads these as zero
     /// and ignores writes. Keep the established standalone/P1 strict policy
     /// and reject every other gap.

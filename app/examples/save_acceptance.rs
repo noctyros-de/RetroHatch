@@ -66,6 +66,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         (DeviceProfile::P1, "TamagotchiP1Japanese.bin"),
         (DeviceProfile::Genjintch, "TamagotchiGenjintch.bin"),
         (DeviceProfile::Angel, "TamagotchiAngel.bin"),
+        (DeviceProfile::Morino, "TamagotchiMorino.bin"),
     ] {
         let path = folder.join(name);
         let rom = roms::load_for_profile(&path, profile)?;
@@ -76,6 +77,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             advance(&mut d, 1.0)?;
             d.set_button(b, false);
             advance(&mut d, 1.0)?;
+        }
+        if profile == DeviceProfile::Morino {
+            // Confirm the real firmware's egg-selection screen before waiting for hatching.
+            d.set_button(Button::B, true);
+            advance(&mut d, 1.0)?;
+            d.set_button(Button::B, false);
         }
         advance(&mut d, 350.0)?;
         let bytes = d.save_state()?;
@@ -160,6 +167,7 @@ fn worker_check(folder: &Path, root: &Path) -> Result<(), Box<dyn std::error::Er
         (DeviceProfile::P1, "TamagotchiP1Japanese.bin"),
         (DeviceProfile::Genjintch, "TamagotchiGenjintch.bin"),
         (DeviceProfile::Angel, "TamagotchiAngel.bin"),
+        (DeviceProfile::Morino, "TamagotchiMorino.bin"),
     ] {
         let rom = roms::load_for_profile(&folder.join(name), profile)?;
         let fresh = Tamagotchi::new(&rom)?;

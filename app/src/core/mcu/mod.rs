@@ -44,7 +44,10 @@ impl Mcu {
     pub fn for_profile(words: &[u16], profile: DeviceProfile) -> Result<Self, CpuError> {
         let mut cpu = Cpu::new(words)?;
         cpu.attach_io();
-        if matches!(profile, DeviceProfile::Genjintch | DeviceProfile::Angel) {
+        if matches!(
+            profile,
+            DeviceProfile::Genjintch | DeviceProfile::Angel | DeviceProfile::Morino
+        ) {
             cpu.enable_lcd_gap_bus();
         }
         Ok(Self {

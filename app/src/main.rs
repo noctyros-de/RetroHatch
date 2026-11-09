@@ -6,13 +6,18 @@ mod lcd_geometry;
 mod genjintch_lcd_geometry;
 #[rustfmt::skip]
 mod angel_lcd_geometry;
+#[rustfmt::skip]
+mod morino_lcd_geometry;
+#[rustfmt::skip]
+mod lcd_masks;
+mod lcd_render;
 mod ui;
 
 fn main() -> eframe::Result {
     let options = eframe::NativeOptions {
         viewport: eframe::egui::ViewportBuilder::default()
-            .with_inner_size([440.0, 530.0])
-            .with_min_inner_size([350.0, 430.0]),
+            .with_inner_size([460.0, 660.0])
+            .with_min_inner_size([350.0, 500.0]),
         renderer: eframe::Renderer::Glow,
         ..Default::default()
     };

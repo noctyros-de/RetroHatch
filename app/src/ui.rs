@@ -38,6 +38,7 @@ pub struct RetroHatchApp {
     folder: String,
     local_error: Option<String>,
     reset_confirm: bool,
+    shortcuts_open: bool,
     exit_pending: bool,
     allow_close: bool,
     exit_was_running: bool,
@@ -65,7 +66,7 @@ impl RetroHatchApp {
                     }
                 } else {
                     app.local_error = Some(
-                        "Use --profile p1, genjintch or angel followed by a local ROM path.".into(),
+                        "Use --profile p1, genjintch, angel or morino followed by a local ROM path.".into(),
                     );
                 }
             } else {
@@ -133,6 +134,7 @@ impl RetroHatchApp {
             folder,
             local_error: error,
             reset_confirm: false,
+            shortcuts_open: false,
             exit_pending: false,
             allow_close: false,
             exit_was_running: false,
@@ -386,6 +388,11 @@ impl RetroHatchApp {
                 ui.checkbox(&mut self.settings.save_on_exit, "Save on Exit");
                 ui.separator();
                 ui.checkbox(&mut self.settings.diagnostics, "Show Diagnostics");
+                if ui.button("Keyboard Shortcuts").clicked() {
+                    self.release_inputs();
+                    self.shortcuts_open = true;
+                    ui.close();
+                }
             });
             if s.saving || s.loading {
                 ui.spinner();
@@ -475,7 +482,7 @@ impl RetroHatchApp {
                 &[egui::Key::A, egui::Key::Num1, egui::Key::ArrowLeft],
                 &[egui::Key::B, egui::Key::Num2, egui::Key::ArrowDown],
                 &[egui::Key::C, egui::Key::Num3, egui::Key::ArrowRight],
-                &[egui::Key::K, egui::Key::Num4],
+                &[egui::Key::ArrowUp],
             ];
             (
                 i.focused,
@@ -488,6 +495,7 @@ impl RetroHatchApp {
         let blocked = self.picker.is_some()
             || self.pending_rom.is_some()
             || self.reset_confirm
+            || self.shortcuts_open
             || self.exit_pending;
         let accepts = keys.0 && !ctx.egui_wants_keyboard_input() && !blocked;
         if accepts && keys.3 {
@@ -515,13 +523,13 @@ impl RetroHatchApp {
                 egui::ScrollArea::vertical().show(ui, |ui| {
                     ui.vertical_centered(|ui| {
                         let reserve = if s.loaded && s.profile.has_knock() {
-                            133.0
+                            192.0
                         } else {
-                            100.0
+                            130.0
                         };
                         let width = (ui.available_width() - 40.0)
                             .min((ui.available_height() - reserve) * 352.0 / 329.0)
-                            .clamp(220.0, 384.0);
+                            .clamp(160.0, 384.0);
                         let total = width * 329.0 / 352.0 + reserve;
                         ui.add_space(((ui.available_height() - total) / 2.0).max(14.0));
                         let profile = if s.loaded {
@@ -564,22 +572,24 @@ impl RetroHatchApp {
                         });
                         if s.loaded && s.profile.has_knock() {
                             ui.add_space(10.0);
-                            let response = ui
-                            .add_enabled(
+                            let response = round_button(
+                                ui,
+                                "Tap",
+                                true,
                                 enabled,
-                                egui::Button::new("Tap")
-                                    .corner_radius(14)
-                                    .min_size(egui::vec2(68.0, 26.0)),
+                                self.pressed[3],
+                                accent,
+                                ink,
                             )
-                            .on_hover_text(
-                                "Tap / knock sensor. You can also click the LCD or press 4 or K.",
-                            );
+                            .on_hover_text("Tap / knock sensor. Click the LCD or press Arrow Up.");
                             pointer[3] |= response.is_pointer_button_down_on() && enabled;
                             if response.clicked() {
                                 self.click_until[3] =
                                     Some(Instant::now() + Duration::from_millis(50));
                             }
                         }
+                        ui.add_space(8.0);
+                        ui.weak("Left = A    Down = B    Right = C");
                     });
                 });
             });
@@ -620,6 +630,28 @@ impl RetroHatchApp {
         ctx.request_repaint_after(Duration::from_millis(16));
     }
     fn dialogs(&mut self, ctx: &egui::Context, s: &Snapshot) {
+        if self.shortcuts_open {
+            let mut open = true;
+            egui::Window::new("Keyboard Shortcuts")
+                .open(&mut open)
+                .collapsible(false)
+                .resizable(false)
+                .show(ctx, |ui| {
+                    ui.label("A: Left Arrow, A or 1");
+                    ui.label("B: Down Arrow, B or 2");
+                    ui.label("C: Right Arrow, C or 3");
+                    ui.separator();
+                    ui.label("Pause / Resume: Space");
+                    ui.label("Reset (confirmation): F5");
+                    if s.loaded && s.profile.has_knock() {
+                        ui.separator();
+                        ui.label("Tap / Knock: Up Arrow");
+                        ui.weak("You can also click the LCD or the Tap button.");
+                    }
+                });
+            self.shortcuts_open = open;
+        }
+
         if let Some(path) = self.pending_rom.clone() {
             let mut load = false;
             let mut cancel = false;
@@ -797,6 +829,12 @@ fn diagnostics(ctx: &egui::Context, s: &Snapshot, open: &mut bool) {
         ));
         ui.label(&s.audio_status);
         ui.label(format!("Audio overruns: {}", s.audio_drops));
+        ui.monospace(format!(
+            "Audio queue: {} starvation events | {} pending samples | max refill gap {:.2} ms",
+            s.audio_stats.empty_queue_events,
+            s.audio_stats.pending,
+            s.audio_stats.max_write_gap_us as f64 / 1000.0
+        ));
         if let Some(error) = &s.diagnostics_error {
             ui.colored_label(egui::Color32::RED, error);
         }
@@ -809,7 +847,7 @@ fn paint_profile_lcd(
     empty: bool,
     profile: DeviceProfile,
 ) -> egui::Response {
-    let (lcd_size, pixels, icon_bits, icon_spans) = match profile {
+    let (lcd_size, pixels, _icon_bits, _legacy_spans) = match profile {
         DeviceProfile::P1 => (LCD_SIZE, PIXELS, ICON_BITS, ICON_SPANS),
         DeviceProfile::Genjintch => {
             use crate::genjintch_lcd_geometry as g;
@@ -819,7 +857,13 @@ fn paint_profile_lcd(
             use crate::angel_lcd_geometry as g;
             (g::LCD_SIZE, g::PIXELS, g::ICON_BITS, g::ICON_SPANS)
         }
+        DeviceProfile::Morino => {
+            use crate::morino_lcd_geometry as g;
+            (g::LCD_SIZE, g::PIXELS, g::ICON_BITS, g::ICON_SPANS)
+        }
     };
+    let ppp = ui.ctx().pixels_per_point();
+    let width = (width * ppp).round() / ppp;
     let scale = width / lcd_size[0];
     let size = egui::vec2(width, lcd_size[1] * scale);
     let (rect, response) = ui.allocate_exact_size(
@@ -839,6 +883,9 @@ fn paint_profile_lcd(
             rect.min + egui::vec2(x, y) * scale,
             egui::vec2(10.0, 10.0) * scale,
         );
+        // Snap matrix edges to physical pixels; icon coverage is sampled separately.
+        let snap = |p: egui::Pos2| egui::pos2((p.x * ppp).round() / ppp, (p.y * ppp).round() / ppp);
+        let cell = egui::Rect::from_min_max(snap(cell.min), snap(cell.max));
         ui.painter().rect_filled(
             cell,
             0.0,
@@ -849,20 +896,7 @@ fn paint_profile_lcd(
             },
         );
     }
-    for (index, &(ram, bit)) in icon_bits.iter().enumerate() {
-        let color = if display.segment(ram as usize, bit) {
-            on
-        } else {
-            off
-        };
-        for &(x, y, length) in icon_spans[index] {
-            let span = egui::Rect::from_min_size(
-                rect.min + egui::vec2(f32::from(x), f32::from(y)) * scale,
-                egui::vec2(f32::from(length), 1.0) * scale,
-            );
-            ui.painter().rect_filled(span, 0.0, color);
-        }
-    }
+    crate::lcd_render::paint(ui, rect, profile, display, on, off);
     if empty {
         ui.painter().text(
             rect.center(),
@@ -1081,12 +1115,20 @@ mod tests {
             );
             output.textures_delta.clear();
         };
-        frame(&mut app, true, Some(egui::Key::K));
+        for obsolete in [egui::Key::K, egui::Key::Num4] {
+            frame(&mut app, true, Some(obsolete));
+            assert!(
+                !app.pressed[3],
+                "An obsolete Tap shortcut still affects gameplay"
+            );
+            frame(&mut app, false, None);
+        }
+        frame(&mut app, true, Some(egui::Key::ArrowUp));
         wait_for(&app, 7, 1);
         assert!(app.pressed[3]);
         frame(&mut app, false, None);
         assert!(!app.pressed[3]);
-        frame(&mut app, true, Some(egui::Key::Num4));
+        frame(&mut app, true, Some(egui::Key::ArrowUp));
         wait_for(&app, 7, 2);
         frame(&mut app, false, None);
         frame(&mut app, true, Some(egui::Key::A));
@@ -1157,12 +1199,12 @@ mod tests {
             );
             output.textures_delta.clear();
         };
-        frame(&mut app, true, Some(egui::Key::K));
+        frame(&mut app, true, Some(egui::Key::ArrowUp));
         wait_for(&app, 7, 1);
         assert!(app.pressed[3]);
         frame(&mut app, false, None);
         assert!(!app.pressed[3]);
-        frame(&mut app, true, Some(egui::Key::Num4));
+        frame(&mut app, true, Some(egui::Key::ArrowUp));
         wait_for(&app, 7, 2);
         frame(&mut app, false, None);
         frame(&mut app, true, Some(egui::Key::A));
@@ -1322,5 +1364,202 @@ mod tests {
         drop(app);
         assert_eq!(root.parent(), Some(std::env::temp_dir().as_path()));
         std::fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn sensor_layout_shortcuts_and_independent_arrow_releases_work_at_multiple_sizes_and_dpis() {
+        fn text_rects(shape: &egui::epaint::Shape, out: &mut Vec<(String, egui::Rect)>) {
+            match shape {
+                egui::epaint::Shape::Text(t) => out.push((
+                    t.galley.text().into(),
+                    t.galley.rect.translate(t.pos.to_vec2()),
+                )),
+                egui::epaint::Shape::Vec(v) => {
+                    for s in v {
+                        text_rects(s, out)
+                    }
+                }
+                _ => {}
+            }
+        }
+        let folder =
+            std::env::temp_dir().join(format!("retrohatch-morino-layout-{}", std::process::id()));
+        std::fs::create_dir_all(&folder).unwrap();
+        for profile in [DeviceProfile::P1, DeviceProfile::Morino] {
+            let path = folder.join(format!("{}.bin", profile.id()));
+            let bytes: Vec<_> = (0..profile.rom_bytes() / 2)
+                .flat_map(|_| 0xFF8u16.to_be_bytes())
+                .collect();
+            std::fs::write(&path, bytes).unwrap();
+            let mut app = RetroHatchApp::create(false);
+            app.selected_profile = profile;
+            app.load_rom(path.clone());
+            let deadline = Instant::now() + Duration::from_secs(3);
+            while !app.controller.snapshot().loaded {
+                assert!(Instant::now() < deadline);
+                std::thread::sleep(Duration::from_millis(2));
+            }
+            for ppp in [1.0, 1.25, 1.5, 2.0] {
+                for size in [[350., 500.], [460., 660.], [640., 800.]] {
+                    let ctx = egui::Context::default();
+                    let screen =
+                        egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(size[0], size[1]));
+                    let mut input = egui::RawInput {
+                        screen_rect: Some(screen),
+                        focused: true,
+                        ..Default::default()
+                    };
+                    input
+                        .viewports
+                        .get_mut(&egui::ViewportId::ROOT)
+                        .unwrap()
+                        .native_pixels_per_point = Some(ppp);
+                    let mut out = ctx.run_ui(input, |ui| app.content(ui));
+                    let mut texts = Vec::new();
+                    for s in &out.shapes {
+                        text_rects(&s.shape, &mut texts);
+                    }
+                    out.textures_delta.clear();
+                    for label in ["A", "B", "C", "Left = A    Down = B    Right = C"] {
+                        let rect = texts.iter().find(|(t, _)| t == label).unwrap().1;
+                        assert!(
+                            screen.contains_rect(rect),
+                            "{profile:?} {ppp} {size:?}: {label} clipped at {rect:?}"
+                        );
+                    }
+                    assert_eq!(texts.iter().any(|(t, _)| t == "Tap"), profile.has_knock());
+                    if profile.has_knock() {
+                        let rect = texts.iter().find(|(t, _)| t == "Tap").unwrap().1;
+                        assert!(screen.contains_rect(rect));
+                    }
+                    out.textures_delta.clear();
+                }
+            }
+            let ctx = egui::Context::default();
+            let frame = |app: &mut RetroHatchApp, events: Vec<egui::Event>| {
+                let mut out = ctx.run_ui(
+                    egui::RawInput {
+                        focused: true,
+                        events,
+                        ..Default::default()
+                    },
+                    |ui| app.content(ui),
+                );
+                out.textures_delta.clear();
+            };
+            let key = |key, pressed| egui::Event::Key {
+                key,
+                physical_key: None,
+                pressed,
+                repeat: false,
+                modifiers: egui::Modifiers::NONE,
+            };
+            frame(
+                &mut app,
+                vec![
+                    key(egui::Key::ArrowUp, true),
+                    key(egui::Key::ArrowLeft, true),
+                ],
+            );
+            assert_eq!(app.pressed, [true, false, false, profile.has_knock()]);
+            std::thread::sleep(Duration::from_millis(60));
+            frame(&mut app, vec![key(egui::Key::ArrowUp, false)]);
+            assert_eq!(app.pressed, [true, false, false, false]);
+            frame(&mut app, vec![key(egui::Key::ArrowLeft, false)]);
+            assert_eq!(app.pressed, [false; 4]);
+            if profile.has_knock() {
+                let mut out = ctx.run_ui(egui::RawInput::default(), |ui| app.content(ui));
+                let mut texts = Vec::new();
+                for s in &out.shapes {
+                    text_rects(&s.shape, &mut texts);
+                }
+                let tap = texts.iter().find(|(t, _)| t == "Tap").unwrap().1.center();
+                out.textures_delta.clear();
+                let mouse = |pos, pressed| egui::Event::PointerButton {
+                    pos,
+                    button: egui::PointerButton::Primary,
+                    pressed,
+                    modifiers: egui::Modifiers::NONE,
+                };
+                frame(
+                    &mut app,
+                    vec![egui::Event::PointerMoved(tap), mouse(tap, true)],
+                );
+                assert!(
+                    app.pressed[3],
+                    "Circular Tap button did not press the electrical sensor"
+                );
+                frame(&mut app, vec![mouse(tap, false)]);
+                std::thread::sleep(Duration::from_millis(60));
+                frame(&mut app, vec![]);
+                assert!(!app.pressed[3]);
+                // The LCD is centered and always above the physical button row.
+                let lcd = egui::pos2(tap.x, tap.y - 180.0);
+                frame(
+                    &mut app,
+                    vec![egui::Event::PointerMoved(lcd), mouse(lcd, true)],
+                );
+                assert!(app.pressed[3], "LCD-click Tap input regressed");
+                frame(&mut app, vec![mouse(lcd, false)]);
+                std::thread::sleep(Duration::from_millis(60));
+                frame(&mut app, vec![]);
+                assert!(!app.pressed[3]);
+            }
+            app.shortcuts_open = true;
+            let mut sizing = ctx.run_ui(egui::RawInput::default(), |ui| app.content(ui));
+            sizing.textures_delta.clear();
+            let mut out = ctx.run_ui(egui::RawInput::default(), |ui| app.content(ui));
+            let mut texts = Vec::new();
+            for s in &out.shapes {
+                text_rects(&s.shape, &mut texts);
+            }
+            out.textures_delta.clear();
+            for label in [
+                "Keyboard Shortcuts",
+                "Pause / Resume: Space",
+                "Reset (confirmation): F5",
+            ] {
+                assert!(
+                    texts.iter().any(|(t, _)| t == label),
+                    "Missing {label}: {texts:?}"
+                );
+            }
+            assert_eq!(
+                texts.iter().any(|(t, _)| t == "Tap / Knock: Up Arrow"),
+                profile.has_knock()
+            );
+            out.textures_delta.clear();
+            drop(app);
+            std::fs::remove_file(path).unwrap();
+        }
+        std::fs::remove_dir(folder).unwrap();
+    }
+    #[test]
+    fn morino_geometry_and_exact_masks_preserve_all_original_electrical_segments() {
+        use crate::morino_lcd_geometry as g;
+        let mut bits = std::collections::HashSet::new();
+        assert_eq!(g::PIXELS.len(), 512);
+        for &(x, y, ram, bit) in g::PIXELS {
+            assert!(x >= 0. && y >= 0. && x + 10. <= g::LCD_SIZE[0] && y + 10. <= g::LCD_SIZE[1]);
+            assert!(bits.insert((ram, bit)));
+        }
+        for profile in DeviceProfile::ALL {
+            let source = crate::lcd_render::masks(profile);
+            let expected = match profile {
+                DeviceProfile::P1 => ICON_BITS,
+                DeviceProfile::Genjintch => crate::genjintch_lcd_geometry::ICON_BITS,
+                DeviceProfile::Angel => crate::angel_lcd_geometry::ICON_BITS,
+                DeviceProfile::Morino => g::ICON_BITS,
+            };
+            for (icon, &(ram, bit)) in source.icons.iter().zip(expected) {
+                assert_eq!((icon.ram, icon.bit), (ram, bit));
+                let data = &source.data[icon.offset..icon.offset + icon.size[0] * icon.size[1]];
+                assert!(data.iter().any(|&v| v == 255));
+                assert!(data.iter().any(|&v| v > 0 && v < 255));
+                if profile == DeviceProfile::Morino {
+                    assert!(bits.insert((ram, bit)));
+                }
+            }
+        }
+        assert_eq!(bits.len(), 520);
     }
 }

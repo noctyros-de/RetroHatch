@@ -1,5 +1,5 @@
 //! Local firmware diagnostic: record deterministic states for comparison with BrickEmuPy.
-//! Usage: cargo run --release --locked --example device_trace -- PROFILE ROM TRACE [--angel-gameplay]
+//! Usage: cargo run --release --locked --example device_trace -- PROFILE ROM TRACE [--gameplay]
 //! The trace is private diagnostic state; firmware must be supplied by the user.
 use retrohatch::core::{
     device::{Button, Device},
@@ -14,26 +14,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let profile = args
         .next()
         .and_then(|v| v.to_str().and_then(DeviceProfile::parse))
-        .ok_or("Specify p1, genjintch or angel")?;
+        .ok_or("Specify p1, genjintch, angel or morino")?;
     let path = args.next().ok_or("Provide a local ROM path")?;
     let target = args.next().ok_or("Provide a private trace output path")?;
     let gameplay = match args.next() {
         None => false,
-        Some(value) if value == "--angel-gameplay" => true,
+        Some(value) if value == "--angel-gameplay" || value == "--gameplay" => true,
         _ => {
             return Err(
-                "Unknown option; use --angel-gameplay for the Angel acceptance sequence".into(),
+                "Unknown option; use --gameplay for the extended sensor-device acceptance sequence"
+                    .into(),
             );
         }
     };
-    if gameplay && profile != DeviceProfile::Angel {
-        return Err("The Angel gameplay sequence requires the angel profile".into());
+    if gameplay && !profile.has_knock() {
+        return Err("The extended gameplay sequence requires a sensor-equipped profile".into());
     }
     let mut out = BufWriter::new(std::fs::File::create(target)?);
     let rom = roms::load_for_profile(std::path::Path::new(&path), profile)?;
     let mut d = Tamagotchi::new(&rom)?;
     // Normal electrical input only. No firmware data or timer values are patched.
-    let events = if gameplay {
+    let mut events = if gameplay {
         vec![
             (5.0, Button::B, 2, true),
             (6.0, Button::B, 2, false),
@@ -72,6 +73,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             (12.15, Button::Knock, 8, false),
         ]
     };
+    if gameplay && profile == DeviceProfile::Morino {
+        // Morino presents an egg-selection screen after clock setup. Confirm it.
+        events.splice(
+            6..6,
+            [(12.0, Button::B, 2, true), (12.15, Button::B, 2, false)],
+        );
+    }
     let mut event = 0;
     let mut next = 0;
     let mut samples = 0u64;

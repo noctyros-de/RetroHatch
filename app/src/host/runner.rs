@@ -58,6 +58,7 @@ pub struct Snapshot {
     pub error: Option<String>,
     pub audio_status: String,
     pub audio_drops: u64,
+    pub audio_stats: super::audio::AudioStats,
     pub performance: Performance,
     pub cycles: CycleCounters,
     pub core_profile: CoreProfile,
@@ -90,6 +91,7 @@ impl Default for Snapshot {
             error: None,
             audio_status: "Audio: no device loaded".into(),
             audio_drops: 0,
+            audio_stats: super::audio::AudioStats::default(),
             performance: Performance::default(),
             cycles: CycleCounters::default(),
             core_profile: CoreProfile::default(),
@@ -593,7 +595,9 @@ fn run(
                     && running
                     && let Some(sink) = &mut audio
                 {
-                    match sink.push(samples) {
+                    let pushed = sink.push(samples);
+                    state.audio_stats = sink.stats();
+                    match pushed {
                         Ok(true) => {}
                         Ok(false) => state.audio_drops += 1,
                         Err(error) => {

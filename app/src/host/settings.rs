@@ -48,7 +48,7 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            theme: Theme::Pink,
+            theme: Theme::Green,
             labels: true,
             muted: false,
             volume: 100,
@@ -179,6 +179,15 @@ impl Settings {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn new_installations_are_green_but_explicit_pink_preferences_are_preserved() {
+        assert_eq!(Settings::default().theme, Theme::Green);
+        let old = Settings {
+            theme: Theme::Pink,
+            ..Settings::default()
+        };
+        assert_eq!(Settings::decode(&old.encode()).unwrap().theme, Theme::Pink);
+    }
     #[test]
     fn all_themes_labels_mute_volume_save_policy_and_unicode_paths_survive_restart_encoding() {
         for theme in Theme::ALL {

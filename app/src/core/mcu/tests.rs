@@ -477,3 +477,14 @@ fn angel_matches_reference_timers_knock_halt_audio_clock_and_disconnected_bus() 
         236,
     );
 }
+
+#[test]
+fn morino_matches_reference_timers_knock_halt_audio_clock_and_disconnected_bus() {
+    // compare_morino.py checks the original profile before sharing its hardware oracle.
+    compare_mcu_fixtures(
+        include_str!("../../../tests/data/genjintch_programs.txt"),
+        include_str!("../../../tests/data/genjintch_reference.txt"),
+        crate::core::profile::DeviceProfile::Morino,
+        236,
+    );
+}
