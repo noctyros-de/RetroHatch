@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-only
-# SPDX-FileCopyrightText: 2026 Noktyros
+# SPDX-FileCopyrightText: 2026 Noctyros
 """Compare unfiltered MCU PCM against BrickEmuPy's actual Channel generator."""
 import sys
 sys.dont_write_bytecode=True

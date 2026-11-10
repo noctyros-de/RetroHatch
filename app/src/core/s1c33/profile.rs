@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// SPDX-FileCopyrightText: 2026 Noktyros (Rust translation and integration)
+// SPDX-FileCopyrightText: 2026 Noctyros (Rust translation and integration)
 // Derived from maragotchi/tamaemu; retain upstream GPL notices and provenance.
 //! Internal hardware configurations from device.c, not advertised device support.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

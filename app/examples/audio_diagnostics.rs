@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// SPDX-FileCopyrightText: 2026 Noktyros
+// SPDX-FileCopyrightText: 2026 Noctyros
 //! Opt-in local PCM/WinMM diagnostics. No firmware or recordings are embedded.
 use retrohatch::{
     core::{device::Device, mcu::MASTER_HZ, profile::DeviceProfile, tamagotchi::Tamagotchi},

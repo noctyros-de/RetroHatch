@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-only
-# SPDX-FileCopyrightText: 2026 Noktyros
+# SPDX-FileCopyrightText: 2026 Noctyros
 """Opt-in, local firmware diagnostics against unchanged tamaemu sources; never distributes firmware."""
 from pathlib import Path
 import argparse,os,subprocess,re,array,math

@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only
- * SPDX-FileCopyrightText: 2026 Noktyros
+ * SPDX-FileCopyrightText: 2026 Noctyros
  * Opt-in comparison runner for local, user-provided firmware. */
 #include "emu.h"
 #include <stdlib.h>

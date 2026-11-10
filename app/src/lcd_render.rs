@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// SPDX-FileCopyrightText: 2026 Noktyros
+// SPDX-FileCopyrightText: 2026 Noctyros
 // Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! DPI-aware area sampling of exact Qt SVG coverage; square matrix pixels stay geometric.
 use crate::lcd_masks::{Icon, Masks};
@@ -149,5 +149,97 @@ pub fn paint(
             Rect::from_min_max(egui::Pos2::ZERO, egui::pos2(1.0, 1.0)),
             color,
         );
+    }
+}
+
+/// Segment LCDs are vector layouts, not 32x16 framebuffers. Export at the reference bounds.
+pub fn native_lcd(
+    profile: DeviceProfile,
+    display: &retrohatch::core::device::DisplaySnapshot,
+) -> Result<retrohatch::host::screenshots::Image, String> {
+    use retrohatch::host::screenshots::Image;
+    let (size, pixels) = match profile {
+        DeviceProfile::P1 | DeviceProfile::P2 => {
+            (crate::lcd_geometry::LCD_SIZE, crate::lcd_geometry::PIXELS)
+        }
+        DeviceProfile::Genjintch => (
+            crate::genjintch_lcd_geometry::LCD_SIZE,
+            crate::genjintch_lcd_geometry::PIXELS,
+        ),
+        DeviceProfile::Angel => (
+            crate::angel_lcd_geometry::LCD_SIZE,
+            crate::angel_lcd_geometry::PIXELS,
+        ),
+        DeviceProfile::Morino => (
+            crate::morino_lcd_geometry::LCD_SIZE,
+            crate::morino_lcd_geometry::PIXELS,
+        ),
+        DeviceProfile::Umino => (
+            crate::umino_lcd_geometry::LCD_SIZE,
+            crate::umino_lcd_geometry::PIXELS,
+        ),
+        _ => return Err("Color LCD capture requires its native framebuffer".into()),
+    };
+    let w = size[0].round() as usize;
+    let h = size[1].round() as usize;
+    let background = [215u8, 225, 204];
+    let on = [45u8, 56, 41];
+    let off = [207u8, 217, 196];
+    let mut rgb = background.repeat(w * h);
+    for &(x, y, index, bit) in pixels {
+        let color = if display.segment(index as usize, bit) {
+            on
+        } else {
+            off
+        };
+        for py in (y.round() as usize).min(h)..((y + 10.0).round() as usize).min(h) {
+            for px in (x.round() as usize).min(w)..((x + 10.0).round() as usize).min(w) {
+                rgb[(py * w + px) * 3..(py * w + px) * 3 + 3].copy_from_slice(&color);
+            }
+        }
+    }
+    let source = masks(profile);
+    for icon in &source.icons {
+        let color = if display.segment(icon.ram as usize, icon.bit) {
+            on
+        } else {
+            off
+        };
+        let c = coverage(source.data, icon, 1.0);
+        for row in 0..c.height {
+            for col in 0..c.width {
+                let x = c.left + col as i32;
+                let y = c.top + row as i32;
+                if x < 0 || y < 0 || x >= w as i32 || y >= h as i32 {
+                    continue;
+                }
+                let alpha = c.alpha[row * c.width + col] as u32;
+                let i = (y as usize * w + x as usize) * 3;
+                for ch in 0..3 {
+                    rgb[i + ch] =
+                        ((rgb[i + ch] as u32 * (255 - alpha) + color[ch] as u32 * alpha + 127)
+                            / 255) as u8;
+                }
+            }
+        }
+    }
+    Image::new(w, h, rgb)
+}
+#[cfg(test)]
+mod screenshot_tests {
+    #[test]
+    fn every_classic_profile_exports_only_native_lcd_bounds() {
+        use retrohatch::core::{device::DisplaySnapshot, profile::DeviceProfile};
+        for p in DeviceProfile::CLASSIC {
+            let off = DisplaySnapshot::default();
+            let mut on = off.clone();
+            on.nibbles = [15; 160];
+            let a = super::native_lcd(p, &off).unwrap();
+            let b = super::native_lcd(p, &on).unwrap();
+            assert_eq!((a.width, a.height), (352, 329));
+            assert_eq!(a.rgb.len(), 352 * 329 * 3);
+            assert_ne!(a.rgb, b.rgb);
+            assert!(b.rgb.chunks_exact(3).any(|v| v == [45, 56, 41]));
+        }
     }
 }

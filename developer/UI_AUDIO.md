@@ -1,5 +1,5 @@
 <!-- SPDX-License-Identifier: GPL-3.0-only -->
-<!-- SPDX-FileCopyrightText: 2026 Noktyros -->
+<!-- SPDX-FileCopyrightText: 2026 Noctyros -->
 # UI polish, display sleep and Angel audio
 
 The existing five-theme layout and menu structure remain. A tinted menu-bar

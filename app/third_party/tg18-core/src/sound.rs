@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 oreo-fox
-// RetroHatch integration additions Copyright (c) 2026 Noktyros; released under MIT.
+// RetroHatch integration additions Copyright (c) 2026 Noctyros; released under MIT.
 //! Buzzer sound: turns timer-4 events into 16-bit samples.
 
 /// Square-wave synthesiser that keeps the phase smooth across notes.

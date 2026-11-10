@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// SPDX-FileCopyrightText: 2026 Noktyros
+// SPDX-FileCopyrightText: 2026 Noctyros
 // Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! P1 E0C6200 register/pin/timer behavior derived from BrickEmuPy (CC0).
 use super::buzzer::Buzzer;

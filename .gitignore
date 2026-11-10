@@ -1,8 +1,11 @@
 # Reference projects
 /references/
 
-# Internal documentation
-/docs/
+# Internal documentation; only the approved public README logo is excepted
+/docs/*
+!/docs/assets/
+/docs/assets/*
+!/docs/assets/retrohatchlogo.png
 /AGENTS.md
 
 # Build files
@@ -57,3 +60,7 @@ settings.rhc.bak
 *.key
 __pycache__/
 *.py[cod]
+
+# Local branding originals and user-generated captures
+/resources/
+**/screenshots/

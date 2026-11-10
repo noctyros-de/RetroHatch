@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 oreo-fox
-// RetroHatch integration additions Copyright (c) 2026 Noktyros; released under MIT.
+// RetroHatch integration additions Copyright (c) 2026 Noctyros; released under MIT.
 //! Snapshots: the whole machine frozen to a file.
 //!
 //! Format: `T18SNAP1`, then a zlib stream of chunks, each

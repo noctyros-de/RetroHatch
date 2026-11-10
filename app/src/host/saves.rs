@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// SPDX-FileCopyrightText: 2026 Noktyros
+// SPDX-FileCopyrightText: 2026 Noctyros
 // Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Per-ROM storage coordination. Capture on the owning worker; disk I/O stays off it.
 use super::emulator::Emulator;

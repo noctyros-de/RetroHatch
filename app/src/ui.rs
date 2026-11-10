@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// SPDX-FileCopyrightText: 2026 Noktyros
+// SPDX-FileCopyrightText: 2026 Noctyros
 // Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Minimal themed device view; all machine state and disk I/O belong to the host worker.
 mod help;
 mod library_ui;
+mod screenshots;
 use crate::lcd_geometry::{ICON_BITS, ICON_SPANS, LCD_SIZE, PIXELS};
 use eframe::egui;
 use library_ui::LibraryUi;
@@ -34,6 +35,7 @@ enum PickerKind {
 type PickerResult = (PickerKind, Result<Option<PathBuf>, String>);
 pub struct RetroHatchApp {
     controller: Controller,
+    captures: screenshots::Captures,
     library: LibraryUi,
     settings: Settings,
     data_dir: Option<PathBuf>,
@@ -112,6 +114,11 @@ impl RetroHatchApp {
                 })
             })
             .unwrap_or_default();
+        if let Some(root) = &data_dir {
+            if let Err(e) = retrohatch::host::screenshots::prepare(root) {
+                error = Some(e);
+            }
+        }
         let policy = SavePolicy {
             autosave_minutes: settings.autosave_minutes,
             save_on_exit: settings.save_on_exit,
@@ -131,6 +138,7 @@ impl RetroHatchApp {
             .into_owned();
         let mut app = Self {
             controller,
+            captures: screenshots::Captures::default(),
             library: LibraryUi::default(),
             selected_profile: settings.last_profile,
             settings,
@@ -303,6 +311,13 @@ impl RetroHatchApp {
                 {
                     self.picker(PickerKind::Rom, &ctx);
                     ui.close();
+                }
+                ui.separator();
+                for (label,kind,enabled) in [
+                    ("Take LCD Screenshot",retrohatch::host::screenshots::Kind::Lcd,s.loaded&&!s.loading),
+                    ("Take Full Screenshot",retrohatch::host::screenshots::Kind::Full,true),
+                ] {
+                    if ui.add_enabled(enabled&&self.data_dir.is_some()&&!self.captures.busy()&&!self.exit_pending,egui::Button::new(label)).clicked(){self.queue_screenshot(kind);ui.close();}
                 }
                 ui.separator();
                 if ui
@@ -488,6 +503,7 @@ impl RetroHatchApp {
             self.library_import(path, None);
         }
         let s = self.controller.snapshot();
+        self.poll_screenshots(&ctx, &s);
         if self.last_restore != s.restores {
             self.last_restore = s.restores;
             self.release_inputs();
@@ -533,7 +549,11 @@ impl RetroHatchApp {
             ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
             self.begin_exit(&s);
         }
-        if self.exit_pending && s.exit_ready && self.local_error.is_none() && s.save_error.is_none()
+        if self.exit_pending
+            && s.exit_ready
+            && !self.captures.busy()
+            && self.local_error.is_none()
+            && s.save_error.is_none()
         {
             self.allow_close = true;
             ctx.send_viewport_cmd(egui::ViewportCommand::Close);
@@ -558,6 +578,8 @@ impl RetroHatchApp {
                 groups.map(|g| g.iter().any(|k| i.key_pressed(*k))),
                 i.key_pressed(egui::Key::Space),
                 i.key_pressed(egui::Key::F5),
+                i.key_pressed(egui::Key::F8),
+                i.key_pressed(egui::Key::F9),
             )
         });
         let blocked = self.picker.is_some()
@@ -579,6 +601,12 @@ impl RetroHatchApp {
         if accepts && keys.4 && s.loaded {
             self.release_inputs();
             self.reset_confirm = true;
+        }
+        if accepts && keys.5 && s.loaded && !s.loading && !self.captures.busy() {
+            self.queue_screenshot(retrohatch::host::screenshots::Kind::Lcd);
+        }
+        if accepts && keys.6 && !self.captures.busy() {
+            self.queue_screenshot(retrohatch::host::screenshots::Kind::Full);
         }
         self.menus(ui, &s);
         let mut pointer = [false; 4];
@@ -708,6 +736,7 @@ impl RetroHatchApp {
                 self.dirty = Some(Instant::now());
             }
         }
+        self.screenshot_notice(&ctx);
         ctx.request_repaint_after(Duration::from_millis(16));
     }
     fn paint_color_lcd(&mut self, ui: &mut egui::Ui, s: &Snapshot, width: f32) -> egui::Response {
@@ -762,6 +791,9 @@ impl RetroHatchApp {
                     ui.separator();
                     ui.label("Pause / Resume: Space");
                     ui.label("Reset (confirmation): F5");
+                    ui.separator();
+                    ui.label("LCD screenshot: F8");
+                    ui.label("Full-window screenshot: F9");
                     if s.loaded && s.profile.has_knock() {
                         ui.separator();
                         ui.label("Tap / Knock: Up Arrow");

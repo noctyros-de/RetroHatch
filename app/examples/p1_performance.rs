@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// SPDX-FileCopyrightText: 2026 Noktyros
+// SPDX-FileCopyrightText: 2026 Noctyros
 // Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Repeatable E0C6200 Tamagotchi timing probe. Firmware must be supplied by the user.
 //! Usage: cargo run --release --locked --example p1_performance -- ROM --seconds 60 [--audio] [--device p1|p2|genjintch|angel|morino|umino] [--profile] [--unpaced]

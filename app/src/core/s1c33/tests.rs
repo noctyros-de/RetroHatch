@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// SPDX-FileCopyrightText: 2026 Noktyros
+// SPDX-FileCopyrightText: 2026 Noctyros
 //! Synthetic expectations from unchanged C code; no firmware, host UI or ROM downloads.
 use super::{
     cpu::{Cpu, Fault, Flags},

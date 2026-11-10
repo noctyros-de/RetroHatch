@@ -1,5 +1,5 @@
 <!-- SPDX-License-Identifier: GPL-3.0-only -->
-<!-- SPDX-FileCopyrightText: 2026 Noktyros -->
+<!-- SPDX-FileCopyrightText: 2026 Noctyros -->
 
 # Contributing to RetroHatch
 
@@ -9,7 +9,7 @@ describe observations precisely, and discuss disagreements respectfully.
 
 ## Access and proposals
 
-The official repository is maintained by Noktyros at
+The official repository is maintained by Noctyros at
 https://github.com/Noktyros/RetroHatch. It remains private until the owner makes
 a separate release decision. The owner controls repository access, review and
 merges; these guidelines do not change visibility, remotes or account settings.

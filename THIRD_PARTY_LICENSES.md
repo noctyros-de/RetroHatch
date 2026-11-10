@@ -1,5 +1,5 @@
 <!-- SPDX-License-Identifier: GPL-3.0-only -->
-<!-- SPDX-FileCopyrightText: 2026 Noktyros; original report text only -->
+<!-- SPDX-FileCopyrightText: 2026 Noctyros; original report text only -->
 
 # Third-party licensing and provenance
 
@@ -33,7 +33,7 @@ distribution. License declarations do not establish rights to every asset.
 
 Affected material includes `app/assets/lcd/*.alpha`,
 `app/src/lcd_geometry.rs`, `*_lcd_geometry.rs` and `lcd_masks.rs`.
-Do not describe the symbols as newly authored by Noktyros. Their editable source
+Do not describe the symbols as newly authored by Noctyros. Their editable source
 vectors remain in the private reference checkout; rights and suitable
 Corresponding Source/preferred-source availability must be resolved before
 distributing the affected assets or executable. This preparation does not remove,
@@ -66,7 +66,7 @@ revision `79e19b65a1c970b9e1cd0b58ee6e929507257234`. Credit maragotchi as the
 original author. The upstream README declares GNU GPL-3.0; no separate original
 code copyright year or later-version grant is invented. The unchanged upstream
 license text is retained in [app/LICENSES/TamaEmu-GPL-3.0.txt](app/LICENSES/TamaEmu-GPL-3.0.txt).
-Rust translation/integration contributions are Copyright (C) 2026 Noktyros,
+Rust translation/integration contributions are Copyright (C) 2026 Noctyros,
 GPL-3.0-only. `UPSTREAM.json` records local source hashes and scope. No tamaemu
 frontend, icons, firmware, user saves, network service or DLC assets are included.
 
@@ -184,7 +184,7 @@ for every possible font distribution/modification scenario.
 [LICENSES/rust-stdlib](LICENSES/rust-stdlib/) retains the installed Rust 1.99.1
 standard-library attribution HTML and its complete supplied license set,
 including applicable runtime exceptions. These compiler-produced runtime
-components are not owned or relicensed by Noktyros. Re-audit when changing the
+components are not owned or relicensed by Noctyros. Re-audit when changing the
 toolchain. Rust compiler tools themselves are not bundled with RetroHatch.
 No Windows system DLL or separately licensed MSVC redistributable is copied
 from this workstation into a release package. Review the actual runtime/linking

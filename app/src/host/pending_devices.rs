@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// SPDX-FileCopyrightText: 2026 Noktyros
+// SPDX-FileCopyrightText: 2026 Noctyros
 // Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Recognized research targets with insufficient evidence for executable device profiles.
 //! Facts and blockers: docs/TAMAOTCH.md. No third-party implementation or artwork is included.

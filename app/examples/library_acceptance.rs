@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// SPDX-FileCopyrightText: 2026 Noktyros
+// SPDX-FileCopyrightText: 2026 Noctyros
 // Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Local-only real-ROM library and previous-save migration acceptance.
 //! Usage: library_acceptance ROM_FOLDER PREVIOUS_QA_SAVE_ROOT NEW_PRIVATE_ROOT

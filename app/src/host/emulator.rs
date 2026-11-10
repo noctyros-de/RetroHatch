@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// SPDX-FileCopyrightText: 2026 Noktyros
+// SPDX-FileCopyrightText: 2026 Noctyros
 //! Backend dispatch at the host boundary. Classic serialization and CPU execution stay unchanged.
 use crate::core::s1c33::{machine::Machine as S1Machine, profile::HardwareProfile};
 use crate::core::{

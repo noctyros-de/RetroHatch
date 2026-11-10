@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-only
-# SPDX-FileCopyrightText: 2026 Noktyros
+# SPDX-FileCopyrightText: 2026 Noctyros
 """Generate/check focused Genjintch MCU fixtures using unchanged original handlers.
 
 The fixtures contain synthetic programs only. Optional --rom and --trace compare

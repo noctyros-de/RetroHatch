@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-only
-# SPDX-FileCopyrightText: 2026 Noktyros
+# SPDX-FileCopyrightText: 2026 Noctyros
 """Check the Umino profile and shared synthetic hardware oracle; optionally compare local firmware.
 
 Umino and Genjintch have identical CPU/clock/mask/input configurations. The

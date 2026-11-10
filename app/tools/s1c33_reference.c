@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only
- * SPDX-FileCopyrightText: 2026 Noktyros
+ * SPDX-FileCopyrightText: 2026 Noctyros
  * Test-only adapter for unchanged maragotchi/tamaemu CPU/memory/LCD sources.
  * Peripherals are deliberately unavailable: this is not an MCU/boot oracle. */
 #include "emu.h"

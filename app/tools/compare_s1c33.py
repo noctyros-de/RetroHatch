@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-only
-# SPDX-FileCopyrightText: 2026 Noktyros
+# SPDX-FileCopyrightText: 2026 Noctyros
 """Build unchanged tamaemu C CPU/memory/LCD as an optional synthetic oracle.
 
 No firmware is read or executed. Output and object files stay under app/target.

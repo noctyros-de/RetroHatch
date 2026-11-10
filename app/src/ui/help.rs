@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// SPDX-FileCopyrightText: 2026 Noktyros
+// SPDX-FileCopyrightText: 2026 Noctyros
 //! Application information and external links; device controls remain in the existing UI.
 use super::*;
 
@@ -103,9 +103,10 @@ pub(super) fn dialogs(ctx: &egui::Context, state: &mut HelpUi) -> Option<Externa
                 ui.label("RetroHatch is an open-source Tamagotchi emulator for Windows, developed in Rust.");
                 ui.separator();
                 ui.label("Creator / Developer: Finn Lülsdorf");
+                ui.label("Developer alias: Noctyros");
                 ui.label(format!("Version: {VERSION}"));
                 ui.label("GNU General Public License v3.0 only (GPL-3.0-only)");
-                ui.label("Copyright © 2026 Finn Lülsdorf");
+                ui.label("Copyright © 2026 Finn Lülsdorf / Noctyros");
                 ui.separator();
                 ui.label("Website");
                 if ui.link(ExternalLink::Website.url()).clicked() { link = Some(ExternalLink::Website); }

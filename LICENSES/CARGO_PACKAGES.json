@@ -1978,8 +1978,8 @@
       "features": [],
       "notice_sections": {
         "LICENSE": "1c628d23320358877a93cf89431ca9b3ba80a1f0a1695a9ef58f4492228be4c3",
-        "src/snapshot.rs [source header]": "b54db4ff7a3fc8986104e35d677cb95ef5e3bb40cd18ecb359636a5fcf7593bc",
-        "src/sound.rs [source header]": "df311ffa189f454b6f12cdb86fa9cc78caa1dd8a1b8192bf634fec838a3d3e9b"
+        "src/snapshot.rs [source header]": "9c4da9beaa49f4063fb83e6625d8bb5e50a009cbb99977fd6af471d2d176ea40",
+        "src/sound.rs [source header]": "99e52a3557c3417907f1a876e31a7e8b40783bd975d992919fc36cbf0e554d7a"
       }
     },
     {
@@ -2337,6 +2337,7 @@
         "Win32_Foundation",
         "Win32_Graphics",
         "Win32_Graphics_Dwm",
+        "Win32_Graphics_Gdi",
         "Win32_Media",
         "Win32_Media_Audio",
         "Win32_Networking",

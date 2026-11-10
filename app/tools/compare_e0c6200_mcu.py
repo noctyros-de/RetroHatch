@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-only
-# SPDX-FileCopyrightText: 2026 Noktyros
+# SPDX-FileCopyrightText: 2026 Noctyros
 """Compare focused synthetic P1/MCU scenarios with BrickEmuPy's actual clock().
 
 No firmware imports, ROM files, GUI, audio device, or reference files are modified.

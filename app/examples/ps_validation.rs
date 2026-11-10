@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// SPDX-FileCopyrightText: 2026 Noktyros
+// SPDX-FileCopyrightText: 2026 Noctyros
 //! Opt-in local P's firmware, wall-clock and save/reopen validation; writes only a private validation folder.
 use retrohatch::{
     core::{device::Button, mcu::MASTER_HZ, profile::DeviceProfile, state::sha256},

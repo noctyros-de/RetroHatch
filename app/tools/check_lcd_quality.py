@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-only
-# SPDX-FileCopyrightText: 2026 Noktyros
+# SPDX-FileCopyrightText: 2026 Noctyros
 """Compare production alpha coverage with exact Qt SVG at identical physical scales.
 
 Requires the release lcd_probe example and development-only PyQt6. Writes only

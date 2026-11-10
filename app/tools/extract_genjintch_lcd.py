@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-only
-# SPDX-FileCopyrightText: 2026 Noktyros
+# SPDX-FileCopyrightText: 2026 Noctyros
 """Extract Genjintch display geometry only; derived icon provenance remains uncertain.
 
 No shell, screen-frame artwork, branding, buttons or firmware is included.

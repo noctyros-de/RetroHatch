@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// SPDX-FileCopyrightText: 2026 Noktyros
+// SPDX-FileCopyrightText: 2026 Noctyros
 // Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Host services: worker scheduling, local ROM files, native dialogs and PCM output.
 pub mod audio;
@@ -18,3 +18,5 @@ pub mod fingerprints;
 pub mod library;
 
 pub mod pending_devices;
+
+pub mod screenshots;

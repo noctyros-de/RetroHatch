@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// SPDX-FileCopyrightText: 2026 Noktyros
+// SPDX-FileCopyrightText: 2026 Noctyros
 // Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Export the production icon coverage for comparison with Qt's original SVG renderer.
 #[rustfmt::skip]
@@ -8,6 +8,26 @@
 #[allow(dead_code)]
 #[path = "../src/lcd_render.rs"]
 mod lcd_render;
+#[rustfmt::skip]
+#[allow(dead_code)]
+#[path = "../src/lcd_geometry.rs"]
+mod lcd_geometry;
+#[rustfmt::skip]
+#[allow(dead_code)]
+#[path = "../src/genjintch_lcd_geometry.rs"]
+mod genjintch_lcd_geometry;
+#[rustfmt::skip]
+#[allow(dead_code)]
+#[path = "../src/angel_lcd_geometry.rs"]
+mod angel_lcd_geometry;
+#[rustfmt::skip]
+#[allow(dead_code)]
+#[path = "../src/morino_lcd_geometry.rs"]
+mod morino_lcd_geometry;
+#[rustfmt::skip]
+#[allow(dead_code)]
+#[path = "../src/umino_lcd_geometry.rs"]
+mod umino_lcd_geometry;
 use retrohatch::core::profile::DeviceProfile;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let a: Vec<_> = std::env::args().skip(1).collect();

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-only
-# SPDX-FileCopyrightText: 2026 Noktyros
+# SPDX-FileCopyrightText: 2026 Noctyros
 """Inventory the locked Windows Cargo graph and preserve cached upstream notices.
 
 Run after fetching/building the locked Windows dependencies. No network calls,

@@ -1,5 +1,11 @@
 <!-- SPDX-License-Identifier: GPL-3.0-only -->
-<!-- SPDX-FileCopyrightText: 2026 Noktyros -->
+<!-- SPDX-FileCopyrightText: 2026 Noctyros -->
+
+<p align="center">
+  <img src="docs/assets/retrohatchlogo.png"
+       alt="RetroHatch"
+       width="400">
+</p>
 
 # RetroHatch
 
@@ -17,7 +23,7 @@ and the [release checklist](developer/RELEASE.md).
 ## Installation
 
 1. Open [GitHub Releases](https://github.com/Noktyros/RetroHatch/releases).
-2. Download the latest **`RetroHatch-v<version>-windows-x86_64.zip`** under
+2. Download the latest **`RetroHatch-v<version>-Windows.zip`** under
    **Assets**. The source ZIP is intended for developers.
 3. Extract the entire archive into a folder of your choice.
 4. Double-click **`RetroHatch.exe`**.
@@ -156,7 +162,7 @@ will follow the same issue/PR guidelines; no repository setting is changed here.
 
 ## License and acknowledgements
 
-Original RetroHatch contributions are Copyright (C) 2026 Noktyros and licensed
+Original RetroHatch contributions are Copyright (C) 2026 Noctyros and licensed
 under **GNU GPL-3.0-only**, not an automatic grant of later GPL versions. See
 [LICENSE](LICENSE), [COPYRIGHT.md](COPYRIGHT.md),
 [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) and [LICENSES](LICENSES/).
@@ -168,3 +174,28 @@ by, or sponsored by Bandai. Tamagotchi and related names belong to their
 respective owners. Copyrighted ROMs and firmware are **not included**; users
 must obtain appropriate rights to use their own images. Do not request or
 submit firmware downloads, dumps or private saves.
+
+## Screenshots and optional local branding
+
+File → **Take LCD Screenshot** (**F8**) exports native LCD content without
+application controls: 128×128 RGB for color models, or the complete 352×329
+reference segment layout for classic LCDs (including their icons). Classic
+segment LCDs have no single physical pixel resolution; this uses their canonical
+layout rather than enlarging a window crop. Firmware-drawn backgrounds remain
+part of a color LCD's native content.
+
+File → **Take Full Screenshot** (**F9**) captures the application interface and,
+on Windows, its title bar and visible frame. Unrelated desktop content is excluded.
+PNG files use unique model/time names under `%LOCALAPPDATA%/RetroHatch/screenshots/lcd/`
+and `screenshots/full/`, or the configured `RETROHATCH_DATA_DIR`. A confirmation
+shows the filename; hover it for the full path. Captures never replace existing
+files and do not pause or change the emulated clock.
+
+The README logo is the owner-supplied public copy at `docs/assets/retrohatchlogo.png`.
+Private originals stay in ignored `resources/`. To brand a local Windows build,
+place `retrohatchicon.ico` there and build normally. The build embeds that ICO in
+the EXE and uses its PNG frame for title-bar/taskbar/window icons. The supplied
+ICO currently contains a 256×256 frame, scaled by Windows. Clean public checkouts
+without `resources/` build with standard Windows/eframe fallback icons. Set
+`$env:RETROHATCH_UNBRANDED='1'` before Cargo to explicitly select that fallback.
+See [branding and capture implementation](developer/BRANDING_SCREENSHOTS.md).

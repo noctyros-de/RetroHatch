@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-only
-# SPDX-FileCopyrightText: 2026 Noktyros
+# SPDX-FileCopyrightText: 2026 Noctyros
 # Build locally or configure the current process for a CI distribution build.
 # This script never packages or uploads artifacts.
 param([switch]$Offline, [switch]$ConfigureOnly)

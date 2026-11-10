@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-only
-# SPDX-FileCopyrightText: 2026 Noktyros
+# SPDX-FileCopyrightText: 2026 Noctyros
 """Create local Windows/source release ZIPs from an allowlisted source tree.
 
 Never uploads, changes Git state, or reads firmware/user-data directories.
@@ -19,8 +19,8 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
 ROOT_FILES = {".gitignore", "LICENSE", "README.md", "COPYRIGHT.md",
-              "THIRD_PARTY_LICENSES.md", "CONTRIBUTING.md", "SECURITY.md"}
-APP_FILES = {"app/.gitignore", "app/Cargo.toml", "app/Cargo.lock", "app/THIRD_PARTY_NOTICES.md"}
+              "THIRD_PARTY_LICENSES.md", "CONTRIBUTING.md", "SECURITY.md", "docs/assets/retrohatchlogo.png"}
+APP_FILES = {"app/build.rs", "app/.gitignore", "app/Cargo.toml", "app/Cargo.lock", "app/THIRD_PARTY_NOTICES.md"}
 PREFIXES = (".github/", "developer/", "LICENSES/", "app/src/", "app/assets/lcd/",
             "app/examples/", "app/tests/", "app/tools/", "app/LICENSES/", "app/third_party/")
 SUFFIXES = {".rs", ".toml", ".lock", ".md", ".txt", ".py", ".ps1", ".json",
@@ -40,6 +40,13 @@ def source_allowed(name):
     if name in ROOT_FILES or name in APP_FILES:
         return True
     return name.startswith(PREFIXES) and (path.suffix.lower() in SUFFIXES or path.name == "LICENSE")
+
+
+def release_names(version):
+    """Derive archive names from the sole application version in Cargo.toml."""
+    if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?", version):
+        raise ValueError("Invalid Cargo semantic version")
+    return f"RetroHatch-v{version}-Windows.zip", f"RetroHatch-v{version}-source.zip"
 
 
 def pe_imports(data):
@@ -118,7 +125,8 @@ def run(*args, cwd=ROOT):
 def package(args):
     metadata = tomllib.loads((ROOT/"app/Cargo.toml").read_text(encoding="utf-8"))
     version = metadata["package"]["version"]
-    if args.tag != "v"+version or not re.fullmatch(r"v[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?", args.tag):
+    binary_name, source_name = release_names(version)
+    if args.tag != "v"+version:
         raise ValueError("Tag must match the Cargo.toml package version")
     dirty = bool(run("git", "status", "--porcelain"))
     if dirty and not args.allow_dirty:
@@ -143,8 +151,6 @@ def package(args):
         raise ValueError(f"Missing required publication files: {sorted(required-set(files))}")
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
-    binary_name = f"RetroHatch-{args.tag}-windows-x86_64.zip"
-    source_name = f"RetroHatch-{args.tag}-source.zip"
     if any((output/name).exists() for name in (binary_name, source_name, "SHA256SUMS.txt", "RELEASE_NOTES.md")):
         raise ValueError("Output already contains release artifacts; select a new output directory")
     with tempfile.TemporaryDirectory(prefix="retrohatch-package-") as temporary:

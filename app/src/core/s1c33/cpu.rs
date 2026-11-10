@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// SPDX-FileCopyrightText: 2026 Noktyros (Rust translation and integration)
+// SPDX-FileCopyrightText: 2026 Noctyros (Rust translation and integration)
 // Derived from maragotchi/tamaemu/src/cpu.c, revision 79e19b65a1c970b9e1cd0b58ee6e929507257234.
 // The original credits GMMan/s1c33_sleigh as its S1C33 PE instruction-set reference.
 //! Native S1C33 interpreter. Peripheral scheduling belongs above this CPU.

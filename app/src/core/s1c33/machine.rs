@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// SPDX-FileCopyrightText: 2026 Noktyros (Rust translation and integration)
+// SPDX-FileCopyrightText: 2026 Noctyros (Rust translation and integration)
 //! Deterministic CPU/peripheral owner, using tamaemu's 256-cycle synchronization boundary.
 use super::{
     cpu::{Cpu, CpuError},

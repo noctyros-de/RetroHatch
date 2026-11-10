@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-only
-# SPDX-FileCopyrightText: 2026 Noktyros
+# SPDX-FileCopyrightText: 2026 Noctyros
 """Focused privacy and archive checks for the release packager."""
 from pathlib import Path
 import os
@@ -8,12 +8,21 @@ import unittest
 from unittest.mock import patch
 import zipfile
 
-from package_release import source_allowed, validate_executable, write_zip
+from package_release import release_names, source_allowed, validate_executable, write_zip
 
 
 class PackagingTests(unittest.TestCase):
+    def test_archive_names_follow_the_cargo_semantic_version(self):
+        self.assertEqual(release_names("0.3.2"),
+                         ("RetroHatch-v0.3.2-Windows.zip", "RetroHatch-v0.3.2-source.zip"))
+        self.assertEqual(release_names("0.4.0-beta.1+local")[0],
+                         "RetroHatch-v0.4.0-beta.1+local-Windows.zip")
+        for version in ("0.3", "v0.3.2", "../0.3.2"):
+            with self.assertRaises(ValueError):
+                release_names(version)
+
     def test_required_source_and_notices_are_allowed(self):
-        for name in ("LICENSE", "README.md", "app/Cargo.lock", "app/src/main.rs",
+        for name in ("LICENSE", "README.md", "app/build.rs", "docs/assets/retrohatchlogo.png", "app/Cargo.lock", "app/src/main.rs",
                      "app/assets/lcd/angel.alpha", "app/tests/data/e0c6200_reference.txt",
                      "LICENSES/CARGO_NOTICES.txt", ".github/workflows/windows-release.yml",
                      "app/third_party/tg18-core/LICENSE", "app/third_party/tg18-core/src/cpu.rs",
@@ -23,7 +32,7 @@ class PackagingTests(unittest.TestCase):
                 self.assertTrue(source_allowed(name))
 
     def test_private_files_and_path_traversal_are_rejected(self):
-        for name in ("roms/game.bin", "references/license.txt", "docs/private.md",
+        for name in ("roms/game.bin", "resources/retrohatchicon.ico", "resources/retrohatchlogo.png", "docs/assets/private.png", "screenshots/full/capture.png", "references/license.txt", "docs/private.md",
                      "AGENTS.md", ".git/config", "saves/slot.rhstate", ".env",
                      "app/target/release/RetroHatch.exe", "app/tools/secret.key",
                      "app/assets/lcd/firmware.rom", "app/src/../../private.md",

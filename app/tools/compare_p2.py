@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-only
-# SPDX-FileCopyrightText: 2026 Noktyros
+# SPDX-FileCopyrightText: 2026 Noctyros
 """Verify the P2/P1 hardware equivalence and the shared original MCU oracle.
 
 Optional --rom/--trace checks user-provided P2 firmware; no ROM is included.

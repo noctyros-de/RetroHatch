@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// SPDX-FileCopyrightText: 2026 Noktyros
+// SPDX-FileCopyrightText: 2026 Noctyros
 // Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! E0C6200sound.py control behavior (BrickEmuPy, CC0), with deterministic PCM synthesis.
 #[derive(Clone, Debug, PartialEq, Eq)]

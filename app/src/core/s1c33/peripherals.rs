@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// SPDX-FileCopyrightText: 2026 Noktyros (Rust translation and integration)
+// SPDX-FileCopyrightText: 2026 Noctyros (Rust translation and integration)
 // Derived from maragotchi/tamaemu/src/periph.c; see UPSTREAM.json and THIRD_PARTY_LICENSES.md.
 //! S1C33 peripherals with disconnected IR; no simulated peer or RTC acceleration.
 use super::profile::HardwareProfile;

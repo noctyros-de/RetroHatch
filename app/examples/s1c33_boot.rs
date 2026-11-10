@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// SPDX-FileCopyrightText: 2026 Noktyros
+// SPDX-FileCopyrightText: 2026 Noctyros
 //! Local, opt-in firmware diagnostic. Never embeds or overwrites firmware.
 use retrohatch::core::s1c33::{machine::Machine, profile::HardwareProfile};
 use std::{env, fs, time::Instant};

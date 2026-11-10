@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// SPDX-FileCopyrightText: 2026 Noktyros
+// SPDX-FileCopyrightText: 2026 Noctyros
 //! Explicit versioned S1C33 states. No native structure dumps or changes to classic/ARM schemas.
 use super::{machine::Machine, profile::HardwareProfile};
 use crate::core::state::{Decoder, Encoder, MAGIC, require, sha256};

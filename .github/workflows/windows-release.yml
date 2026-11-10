@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-only
-# SPDX-FileCopyrightText: 2026 Noktyros
+# SPDX-FileCopyrightText: 2026 Noctyros
 name: Windows release
 
 on:
@@ -90,7 +90,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           $assets = @(
-            "dist/RetroHatch-$env:RELEASE_TAG-windows-x86_64.zip",
+            "dist/RetroHatch-$env:RELEASE_TAG-Windows.zip",
             "dist/RetroHatch-$env:RELEASE_TAG-source.zip",
             'dist/SHA256SUMS.txt'
           )

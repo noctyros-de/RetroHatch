@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// SPDX-FileCopyrightText: 2026 Noktyros
+// SPDX-FileCopyrightText: 2026 Noctyros
 //! Exercise the actual egui menus/dialogs without launching a browser during ordinary tests.
 use super::*;
 use retrohatch::host::library::{Entry, Key};
@@ -121,6 +121,7 @@ fn about_metadata_profile_list_and_links_render_from_the_current_implementation(
     for label in [
         "RetroHatch",
         "Creator / Developer: Finn Lülsdorf",
+        "Developer alias: Noctyros",
         &format!("Version: {}", env!("CARGO_PKG_VERSION")),
         "GNU General Public License v3.0 only (GPL-3.0-only)",
         ExternalLink::Website.url(),

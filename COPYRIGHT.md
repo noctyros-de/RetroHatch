@@ -1,9 +1,9 @@
 <!-- SPDX-License-Identifier: GPL-3.0-only -->
-<!-- SPDX-FileCopyrightText: 2026 Noktyros -->
+<!-- SPDX-FileCopyrightText: 2026 Noctyros -->
 
 # Copyright and licensing scope
 
-Copyright (C) 2026 Noktyros (the project owner's confirmed GitHub attribution)
+Copyright (C) 2026 Finn Lülsdorf / Noctyros (the project owner's confirmed attribution)
 for original RetroHatch contributions. Other contributors retain copyright in
 their contributions. Git authorship metadata is not proof that every file is
 exclusively owned by the project owner.
@@ -17,9 +17,9 @@ third-party rights, CC0 provenance, separate font conditions or mandatory notice
 | --- | --- |
 | Handwritten Rust port, integration, host/UI, tests and developer tools | GPL-3.0-only for original RetroHatch contributions, with upstream provenance retained |
 | BrickEmuPy CPU/MCU behavior and derived technical mapping | Upstream CC0-1.0 declaration; see the unchanged full license and attribution |
-| Generated LCD geometry/spans and alpha masks | Upstream-derived data with unresolved independent icon provenance; no exclusive Noktyros authorship claim or fabricated GPL grant |
-| TG18 ARM library in `app/third_party/tg18-core/` | MIT; Copyright (c) 2026 oreo-fox; separately marked MIT integration additions by Noktyros |
-| S1C33 CPU/memory/LCD/peripheral port | Derived from maragotchi/tamaemu (declared GPLv3); GPL-3.0-only Rust translation by Noktyros; unresolved upstream README/provenance issues are documented separately |
+| Generated LCD geometry/spans and alpha masks | Upstream-derived data with unresolved independent icon provenance; no exclusive Noctyros authorship claim or fabricated GPL grant |
+| TG18 ARM library in `app/third_party/tg18-core/` | MIT; Copyright (c) 2026 oreo-fox; separately marked MIT integration additions by Noctyros |
+| S1C33 CPU/memory/LCD/peripheral port | Derived from maragotchi/tamaemu (declared GPLv3); GPL-3.0-only Rust translation by Noctyros; unresolved upstream README/provenance issues are documented separately |
 | Cargo libraries and embedded fonts | Their own licenses/notices; see the generated Windows inventory and full notices |
 | Rust standard-library components | Toolchain attribution and applicable component licenses retained separately |
 | ROMs, firmware, private saves and reference checkouts | Not part of the proposed public source distribution; no rights granted by this project |
