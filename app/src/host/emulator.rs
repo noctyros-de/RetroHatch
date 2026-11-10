@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // SPDX-FileCopyrightText: 2026 Noktyros
 //! Backend dispatch at the host boundary. Classic serialization and CPU execution stay unchanged.
+use crate::core::s1c33::{machine::Machine as S1Machine, profile::HardwareProfile};
 use crate::core::{
     cpu::e0c6200::CpuState,
     device::{Button, Device, DisplaySnapshot},
@@ -19,6 +20,12 @@ use tg18::sound::ToneSynth;
 use tg18::{CPU_HZ, Key, Machine, Outcome};
 
 pub fn validate_rom(bytes: &[u8], profile: DeviceProfile) -> Result<(), String> {
+    if profile == DeviceProfile::Ps {
+        return crate::core::s1c33::machine::validate_image(
+            bytes,
+            HardwareProfile::find("ps").unwrap(),
+        );
+    }
     if profile.is_color() {
         require(
             tg18::is_image(bytes),
@@ -36,6 +43,7 @@ pub type SaveCapture = Box<dyn FnOnce() -> Result<Vec<u8>, String> + Send>;
 enum Backend {
     Classic(Box<Tamagotchi>),
     On(Box<OnDevice>),
+    Ps(Box<S1Machine>),
 }
 pub struct Emulator {
     profile: DeviceProfile,
@@ -46,7 +54,15 @@ pub struct Emulator {
 impl Emulator {
     pub fn from_bytes(bytes: &[u8], profile: DeviceProfile) -> Result<Self, String> {
         validate_rom(bytes, profile)?;
-        let (backend, metadata) = if profile.is_color() {
+        let (backend, metadata) = if profile == DeviceProfile::Ps {
+            (
+                Backend::Ps(Box::new(S1Machine::new(
+                    bytes,
+                    HardwareProfile::find("ps").unwrap(),
+                )?)),
+                (None, false),
+            )
+        } else if profile.is_color() {
             (
                 Backend::On(Box::new(OnDevice::new(Arc::new(bytes.to_vec())))),
                 (None, false),
@@ -78,6 +94,7 @@ impl Emulator {
     pub fn time(&self) -> u64 {
         match &self.backend {
             Backend::Classic(d) => d.time(),
+            Backend::Ps(d) => (d.seconds() * MASTER_HZ as f64) as u64,
             Backend::On(d) => {
                 (u128::from(d.machine.executed) * u128::from(MASTER_HZ) / CPU_HZ as u128) as u64
             }
@@ -86,6 +103,7 @@ impl Emulator {
     pub fn advance_to(&mut self, tick: u64) -> Result<(), String> {
         match &mut self.backend {
             Backend::Classic(d) => d.advance_to(tick).map_err(|e| e.to_string()),
+            Backend::Ps(d) => d.advance_to(tick as f64 / MASTER_HZ as f64),
             Backend::On(d) => d.advance_to(
                 (u128::from(tick) * CPU_HZ as u128)
                     .div_ceil(u128::from(MASTER_HZ))
@@ -96,41 +114,49 @@ impl Emulator {
     pub fn classic_cpu_state(&self) -> Option<&CpuState> {
         match &self.backend {
             Backend::Classic(d) => Some(d.cpu_state()),
-            Backend::On(_) => None,
+            Backend::On(_) | Backend::Ps(_) => None,
         }
     }
     pub fn arm_pc(&self) -> Option<u32> {
         match &self.backend {
             Backend::On(d) => Some(d.machine.cpu.r[15]),
+            // Legacy snapshot field also carries the S1C33 full-width program counter.
+            Backend::Ps(d) => Some(d.cpu.pc),
             _ => None,
         }
     }
     pub fn pc(&self) -> u32 {
-        self.arm_pc()
-            .unwrap_or_else(|| u32::from(self.classic_cpu_state().unwrap().pc))
+        if let Backend::Ps(d) = &self.backend {
+            d.cpu.pc
+        } else {
+            self.arm_pc()
+                .unwrap_or_else(|| u32::from(self.classic_cpu_state().unwrap().pc))
+        }
     }
     pub fn instructions(&self) -> u64 {
         match &self.backend {
             Backend::Classic(d) => d.mcu.instructions,
             Backend::On(d) => d.machine.executed,
+            Backend::Ps(d) => d.instructions,
         }
     }
     pub fn interrupts(&self) -> u64 {
         match &self.backend {
             Backend::Classic(d) => d.mcu.interrupts,
             Backend::On(d) => d.machine.irqs,
+            Backend::Ps(d) => d.interrupts,
         }
     }
     pub fn counters(&self) -> CycleCounters {
         match &self.backend {
             Backend::Classic(d) => d.mcu.counters,
-            Backend::On(_) => CycleCounters::default(),
+            Backend::On(_) | Backend::Ps(_) => CycleCounters::default(),
         }
     }
     pub fn core_profile(&self) -> CoreProfile {
         match &self.backend {
             Backend::Classic(d) => d.mcu.profile,
-            Backend::On(_) => CoreProfile::default(),
+            Backend::On(_) | Backend::Ps(_) => CoreProfile::default(),
         }
     }
     pub fn set_profiling(&mut self, value: bool) {
@@ -138,17 +164,29 @@ impl Emulator {
             d.mcu.set_profiling(value);
         }
     }
+    pub fn set_keep_screen_awake(&mut self, enabled: bool) {
+        if let Backend::Ps(d) = &mut self.backend {
+            d.keep_screen_awake = enabled;
+        }
+    }
     pub fn sleeping(&self) -> bool {
-        matches!(&self.backend, Backend::On(d) if d.machine.sys.powered_off || d.machine.alarm_wake)
+        match &self.backend {
+            Backend::On(d) => d.machine.sys.powered_off || d.machine.alarm_wake,
+            Backend::Ps(d) => {
+                !d.keep_screen_awake && (!d.memory.lcd.sleep_out || !d.memory.lcd.display_on)
+            }
+            _ => false,
+        }
     }
     pub fn display(&self) -> DisplaySnapshot {
         match &self.backend {
             Backend::Classic(d) => d.display(),
-            Backend::On(_) => DisplaySnapshot::default(),
+            Backend::On(_) | Backend::Ps(_) => DisplaySnapshot::default(),
         }
     }
     pub fn color_display(&self) -> Option<Arc<Vec<u8>>> {
         match &self.backend {
+            Backend::Ps(d) => Some(Arc::new(d.rgb())),
             Backend::On(d) => Some(Arc::new(if self.sleeping() {
                 vec![0; 128 * 128 * 3]
             } else {
@@ -161,11 +199,22 @@ impl Emulator {
         match &mut self.backend {
             Backend::Classic(d) => d.set_button(button, pressed),
             Backend::On(d) => d.set_button(button, pressed),
+            Backend::Ps(d) => {
+                let bit = match button {
+                    Button::A => 1,
+                    Button::B => 2,
+                    Button::C => 4,
+                    Button::Knock => 0,
+                };
+                let mask = d.memory.peripherals.as_ref().unwrap().buttons;
+                d.buttons(if pressed { mask | bit } else { mask & !bit });
+            }
         }
     }
     pub fn release_inputs(&mut self) {
         match &mut self.backend {
             Backend::Classic(d) => d.release_inputs(),
+            Backend::Ps(d) => d.buttons(0),
             Backend::On(d) => {
                 d.machine.sys.live_keys = [false; 3];
                 d.machine.sys.hold_until = [d.machine.now(); 3];
@@ -176,6 +225,9 @@ impl Emulator {
     pub fn reset(&mut self) {
         match &mut self.backend {
             Backend::Classic(d) => d.reset(),
+            Backend::Ps(d) => {
+                d.reset().expect("Previously validated S1C33 firmware");
+            }
             Backend::On(d) => {
                 d.machine.restart();
                 d.reset_audio();
@@ -188,6 +240,7 @@ impl Emulator {
         match &mut self.backend {
             Backend::Classic(d) => d.drain_audio(),
             Backend::On(d) => std::mem::take(&mut d.pcm),
+            Backend::Ps(d) => d.drain_audio(),
         }
     }
     pub fn save_state(&self) -> Result<Vec<u8>, String> {
@@ -195,6 +248,11 @@ impl Emulator {
     }
     /// Capture coherently on the emulation owner; compress/encode on the ordered I/O worker.
     pub fn capture_save(&self) -> Result<SaveCapture, String> {
+        if let Backend::Ps(d) = &self.backend {
+            let snapshot = d.as_ref().clone();
+            let hash = self.hash;
+            return Ok(Box::new(move || snapshot.save_state(hash)));
+        }
         let Backend::On(on) = &self.backend else {
             if let Backend::Classic(d) = &self.backend {
                 let data = d.save_state()?;
@@ -232,6 +290,14 @@ impl Emulator {
         }))
     }
     pub fn restored(&self, data: &[u8]) -> Result<Self, String> {
+        if let Backend::Ps(_) = &self.backend {
+            return Ok(Self {
+                profile: self.profile,
+                hash: self.hash,
+                metadata: self.metadata,
+                backend: Backend::Ps(Box::new(S1Machine::restored(data, self.hash)?)),
+            });
+        }
         if let Backend::Classic(d) = &self.backend {
             return Ok(Self {
                 profile: self.profile,

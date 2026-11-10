@@ -62,3 +62,16 @@ ROM content and device profile isolate state directories. Classic profile codes
 0..5 and their schema remain unchanged; On/Meets appends code 6, backend schema 2.
 TG18 capture runs on the owner, while compression and ordered atomic writes run
 on the existing I/O worker. See [TG18.md](TG18.md) for verification limits.
+
+
+## Native S1C33 backend
+
+`core/s1c33/` owns a separate CPU, RAM/NOR bus, LCD controller, CMU, timers,
+GPIO/ITC/RTC and cycle-stamped audio. P's is dispatched by `host/emulator.rs`;
+the existing worker owns all execution and input. It uses the shared color
+framebuffer, PCM output, library, menus and clock-independent pacing.
+
+P's appends profile code 7 and uses backend save schema 3. Classic schema 1 and
+ARM schema 2 retain their formats and identities. Coherent machine capture occurs
+on the emulation worker; explicit encoding, hashing and atomic writes occur on
+the ordered save worker. See [S1C33.md](S1C33.md) for verification and limits.

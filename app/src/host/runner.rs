@@ -31,6 +31,7 @@ pub enum Command {
     Button(Button, bool),
     ReleaseInputs,
     Audio(bool),
+    KeepScreenAwake(bool),
     Profiling(bool),
     Save(SaveTarget),
     LoadSave(SaveTarget),
@@ -238,6 +239,7 @@ fn run(
     let mut state = Snapshot::default();
     let mut audio: Option<AudioSink> = None;
     let mut attempted_audio = false;
+    let mut keep_screen_awake = false;
     let mut pacer = Pacer::new(Instant::now(), 0);
     let mut telemetry = Telemetry::new(0);
     let mut last_publish = Instant::now();
@@ -283,6 +285,9 @@ fn run(
                 state.save_error = Some(e);
                 store.reset_timer();
             }
+        }
+        if let Some(d) = &mut device {
+            d.set_keep_screen_awake(keep_screen_awake);
         }
         // A Windows timeout may wake after ~15.6 ms. Never sleep again while behind.
         let wait = if running {
@@ -562,6 +567,12 @@ fn run(
                 Command::ClearSaveError => {
                     state.save_error = None;
                     state.error = None;
+                }
+                Command::KeepScreenAwake(value) => {
+                    keep_screen_awake = value;
+                    if let Some(d) = &mut device {
+                        d.set_keep_screen_awake(value);
+                    }
                 }
                 Command::Profiling(value) => {
                     detailed = value;

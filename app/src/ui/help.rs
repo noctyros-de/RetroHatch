@@ -81,8 +81,12 @@ pub(super) fn dialogs(ctx: &egui::Context, state: &mut HelpUi) -> Option<Externa
                 }
                 if DeviceProfile::ALL.iter().any(|p| p.is_color()) {
                     ui.separator();
+                    ui.strong("Color devices");
+                    ui.label(DeviceProfile::Ps.name());
+                    ui.weak("P's: local firmware boot, controls and saves verified. Infrared and DLC are unavailable.");
+                    ui.separator();
                     ui.strong("Color devices (experimental)");
-                    for profile in DeviceProfile::ALL.into_iter().filter(|p| p.is_color()) {
+                    for profile in DeviceProfile::ALL.into_iter().filter(|p| *p==DeviceProfile::On) {
                         ui.label(profile.name());
                     }
                     ui.weak("On/Meets integration is implemented, but real firmware boot and gameplay have not been verified. Bluetooth and infrared are unavailable.");

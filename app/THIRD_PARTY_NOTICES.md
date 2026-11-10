@@ -19,7 +19,13 @@ third_party/tg18-core/LICENSE and ../LICENSES/TG18-Emu-MIT.txt. MIT integration
 changes in that library retain separate attribution; the host adapter is GPL-3.0-only.
 No upstream desktop frontend, logo, screenshots or ROM data are included.
 
-TamaEmu, TamaLIB/TamaTool, MAME, Epson
+The S1C33 CPU/memory/LCD/peripheral Rust translation derives from maragotchi/tamaemu
+(original author: maragotchi), which declares GNU GPL-3.0. The exact upstream
+text is retained in LICENSES/TamaEmu-GPL-3.0.txt. Its contradictory README
+no-charge wording and the credited SLEIGH provenance remain release-review
+issues; see ../THIRD_PARTY_LICENSES.md. Only the locally verified P's profile is exposed; other S1C33 boards remain unverified.
+
+TamaLIB/TamaTool, MAME, Epson
 and Paramix Studio supplied research context or factual corroboration; no
 implementation or icon set from those research-only sources is incorporated.
 No copyrighted firmware is included; stored test programs are synthetic.

@@ -24,7 +24,7 @@ APP_FILES = {"app/.gitignore", "app/Cargo.toml", "app/Cargo.lock", "app/THIRD_PA
 PREFIXES = (".github/", "developer/", "LICENSES/", "app/src/", "app/assets/lcd/",
             "app/examples/", "app/tests/", "app/tools/", "app/LICENSES/", "app/third_party/")
 SUFFIXES = {".rs", ".toml", ".lock", ".md", ".txt", ".py", ".ps1", ".json",
-            ".html", ".alpha", ".yml", ".yaml"}
+            ".html", ".alpha", ".yml", ".yaml", ".c"}
 SYSTEM_DLLS = {"kernel32.dll", "kernelbase.dll", "user32.dll", "dwmapi.dll",
               "ole32.dll", "oleaut32.dll", "shell32.dll", "shlwapi.dll", "uxtheme.dll",
               "winmm.dll", "comdlg32.dll", "comctl32.dll", "advapi32.dll", "bcrypt.dll",

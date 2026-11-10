@@ -72,11 +72,13 @@ pub fn inspect_bytes(bytes: Vec<u8>, source_name: String) -> Result<Prepared, St
     super::pending_devices::ensure_supported(&hash)?;
     let candidates: Vec<_> = DeviceProfile::ALL
         .into_iter()
-        .filter(|p| p.rom_bytes() == bytes.len())
+        .filter(|p| {
+            p.rom_bytes() == bytes.len() && super::emulator::validate_rom(&bytes, *p).is_ok()
+        })
         .collect();
     let p = *candidates
         .first()
-        .ok_or("Unsupported ROM size. Import an unpacked 12,288/16,384-byte classic image or an 8-MiB SPII On/Meets flash dump.")?;
+        .ok_or("Unsupported ROM size. Import an unpacked 12,288/16,384-byte classic image or a supported unpacked color NOR image.")?;
     super::emulator::validate_rom(&bytes, p)?;
     Ok(Prepared {
         hash,

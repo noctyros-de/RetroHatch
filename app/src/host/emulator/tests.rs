@@ -262,3 +262,21 @@ fn on_validation_never_uses_filenames_or_silently_accepts_wrong_formats() {
         assert!(DeviceProfile::ALL.contains(&classic));
     }
 }
+
+#[test]
+fn ps_awake_policy_reaches_the_worker_before_and_after_loading() {
+    let temp = Temp::new();
+    let path = temp.0.join("synthetic-ps.bin");
+    let mut bytes = vec![255; 0x800000];
+    bytes[0x400000..0x400004].copy_from_slice(&0x02001000u32.to_le_bytes());
+    bytes[0x1000..0x1002].copy_from_slice(&0x0080u16.to_le_bytes());
+    std::fs::write(&path, bytes).unwrap();
+    let controller = Controller::new(false);
+    controller.send(Command::KeepScreenAwake(true));
+    controller.send(Command::LoadProfile(path, DeviceProfile::Ps));
+    wait(&controller, |s| s.loaded && !s.loading && !s.sleeping);
+    controller.send(Command::KeepScreenAwake(false));
+    wait(&controller, |s| s.sleeping);
+    controller.send(Command::KeepScreenAwake(true));
+    wait(&controller, |s| !s.sleeping);
+}

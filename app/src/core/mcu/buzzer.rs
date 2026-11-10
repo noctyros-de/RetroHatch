@@ -116,6 +116,14 @@ impl Buzzer {
         ]
     }
     pub fn sample(&mut self, rate: u32) -> i16 {
+        self.sample_with_gain(rate, 5.0)
+    }
+    /// Host presentation with headroom, preserving frequency, phase and envelope timing.
+    /// The upstream 5x mixer gain otherwise hard-clips most Angel notification samples.
+    pub fn sample_with_headroom(&mut self, rate: u32) -> i16 {
+        self.sample_with_gain(rate, 1.0)
+    }
+    fn sample_with_gain(&mut self, rate: u32, gain: f64) -> i16 {
         if self.level == 0 {
             self.phase = 0;
             return 0;
@@ -126,14 +134,56 @@ impl Buzzer {
         let wave = (std::f64::consts::TAU * self.phase as f64 / 18446744073709551616.0).sin();
         let increment = ((32768u128 << 64) / u128::from(period)) as u64;
         self.phase = self.phase.wrapping_add(increment);
-        // Match the reference's clipped sine: amplitude=5*step/7, output ceiling=2%.
-        (wave * 655.0 * 5.0 * f64::from(self.level) / 7.0).clamp(-655.0, 655.0) as i16
+        // Preserve the legacy reference path; presentation gain is applied before saturation.
+        (wave * 655.0 * gain * f64::from(self.level) / 7.0).clamp(-655.0, 655.0) as i16
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn headroom_removes_saturation_without_changing_phase_or_control_state() {
+        let mut legacy = Buzzer::default();
+        legacy.set_on(true);
+        let mut clean = legacy.clone();
+        let mut old_pcm = Vec::new();
+        let mut new_pcm = Vec::new();
+        // 11025 samples contain exactly 1024 cycles at 4096 Hz / 44100 Hz.
+        for _ in 0..11025 {
+            old_pcm.push(legacy.sample(44100));
+            new_pcm.push(clean.sample_with_headroom(44100));
+        }
+        assert_eq!(
+            legacy, clean,
+            "Presentation gain must not change oscillator or sound-control state"
+        );
+        assert!(old_pcm.iter().filter(|v| v.abs() == 655).count() > 8000);
+        assert_eq!(new_pcm.iter().filter(|v| v.abs() == 655).count(), 0);
+        fn amplitude(pcm: &[i16], multiple: f64) -> f64 {
+            let (mut real, mut imag) = (0.0, 0.0);
+            for (i, &sample) in pcm.iter().enumerate() {
+                let phase = std::f64::consts::TAU * 4096.0 * multiple * i as f64 / 44100.0;
+                real += sample as f64 * phase.cos();
+                imag += sample as f64 * phase.sin();
+            }
+            real.hypot(imag)
+        }
+        let old_ratio = amplitude(&old_pcm, 3.0) / amplitude(&old_pcm, 1.0);
+        let new_ratio = amplitude(&new_pcm, 3.0) / amplitude(&new_pcm, 1.0);
+        assert!(old_ratio > 0.2);
+        assert!(
+            new_ratio < 0.001,
+            "Unexpected nonlinear distortion: {new_ratio}"
+        );
+        legacy.set_frequency(7);
+        clean.set_frequency(7);
+        legacy.clock();
+        clean.clock();
+        let _ = legacy.sample(44100);
+        let _ = clean.sample_with_headroom(44100);
+        assert_eq!(legacy, clean);
+    }
     #[test]
     fn retuning_preserves_waveform_phase_and_silence_restarts_it() {
         let mut retuned = Buzzer::default();

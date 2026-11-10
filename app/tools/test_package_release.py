@@ -16,7 +16,9 @@ class PackagingTests(unittest.TestCase):
         for name in ("LICENSE", "README.md", "app/Cargo.lock", "app/src/main.rs",
                      "app/assets/lcd/angel.alpha", "app/tests/data/e0c6200_reference.txt",
                      "LICENSES/CARGO_NOTICES.txt", ".github/workflows/windows-release.yml",
-                     "app/third_party/tg18-core/LICENSE", "app/third_party/tg18-core/src/cpu.rs"):
+                     "app/third_party/tg18-core/LICENSE", "app/third_party/tg18-core/src/cpu.rs",
+                     "app/tools/s1c33_reference.c", "app/src/core/s1c33/UPSTREAM.json",
+                     "app/LICENSES/TamaEmu-GPL-3.0.txt"):
             with self.subTest(name=name):
                 self.assertTrue(source_allowed(name))
 

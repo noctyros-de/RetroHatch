@@ -38,6 +38,8 @@ pub struct Mcu {
     profiling: bool,
     osc2_hz: u32,
     osc2_remainder: u64,
+    // Derived presentation policy, not an MCU register or serialized hardware field.
+    audio_headroom: bool,
 }
 
 impl Mcu {
@@ -73,6 +75,7 @@ impl Mcu {
             profiling: false,
             osc2_hz: profile.osc2_hz(),
             osc2_remainder: 0,
+            audio_headroom: profile == DeviceProfile::Angel,
         })
     }
     pub fn set_profiling(&mut self, enabled: bool) {
@@ -224,7 +227,14 @@ impl Mcu {
             } else {
                 let start = self.profiling.then(Instant::now);
                 let sample = if oscillator_running {
-                    self.cpu.with_io(|io| io.buzzer.sample(AUDIO_RATE))
+                    let headroom = self.audio_headroom;
+                    self.cpu.with_io(|io| {
+                        if headroom {
+                            io.buzzer.sample_with_headroom(AUDIO_RATE)
+                        } else {
+                            io.buzzer.sample(AUDIO_RATE)
+                        }
+                    })
                 } else {
                     0
                 };

@@ -140,6 +140,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         last_rom: Some(folder.join("TamagotchiAngel.bin")),
         last_profile: DeviceProfile::Angel,
         rom_folder: Some(folder),
+        keep_screen_awake: false,
     };
     config.store(&output)?;
     assert_eq!(Settings::load(&output)?, config);

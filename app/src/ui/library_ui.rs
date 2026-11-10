@@ -267,7 +267,7 @@ impl RetroHatchApp {
       if ui.button("Remove...").clicked(){self.library.remove=Some((entry.clone(),false));}
      });});
     }
-    ui.separator();ui.add_enabled_ui(!busy,|ui|{if ui.button("Import ROM...").clicked(){self.picker(PickerKind::Rom,ctx);}if ui.button("Restore Library Index Backup...").clicked(){self.library.restore=true;}});
+    ui.separator();ui.add_enabled_ui(!busy,|ui|{if ui.button("Restore Library Index Backup...").clicked(){self.library.restore=true;}});
    });
             self.library.manage = open;
         }

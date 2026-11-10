@@ -12,6 +12,7 @@ pub enum DeviceProfile {
     Morino,
     Umino,
     On,
+    Ps,
 }
 impl DeviceProfile {
     pub const CLASSIC: [Self; 6] = [
@@ -22,7 +23,7 @@ impl DeviceProfile {
         Self::Morino,
         Self::Umino,
     ];
-    pub const ALL: [Self; 7] = [
+    pub const ALL: [Self; 8] = [
         Self::P1,
         Self::P2,
         Self::Genjintch,
@@ -30,9 +31,10 @@ impl DeviceProfile {
         Self::Morino,
         Self::Umino,
         Self::On,
+        Self::Ps,
     ];
     pub const fn is_color(self) -> bool {
-        matches!(self, Self::On)
+        matches!(self, Self::On | Self::Ps)
     }
     pub const fn id(self) -> &'static str {
         match self {
@@ -43,6 +45,7 @@ impl DeviceProfile {
             Self::Morino => "tamagotchi-morino",
             Self::Umino => "tamagotchi-umino",
             Self::On => "tamagotchi-on-meets",
+            Self::Ps => "tamagotchi-ps",
         }
     }
     pub const fn name(self) -> &'static str {
@@ -54,12 +57,13 @@ impl DeviceProfile {
             Self::Morino => "Tamagotchi Morino",
             Self::Umino => "Tamagotchi Umino (Ocean)",
             Self::On => "Tamagotchi On / Meets",
+            Self::Ps => "Tamagotchi P's",
         }
     }
     pub const fn rom_bytes(self) -> usize {
         match self {
             Self::P1 | Self::P2 => 0x3000,
-            Self::On => 0x80_0000,
+            Self::On | Self::Ps => 0x80_0000,
             Self::Genjintch | Self::Angel | Self::Morino | Self::Umino => 0x4000,
         }
     }
@@ -67,6 +71,7 @@ impl DeviceProfile {
         match self {
             Self::P1 | Self::P2 => 1_600_000,
             Self::On => 96_000_000,
+            Self::Ps => 18_432_000,
             Self::Genjintch | Self::Angel | Self::Morino | Self::Umino => 1_060_000,
         }
     }
@@ -84,6 +89,7 @@ impl DeviceProfile {
             "angel" | "angelgotchi" | "tamagotchi-angel" => Some(Self::Angel),
             "morino" | "tamagotchi-morino" => Some(Self::Morino),
             "umino" | "ocean" | "tamagotchi-umino" | "tamagotchi-ocean" => Some(Self::Umino),
+            "ps" | "tamagotchi-ps" => Some(Self::Ps),
             "on" | "meets" | "tg18" | "tamagotchi-on-meets" => Some(Self::On),
             _ => None,
         }

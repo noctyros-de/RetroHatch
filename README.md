@@ -44,13 +44,19 @@ workflow does not resolve the artwork-provenance blockers described above.
 | Tamagotchi Angel (Angelgotchi) | Dedicated LCD, buttons and tap sensor; local firmware/reference validation |
 | Tamagotchi Morino | Dedicated LCD, buttons and sensor; local firmware/reference validation |
 | Tamagotchi Umino (Ocean) | Dedicated LCD, buttons and tap sensor; local firmware/reference validation |
+| Tamagotchi P's | Native S1C33; local firmware boot, color LCD, buttons, audio and full-state resume/reference validation; infrared/DLC unavailable |
 
 Verification covers the available local images and focused gameplay sequences,
 not every regional revision, minigame or complete device lifetime. TamaOtch is
 a recognized **unsupported research target**: its exact LCD mapping, geometry
 and board settings are unresolved. Recognized TamaOtch firmware is refused with
 an explanation; another device's display is not substituted. Tamagotchi
-Connection and other MCU families are not implemented.
+Connection and other MCU families are not available as playable profiles.
+The [native S1C33 backend](developer/S1C33.md) now runs the locally verified
+Tamagotchi P's firmware with the shared library, 128x128 color display, controls,
+audio, slots and autosave. Other S1C33 families (Plus Color, iD, iD L and 4U)
+remain internal hardware configurations, unavailable as supported profiles.
+Infrared, DLC and upstream `.sav`/`.tamasave` import are not implemented.
 
 **On/Meets integration, firmware validation pending:** the reused MIT TG18 ARM
 backend is connected to the existing library, color LCD, A/B/C controls, audio,

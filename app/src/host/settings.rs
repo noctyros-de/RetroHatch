@@ -44,6 +44,7 @@ pub struct Settings {
     pub autosave_minutes: u32,
     pub save_on_exit: bool,
     pub diagnostics: bool,
+    pub keep_screen_awake: bool,
     pub last_rom: Option<PathBuf>,
     pub last_profile: DeviceProfile,
     pub rom_folder: Option<PathBuf>,
@@ -58,6 +59,7 @@ impl Default for Settings {
             autosave_minutes: 1,
             save_on_exit: true,
             diagnostics: false,
+            keep_screen_awake: false,
             last_rom: None,
             last_profile: DeviceProfile::P1,
             rom_folder: None,
@@ -90,7 +92,7 @@ fn parse_path(v: &str) -> Result<Option<PathBuf>, String> {
 impl Settings {
     pub fn encode(&self) -> Vec<u8> {
         let body = format!(
-            "RETROHATCH_SETTINGS=1\ntheme={}\nlabels={}\nmuted={}\nvolume={}\nautosave_minutes={}\nsave_on_exit={}\ndiagnostics={}\nlast_profile={}\nlast_rom={}\nrom_folder={}\n",
+            "RETROHATCH_SETTINGS=1\ntheme={}\nlabels={}\nmuted={}\nvolume={}\nautosave_minutes={}\nsave_on_exit={}\ndiagnostics={}\nkeep_screen_awake={}\nlast_profile={}\nlast_rom={}\nrom_folder={}\n",
             self.theme.name(),
             self.labels,
             self.muted,
@@ -98,6 +100,7 @@ impl Settings {
             self.autosave_minutes,
             self.save_on_exit,
             self.diagnostics,
+            self.keep_screen_awake,
             self.last_profile.id(),
             path_text(&self.last_rom),
             path_text(&self.rom_folder)
@@ -137,6 +140,9 @@ impl Settings {
                 "diagnostics" => {
                     s.diagnostics = v.parse().map_err(|_| "Invalid diagnostics setting")?
                 }
+                "keep_screen_awake" => {
+                    s.keep_screen_awake = v.parse().map_err(|_| "Invalid display-sleep setting")?
+                }
                 "last_profile" => {
                     s.last_profile = DeviceProfile::parse(v).ok_or("Invalid saved profile")?
                 }
@@ -145,7 +151,11 @@ impl Settings {
                 _ => return Err(format!("Unsupported settings field/version: {k}")),
             }
         }
-        if seen.len() != 11 || s.volume > 100 || !AUTOSAVES.contains(&s.autosave_minutes) {
+        if !(seen.len() == 11 && !seen.contains("keep_screen_awake")
+            || seen.len() == 12 && seen.contains("keep_screen_awake"))
+            || s.volume > 100
+            || !AUTOSAVES.contains(&s.autosave_minutes)
+        {
             return Err("Invalid settings values".into());
         }
         Ok(s)
@@ -196,6 +206,21 @@ mod tests {
         }
     }
     #[test]
+    fn legacy_settings_default_to_normal_sleep_and_new_policy_persists() {
+        let mut settings = Settings::default();
+        assert!(!settings.keep_screen_awake);
+        let encoded = String::from_utf8(settings.encode()).unwrap();
+        let body = encoded
+            .split("integrity=")
+            .next()
+            .unwrap()
+            .replace("keep_screen_awake=false\n", "");
+        let old = format!("{body}integrity={}\n", hex(&sha256(body.as_bytes())));
+        assert!(!Settings::decode(old.as_bytes()).unwrap().keep_screen_awake);
+        settings.keep_screen_awake = true;
+        assert_eq!(Settings::decode(&settings.encode()).unwrap(), settings);
+    }
+    #[test]
     fn new_installations_are_green_but_explicit_pink_preferences_are_preserved() {
         assert_eq!(Settings::default().theme, Theme::Green);
         let old = Settings {
@@ -216,6 +241,7 @@ mod tests {
                     autosave_minutes: interval,
                     save_on_exit: false,
                     diagnostics: true,
+                    keep_screen_awake: true,
                     last_rom: Some(PathBuf::from("C:/Pets/Angel Omega Ω.bin")),
                     last_profile: DeviceProfile::Angel,
                     rom_folder: Some(PathBuf::from("C:/Pets")),

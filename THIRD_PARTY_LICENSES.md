@@ -58,11 +58,38 @@ GPL-3.0-only. No TG18 frontend, logo, shell graphics, screenshots or firmware
 are copied. Display artwork for this backend comes from the user's firmware
 while it runs. The separate classic-LCD provenance blockers remain unchanged.
 
+## tamaemu S1C33 translation (P's backend)
+
+The native Rust implementation under `app/src/core/s1c33/` translates CPU, memory/
+NOR, LCD-controller and P's peripheral behavior from [maragotchi/tamaemu](https://github.com/maragotchi/tamaemu),
+revision `79e19b65a1c970b9e1cd0b58ee6e929507257234`. Credit maragotchi as the
+original author. The upstream README declares GNU GPL-3.0; no separate original
+code copyright year or later-version grant is invented. The unchanged upstream
+license text is retained in [app/LICENSES/TamaEmu-GPL-3.0.txt](app/LICENSES/TamaEmu-GPL-3.0.txt).
+Rust translation/integration contributions are Copyright (C) 2026 Noktyros,
+GPL-3.0-only. `UPSTREAM.json` records local source hashes and scope. No tamaemu
+frontend, icons, firmware, user saves, network service or DLC assets are included.
+
+**Release blocker:** upstream's README also says not to charge for the software.
+That conflicts with the ordinary GPL permission to redistribute for a fee.
+This integration does not adopt or impose that restriction on RetroHatch;
+the contradictory upstream wording needs clarification before distributing
+the translated material. Local implementation and tests are not legal clearance.
+
+The original CPU header credits [GMMan/s1c33_sleigh](https://github.com/GMMan/s1c33_sleigh)
+as its instruction-set reference. That credit is retained. No SLEIGH source is
+copied directly into RetroHatch and no permissive license for that separate
+repository was established by this inspection. Review upstream derivation and
+any required permission if it goes beyond technical instruction-set facts.
+
+The optional C oracle compiles unchanged locally supplied reference sources in
+`app/target/`; it is a development test, never a production emulator executable.
+The product core is native Rust and has no C runtime bridge or new dependencies.
+
 ## Inspiration and research; no other incorporated implementation identified
 
 | Project/source | Verified declaration and attribution | RetroHatch use / limits |
 | --- | --- | --- |
-| [TamaEmu](https://github.com/maragotchi/tamaemu) | Upstream LICENSE contains GPL version 3; README declares GNU GPL-3.0. Maintainer handle maragotchi; no separate code copyright owner established by the inspected README/LICENSE/header. | S1C33/color-device research context, not a linked or ported RetroHatch implementation. Exact-only versus later-version grant was not established from the inspected code header. Its README's instruction against charging conflicts with the ordinary GPL freedom to charge; clarify terms before any future reuse. No such restriction is imposed on RetroHatch. |
 | [TamaLIB](https://github.com/jcrona/tamalib), [TamaTool](https://github.com/jcrona/tamatool) | Upstream GPLv2 texts and Jean-Christophe Rona attribution inspected | Hardware/ROM-format research only; no code, icon set or firmware included. GPL-2.0-only code must not be assumed compatible with GPL-3.0-only; review the exact grant before any future incorporation. |
 | [Paramix Studio](https://github.com/mameise/Paramix-Studio) | Project notices declare GPLv3-or-later; include TamaLIB components with their own notices | Factual research labels/checksum corroboration only. No emulator implementation, approximate icon bitmap or firmware copied. No exclusive ownership of that project's contributions is claimed. |
 | [MAME](https://github.com/mamedev/mame) | Inspected E0C6200 handheld driver header: BSD-3-Clause; the whole MAME tree has mixed licenses | Hardware/dump research only; no MAME core or display assets incorporated. Do not apply that single driver's license to all of MAME. |

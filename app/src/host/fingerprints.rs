@@ -16,6 +16,11 @@ pub struct Fingerprint<'a> {
 }
 pub const CATALOG: &[Fingerprint<'static>] = &[
     Fingerprint {
+        sha256: "d64b56098cc09996dbb465b8cfb690d8f21b747325a1bfe56d9025b5dde2159b",
+        profile: DeviceProfile::Ps,
+        variant: "Region not verified",
+    },
+    Fingerprint {
         sha256: "7ee70ec703f390e17f6a3a4c817ba6e6f6ea97a718969aefd8641b7e2e1aa6c8",
         profile: DeviceProfile::P2,
         variant: "Region not verified",
@@ -53,7 +58,12 @@ pub fn matches(hash: &str, catalog: &[Fingerprint<'_>]) -> Vec<Assignment> {
         .map(|f| Assignment {
             profile: f.profile,
             variant: f.variant.into(),
-            evidence: "Verified SHA-256 (local BrickEmuPy comparison)".into(),
+            evidence: if f.profile == DeviceProfile::Ps {
+                "Verified SHA-256 (local tamaemu P's boot comparison)"
+            } else {
+                "Verified SHA-256 (local BrickEmuPy comparison)"
+            }
+            .into(),
         })
         .collect()
 }

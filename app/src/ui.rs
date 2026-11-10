@@ -77,7 +77,7 @@ impl RetroHatchApp {
                     }
                 } else {
                     app.local_error = Some(
-                        "Use --profile p1, p2, genjintch, angel, morino, umino or on followed by a local ROM path.".into(),
+                        "Use --profile p1, p2, genjintch, angel, morino, umino, on or ps followed by a local ROM path.".into(),
                     );
                 }
             } else {
@@ -122,6 +122,7 @@ impl RetroHatchApp {
         } else {
             Controller::new(persistent && !settings.muted)
         };
+        controller.send(Command::KeepScreenAwake(settings.keep_screen_awake));
         let folder = settings
             .rom_folder
             .clone()
@@ -181,6 +182,10 @@ impl RetroHatchApp {
     }
     fn changed(&mut self, before: &Settings) {
         self.dirty = Some(Instant::now());
+        if before.keep_screen_awake != self.settings.keep_screen_awake {
+            self.controller
+                .send(Command::KeepScreenAwake(self.settings.keep_screen_awake));
+        }
         if before.muted != self.settings.muted {
             self.controller.send(Command::Audio(!self.settings.muted));
         }
@@ -279,6 +284,9 @@ impl RetroHatchApp {
         let available =
             s.loaded && !s.loading && !s.saving && !self.exit_pending && self.data_dir.is_some();
         let before = self.settings.clone();
+        let (bg, accent, ink) = palette(self.settings.theme);
+        let bar=egui::Frame::new().fill(blend(bg,accent,0.22)).inner_margin(egui::Margin::symmetric(6,3)).show(ui,|ui| {
+        ui.set_min_width(ui.available_width());
         egui::MenuBar::new().ui(ui, |ui| {
             ui.menu_button("File", |ui| {
                 if ui
@@ -399,7 +407,16 @@ impl RetroHatchApp {
                 });
                 ui.checkbox(&mut self.settings.labels, "Show A/B/C Labels");
                 ui.checkbox(&mut self.settings.muted, "Mute Sound");
-                ui.add(egui::Slider::new(&mut self.settings.volume, 0..=100).text("Volume"));
+                ui.scope(|ui| {
+                    ui.visuals_mut().widgets.inactive.bg_fill=blend(bg,ink,0.18);
+                    ui.visuals_mut().widgets.inactive.fg_stroke=egui::Stroke::new(1.0,ink);
+                    ui.spacing_mut().slider_rail_height=8.0;
+                    ui.add(egui::Slider::new(&mut self.settings.volume,0..=100).text("Volume").suffix("%").trailing_fill(true));
+                });
+                ui.add_enabled_ui(s.profile==DeviceProfile::Ps,|ui| {
+                    ui.checkbox(&mut self.settings.keep_screen_awake,"Keep screen awake")
+                      .on_hover_text("P's only: prevent the firmware display timeout. Disable for normal sleep behavior. If already asleep, press A, B or C once to wake.");
+                });
                 ui.menu_button("Autosave Interval", |ui| {
                     for n in AUTOSAVES {
                         let label = if n == 0 {
@@ -431,6 +448,14 @@ impl RetroHatchApp {
                 }
             }
         });
+        });
+        ui.painter().line_segment(
+            [
+                bar.response.rect.left_bottom(),
+                bar.response.rect.right_bottom(),
+            ],
+            egui::Stroke::new(1.0, blend(accent, ink, 0.12)),
+        );
         if self.settings != before {
             self.changed(&before);
         }
@@ -912,7 +937,7 @@ fn diagnostics(ctx: &egui::Context, s: &Snapshot, open: &mut bool) {
         ));
         if s.profile.is_color() {
             ui.monospace(format!(
-                "{} nominal ARM instruction/skip ticks | {} interrupts",
+                "{} CPU instruction/skip ticks | {} interrupts",
                 s.instructions, s.interrupts
             ));
             ui.label("TG18 ARM926: 96 MHz nominal instruction-time model; RTC 32768 Hz");
@@ -966,7 +991,9 @@ fn paint_profile_lcd(
             use crate::morino_lcd_geometry as g;
             (g::LCD_SIZE, g::PIXELS, g::ICON_BITS, g::ICON_SPANS)
         }
-        DeviceProfile::On => unreachable!("On uses the color framebuffer renderer"),
+        DeviceProfile::On | DeviceProfile::Ps => {
+            unreachable!("On uses the color framebuffer renderer")
+        }
         DeviceProfile::Umino => {
             use crate::umino_lcd_geometry as g;
             (g::LCD_SIZE, g::PIXELS, g::ICON_BITS, g::ICON_SPANS)
@@ -1378,6 +1405,70 @@ mod tests {
         }
     }
     #[test]
+    fn rom_management_has_no_import_button_and_file_keeps_the_import_entry() {
+        fn find(shape: &egui::epaint::Shape, label: &str) -> Option<egui::Pos2> {
+            match shape {
+                egui::epaint::Shape::Text(t) if t.galley.text() == label => {
+                    Some(t.pos + t.galley.size() / 2.0)
+                }
+                egui::epaint::Shape::Vec(v) => v.iter().find_map(|s| find(s, label)),
+                _ => None,
+            }
+        }
+        fn position(out: &egui::FullOutput, label: &str) -> Option<egui::Pos2> {
+            out.shapes.iter().find_map(|s| find(&s.shape, label))
+        }
+        fn frame(
+            ctx: &egui::Context,
+            app: &mut RetroHatchApp,
+            events: Vec<egui::Event>,
+        ) -> egui::FullOutput {
+            let mut output = ctx.run_ui(
+                egui::RawInput {
+                    focused: true,
+                    events,
+                    screen_rect: Some(egui::Rect::from_min_size(
+                        egui::Pos2::ZERO,
+                        egui::vec2(460., 660.),
+                    )),
+                    ..Default::default()
+                },
+                |ui| app.content(ui),
+            );
+            output.textures_delta.clear();
+            output
+        }
+        let ctx = egui::Context::default();
+        let mut app = RetroHatchApp::create(false);
+        app.library.manage = true;
+        let mut out = frame(&ctx, &mut app, vec![]);
+        for _ in 0..2 {
+            out = frame(&ctx, &mut app, vec![]);
+        }
+        assert!(position(&out, "Restore Library Index Backup...").is_some());
+        assert!(position(&out, "Import ROM...").is_none());
+        app.library.manage = false;
+        let out = frame(&ctx, &mut app, vec![]);
+        let pos = position(&out, "File").unwrap();
+        for pressed in [true, false] {
+            frame(
+                &ctx,
+                &mut app,
+                vec![
+                    egui::Event::PointerMoved(pos),
+                    egui::Event::PointerButton {
+                        pos,
+                        button: egui::PointerButton::Primary,
+                        pressed,
+                        modifiers: egui::Modifiers::NONE,
+                    },
+                ],
+            );
+        }
+        let out = frame(&ctx, &mut app, vec![]);
+        assert!(position(&out, "Import ROM...").is_some());
+    }
+    #[test]
     fn settings_menu_checkboxes_and_theme_selection_persist_the_actual_user_actions() {
         fn find(shape: &egui::epaint::Shape, label: &str) -> Option<egui::Pos2> {
             match shape {
@@ -1665,7 +1756,7 @@ mod tests {
                 DeviceProfile::Angel => crate::angel_lcd_geometry::ICON_BITS,
                 DeviceProfile::Morino => g::ICON_BITS,
                 DeviceProfile::Umino => crate::umino_lcd_geometry::ICON_BITS,
-                DeviceProfile::On => unreachable!("Classic geometry test"),
+                DeviceProfile::On | DeviceProfile::Ps => unreachable!("Classic geometry test"),
             };
             for (icon, &(ram, bit)) in source.icons.iter().zip(expected) {
                 assert_eq!((icon.ram, icon.bit), (ram, bit));
@@ -1730,6 +1821,11 @@ mod tests {
     #[test]
     fn unidentified_on_import_color_display_and_one_click_library_start_use_the_existing_ui() {
         unidentified_rom_workflow(DeviceProfile::On);
+    }
+
+    #[test]
+    fn unidentified_ps_import_uses_existing_color_display_library_and_controls() {
+        unidentified_rom_workflow(DeviceProfile::Ps);
     }
 
     fn unidentified_rom_workflow(profile: DeviceProfile) {
@@ -1805,7 +1901,12 @@ mod tests {
         ));
         std::fs::create_dir_all(&folder).unwrap();
         let path = folder.join("misleading-p1-filename.bin");
-        let bytes: Vec<u8> = if profile.is_color() {
+        let bytes: Vec<u8> = if profile == DeviceProfile::Ps {
+            let mut bytes = vec![255; profile.rom_bytes()];
+            bytes[0x400000..0x400004].copy_from_slice(&0x02001000u32.to_le_bytes());
+            bytes[0x1000..0x1002].copy_from_slice(&0x0080u16.to_le_bytes());
+            bytes
+        } else if profile.is_color() {
             let mut bytes = vec![0; profile.rom_bytes()];
             bytes[..4].copy_from_slice(b"SPII");
             bytes[0x48..0x4c].copy_from_slice(&0xeafffffeu32.to_le_bytes());

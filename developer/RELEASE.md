@@ -33,6 +33,12 @@ clearance.
   and unresolved-risk report, before pushing the version tag. A tag push starts
   publication automatically; local packaging does not.
 
+The staged tamaemu translation adds a separate release gate: clarify the
+upstream README's no-charge instruction against its GPLv3 declaration, and
+review the CPU's credited SLEIGH derivation. Retain
+`app/LICENSES/TamaEmu-GPL-3.0.txt` in source/binary packages. Passing synthetic
+S1C33 tests must never be presented as verified support for the target devices.
+
 ## GPL-3.0-only binaries and matching source
 
 GPL version 3 permits commercial redistribution; do not add a noncommercial or

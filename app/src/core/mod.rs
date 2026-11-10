@@ -10,3 +10,5 @@ pub mod profile;
 pub mod tamagotchi;
 
 pub mod state;
+
+pub mod s1c33;
