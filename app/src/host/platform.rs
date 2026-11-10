@@ -110,3 +110,120 @@ pub fn open_folder(folder: &Path) -> Result<(), String> {
         Err("Open the configured ROM folder in your file manager".into())
     }
 }
+
+/// Dispatch an HTTP(S) link to the operating system's default browser.
+pub fn open_url(url: &str) -> Result<(), String> {
+    validate_url(url)?;
+    #[cfg(windows)]
+    {
+        use windows_sys::Win32::System::Com::{
+            COINIT_APARTMENTTHREADED, COINIT_DISABLE_OLE1DDE, CoInitializeEx, CoUninitialize,
+        };
+        use windows_sys::Win32::UI::Shell::ShellExecuteW;
+        let target: Vec<u16> = url.encode_utf16().chain(Some(0)).collect();
+        let operation: Vec<u16> = "open".encode_utf16().chain(Some(0)).collect();
+        // SAFETY: COM initialization is balanced on this thread when successful.
+        let initialized = unsafe {
+            CoInitializeEx(
+                std::ptr::null(),
+                (COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE) as u32,
+            )
+        };
+        // RPC_E_CHANGED_MODE means the caller already initialized COM in another apartment.
+        if initialized < 0 && initialized != 0x80010106u32 as i32 {
+            return Err(format!(
+                "Windows browser initialization failed ({initialized:#x})"
+            ));
+        }
+        // SAFETY: the UTF-16 strings remain alive; optional pointers are null; the verb is only open.
+        let result = unsafe {
+            ShellExecuteW(
+                std::ptr::null_mut(),
+                operation.as_ptr(),
+                target.as_ptr(),
+                std::ptr::null(),
+                std::ptr::null(),
+                1,
+            )
+        } as isize;
+        if initialized >= 0 {
+            unsafe {
+                CoUninitialize();
+            }
+        }
+        shell_open_result(result)
+    }
+    #[cfg(not(windows))]
+    {
+        let executable = if cfg!(target_os = "macos") {
+            "open"
+        } else {
+            "xdg-open"
+        };
+        let result = std::process::Command::new(executable)
+            .arg(url)
+            .status()
+            .map_err(|e| format!("Cannot start the default browser: {e}"))?;
+        if result.success() {
+            Ok(())
+        } else {
+            Err(format!("The browser launcher exited with {result}"))
+        }
+    }
+}
+fn validate_url(url: &str) -> Result<(), String> {
+    let rest = url
+        .strip_prefix("https://")
+        .or_else(|| url.strip_prefix("http://"));
+    if rest.is_none_or(|s| s.is_empty() || s.starts_with('/'))
+        || url.chars().any(|c| c.is_control() || c.is_whitespace())
+    {
+        Err("Only complete HTTP or HTTPS links can be opened".into())
+    } else {
+        Ok(())
+    }
+}
+#[cfg(any(windows, test))]
+fn shell_open_result(code: isize) -> Result<(), String> {
+    if code > 32 {
+        Ok(())
+    } else {
+        Err(format!(
+            "Windows could not open the default browser (ShellExecute {code})"
+        ))
+    }
+}
+
+#[cfg(test)]
+mod url_tests {
+    use super::*;
+    #[test]
+    fn browser_errors_and_invalid_targets_are_explicit() {
+        for code in [0, 2, 5, 8, 31, 32] {
+            assert!(shell_open_result(code).is_err());
+        }
+        assert!(shell_open_result(33).is_ok());
+        for url in [
+            "",
+            "https://",
+            "file:///private",
+            "javascript:alert(1)",
+            "https:///",
+            "https://example.com\0tail",
+        ] {
+            assert!(validate_url(url).is_err());
+        }
+        assert!(validate_url("https://tamatown.de").is_ok());
+    }
+    #[test]
+    #[ignore = "Opens three browser tabs; run explicitly for native URL dispatch verification"]
+    fn default_browser_opens_the_requested_community_links() {
+        for url in [
+            "https://tamatown.de",
+            "https://github.com/Noktyros/RetroHatch",
+            "https://discord.gg/w4zuzCKaZf",
+        ] {
+            open_url(url).unwrap();
+        }
+    }
+}

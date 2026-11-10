@@ -14,14 +14,12 @@ use retrohatch::{
 struct Edit {
     entry: Entry,
     profile: DeviceProfile,
-    variant: String,
     keep: bool,
 }
 struct Choice {
     prepared: Prepared,
     suggestions: Vec<Assignment>,
     selected: Option<DeviceProfile>,
-    variant: String,
 }
 #[derive(Default)]
 pub(super) struct LibraryUi {
@@ -127,7 +125,6 @@ impl RetroHatchApp {
                         prepared,
                         suggestions,
                         selected: None,
-                        variant: "Region not verified".into(),
                     });
                 }
                 Event::Ready {
@@ -208,20 +205,15 @@ impl RetroHatchApp {
                 let current = s.loaded
                     && s.profile == entry.key.profile
                     && s.rom_hash.is_some_and(|h| hex(&h) == entry.key.hash);
-                let label = format!(
-                    "{}{}{}",
-                    if current { "Current: " } else { "" },
-                    entry.label(),
-                    if entry.problem.is_some() {
-                        " — Repair needed"
-                    } else {
-                        ""
-                    }
-                );
-                if ui
-                    .add_enabled(!busy, egui::Button::new(label).selected(current))
-                    .clicked()
-                {
+                let response = ui
+                    .push_id((&entry.key.hash, entry.key.profile.id()), |ui| {
+                        ui.add_enabled(
+                            !busy,
+                            egui::Button::new(entry.key.profile.name()).selected(current),
+                        )
+                    })
+                    .inner;
+                if response.clicked() {
                     self.library.repair = Some(entry.key.clone());
                     self.library_send(Action::Start(entry.key));
                     ui.close();
@@ -245,22 +237,14 @@ impl RetroHatchApp {
             let mut open = true;
             egui::Window::new("Identify imported ROM").open(&mut open).collapsible(false).resizable(false).default_width(340.).max_width((ctx.input(|i|i.content_rect().width())-32.).max(280.)).max_height((ctx.input(|i|i.content_rect().height())-72.).max(200.)).vscroll(true).anchor(egui::Align2::CENTER_CENTER,egui::Vec2::ZERO).show(ctx,|ui|{
     ui.label(&choice.prepared.source_name);ui.label("This content has no unique model association. Select its hardware once.");
-    ui.weak(format!("SHA-256 {}... | {} bytes",&choice.prepared.hash[..12],choice.prepared.bytes.len()));
-    for a in &choice.suggestions{ui.small(format!("Known association: {} — {}",a.profile.name(),a.variant));}
-    let before=choice.selected;
+    ui.weak(format!("{} bytes",choice.prepared.bytes.len()));
     egui::ComboBox::from_label("Device profile").selected_text(choice.selected.map(|p|p.name()).unwrap_or("Select model...")).show_ui(ui,|ui|{for &p in &choice.prepared.candidates{ui.selectable_value(&mut choice.selected,Some(p),p.name());}});
-    if before!=choice.selected{choice.variant=choice.selected.map(|p|retrohatch::host::fingerprints::for_profile(&choice.suggestions,p).variant).unwrap_or_else(||"Region not verified".into());}
-    ui.label("Regional variant (optional):");ui.text_edit_singleline(&mut choice.variant);
     ui.weak("Filenames and size do not prove identity. The chosen association is stored locally by content hash.");
     ui.horizontal(|ui|{confirm=ui.add_enabled(choice.selected.is_some(),egui::Button::new("Import and Start")).clicked();cancel=ui.button("Cancel").clicked();});
    });
             if confirm {
                 let profile = choice.selected.unwrap();
-                let a = Assignment {
-                    profile,
-                    variant: choice.variant,
-                    evidence: "User-confirmed model / variant".into(),
-                };
+                let a = retrohatch::host::fingerprints::for_profile(&choice.suggestions, profile);
                 self.library_send(Action::Confirm(choice.prepared, a));
             } else if !cancel && open {
                 self.library.choice = Some(choice)
@@ -271,14 +255,14 @@ impl RetroHatchApp {
             let busy = self.library.busy() || self.picker.is_some();
             egui::Window::new("Manage ROMs").open(&mut open).default_width(410.).max_width((ctx.input(|i|i.content_rect().width())-32.).max(280.)).max_height((ctx.input(|i|i.content_rect().height())-72.).max(200.)).vscroll(true).show(ctx,|ui|{
     ui.weak("Private copies only. Removing or correcting entries never deletes saved games or original ROMs.");
-    for entry in self.library.entries.clone(){ui.separator();ui.strong(entry.label());let age=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).ok().and_then(|now|now.as_secs().checked_sub(entry.imported));
+    for entry in self.library.entries.clone(){ui.separator();ui.strong(entry.key.profile.name());let age=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).ok().and_then(|now|now.as_secs().checked_sub(entry.imported));
     let imported=match age {Some(s) if s<86400=>"Imported today".into(),Some(s)=>format!("Imported {} days ago",s/86400),None=>"Import date unavailable".into()};
-    ui.small(format!("{} bytes | {imported}",entry.size));ui.small(format!("Internal file: {}",entry.filename));ui.small(format!("Source filename: {}",entry.source_name));ui.small(&entry.evidence);
+    ui.small(format!("{} bytes | {imported}",entry.size));if self.settings.diagnostics { ui.small(format!("Internal file: {}",entry.filename)); }ui.small(format!("Source filename: {}",entry.source_name));if self.settings.diagnostics { ui.small(&entry.evidence); }
      if let Some(error)=&entry.problem{ui.colored_label(egui::Color32::RED,error);}
      ui.add_enabled_ui(!busy&&!s.loading&&!s.saving,|ui|{ui.horizontal_wrapped(|ui|{
       if ui.button("Start").clicked(){self.library.repair=Some(entry.key.clone());self.library_send(Action::Start(entry.key.clone()));}
-      if ui.button("Edit model / variant").clicked(){self.library.edit=Some(Edit{profile:entry.key.profile,variant:entry.variant.clone(),entry:entry.clone(),keep:false});}
-      if ui.button("Add model association").clicked(){self.library.edit=Some(Edit{profile:entry.key.profile,variant:"Region not verified".into(),entry:entry.clone(),keep:true});}
+      if ui.button("Edit model").clicked(){self.library.edit=Some(Edit{profile:entry.key.profile,entry:entry.clone(),keep:false});}
+      if ui.button("Add model association").clicked(){self.library.edit=Some(Edit{profile:entry.key.profile,entry:entry.clone(),keep:true});}
       if ui.button("Repair...").clicked(){self.library.repair=Some(entry.key.clone());self.picker(PickerKind::Repair,ctx);}
       if ui.button("Remove...").clicked(){self.library.remove=Some((entry.clone(),false));}
      });});
@@ -291,8 +275,7 @@ impl RetroHatchApp {
             let mut confirm = false;
             let mut cancel = false;
             egui::Window::new(if edit.keep{"Add model association"}else{"Edit model association"}).collapsible(false).resizable(false).default_width(340.).max_width((ctx.input(|i|i.content_rect().width())-32.).max(280.)).max_height((ctx.input(|i|i.content_rect().height())-72.).max(200.)).vscroll(true).show(ctx,|ui|{
-    ui.label(edit.entry.label());egui::ComboBox::from_label("Model").selected_text(edit.profile.name()).show_ui(ui,|ui|{for p in DeviceProfile::ALL{if p.rom_bytes()==edit.entry.size{ui.selectable_value(&mut edit.profile,p,p.name());}}});
-    ui.label("Regional variant:");ui.text_edit_singleline(&mut edit.variant);
+    ui.label(edit.entry.key.profile.name());egui::ComboBox::from_label("Model").selected_text(edit.profile.name()).show_ui(ui,|ui|{for p in DeviceProfile::ALL{if p.rom_bytes()==edit.entry.size{ui.selectable_value(&mut edit.profile,p,p.name());}}});
     ui.weak("Model changes apply on the next start. Previous-profile saves stay intact and are not converted. Add an association to keep both models for shared ROM content.");
     ui.horizontal(|ui|{confirm=ui.button("Save association").clicked();cancel=ui.button("Cancel").clicked();});
    });
@@ -301,8 +284,8 @@ impl RetroHatchApp {
                     edit.entry.key,
                     Assignment {
                         profile: edit.profile,
-                        variant: edit.variant,
-                        evidence: "User-confirmed model / variant".into(),
+                        variant: edit.entry.variant.clone(),
+                        evidence: edit.entry.evidence.clone(),
                     },
                     edit.keep,
                 ));
@@ -326,7 +309,7 @@ impl RetroHatchApp {
                 .max_height((ctx.input(|i| i.content_rect().height()) - 72.).max(200.))
                 .vscroll(true)
                 .show(ctx, |ui| {
-                    ui.label(entry.label());
+                    ui.label(entry.key.profile.name());
                     ui.label("Original files and all saved games will be kept.");
                     ui.weak(
                         "Your confirmed model choice is remembered if this ROM is imported again.",

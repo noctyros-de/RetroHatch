@@ -18,7 +18,7 @@ tg18-core = { path = "third_party/tg18-core" }
 eframe = { version = "0.37", default-features = false, features = ["default_fonts", "glow"] }
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Media_Audio", "Win32_UI_Controls_Dialogs", "Win32_Storage_FileSystem"] }
+windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Media_Audio", "Win32_UI_Controls_Dialogs", "Win32_Storage_FileSystem", "Win32_UI_Shell", "Win32_System_Com"] }
 
 # The reused ARM interpreter needs optimization even in development builds.
 [profile.dev.package.tg18-core]

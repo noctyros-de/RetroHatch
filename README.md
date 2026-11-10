@@ -117,7 +117,7 @@ prove a variant; SOME is not supported. Real On/Meets firmware testing is pendin
 | Tap / Knock | Up Arrow, Tap button or LCD click, only on supported sensor devices |
 | Pause / Resume | Space or the Emulation menu |
 | Reset | F5 or the Emulation menu, with confirmation |
-| View all shortcuts | Settings > Keyboard Shortcuts |
+| View all shortcuts | Help > Keyboard Shortcuts |
 
 Settings preserves five pastel themes, button-label visibility, mute/volume,
 autosave and exit-save preferences. Green is the new-installation default.

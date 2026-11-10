@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2026 Noktyros
 // Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Minimal themed device view; all machine state and disk I/O belong to the host worker.
+mod help;
 mod library_ui;
 use crate::lcd_geometry::{ICON_BITS, ICON_SPANS, LCD_SIZE, PIXELS};
 use eframe::egui;
@@ -46,6 +47,7 @@ pub struct RetroHatchApp {
     local_error: Option<String>,
     reset_confirm: bool,
     shortcuts_open: bool,
+    help: help::HelpUi,
     exit_pending: bool,
     allow_close: bool,
     exit_was_running: bool,
@@ -145,6 +147,7 @@ impl RetroHatchApp {
             local_error: error,
             reset_confirm: false,
             shortcuts_open: false,
+            help: help::HelpUi::default(),
             exit_pending: false,
             allow_close: false,
             exit_was_running: false,
@@ -410,12 +413,16 @@ impl RetroHatchApp {
                 ui.checkbox(&mut self.settings.save_on_exit, "Save on Exit");
                 ui.separator();
                 ui.checkbox(&mut self.settings.diagnostics, "Show Diagnostics");
-                if ui.button("Keyboard Shortcuts").clicked() {
-                    self.release_inputs();
-                    self.shortcuts_open = true;
-                    ui.close();
-                }
             });
+            if let Some(action) = help::menu(ui) {
+                self.release_inputs();
+                match action {
+                    help::Action::Shortcuts => self.shortcuts_open = true,
+                    help::Action::Supported => self.help.supported = true,
+                    help::Action::About => self.help.about = true,
+                    help::Action::Link(link) => self.open_help_link(link),
+                }
+            }
             if s.saving || s.loading || self.library.busy() {
                 ui.spinner();
             } else if Instant::now() < self.message_until && ui.available_width() > 140.0 {
@@ -532,6 +539,7 @@ impl RetroHatchApp {
             || self.pending_rom.is_some()
             || self.reset_confirm
             || self.shortcuts_open
+            || self.help.blocked()
             || self.library.blocked()
             || self.exit_pending;
         let accepts = keys.0 && !ctx.egui_wants_keyboard_input() && !blocked;
@@ -706,7 +714,16 @@ impl RetroHatchApp {
         }
     }
 
+    fn open_help_link(&mut self, link: help::ExternalLink) {
+        if let Err(error) = help::open_link(link, platform::open_url) {
+            self.local_error = Some(error);
+        }
+    }
+
     fn dialogs(&mut self, ctx: &egui::Context, s: &Snapshot) {
+        if let Some(link) = help::dialogs(ctx, &mut self.help) {
+            self.open_help_link(link);
+        }
         if self.shortcuts_open {
             let mut open = true;
             egui::Window::new("Keyboard Shortcuts")
@@ -1307,7 +1324,7 @@ mod tests {
         std::fs::remove_dir(folder).unwrap();
     }
     #[test]
-    fn all_pastel_views_have_four_menus_optional_labels_and_unchanged_lcd_colors() {
+    fn all_pastel_views_have_five_menus_optional_labels_and_unchanged_lcd_colors() {
         fn texts(shapes: &[egui::epaint::ClippedShape]) -> Vec<String> {
             fn walk(s: &egui::epaint::Shape, out: &mut Vec<String>) {
                 match s {
@@ -1334,7 +1351,7 @@ mod tests {
                 app.settings.labels = labels;
                 let mut output = ctx.run_ui(egui::RawInput::default(), |ui| app.content(ui));
                 let strings = texts(&output.shapes);
-                for menu in ["File", "My Tamagotchis", "Emulation", "Settings"] {
+                for menu in ["File", "My Tamagotchis", "Emulation", "Settings", "Help"] {
                     assert!(
                         strings.iter().any(|s| s == menu),
                         "Missing {menu}: {strings:?}"
@@ -1843,8 +1860,8 @@ mod tests {
         let out = frame(&ctx, &mut app, vec![]);
         let pos = center(&out, "My Tamagotchis");
         let out = click(&ctx, &mut app, pos);
-        let entry_label = app.library.entries[0].label();
-        let pos = center(&out, &format!("Current: {entry_label}"));
+        let entry_label = app.library.entries[0].key.profile.name();
+        let pos = center(&out, entry_label);
         click(&ctx, &mut app, pos);
         let deadline =
             Instant::now() + Duration::from_secs(if profile.is_color() { 20 } else { 3 });
