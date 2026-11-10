@@ -9,13 +9,11 @@ describe observations precisely, and discuss disagreements respectfully.
 
 ## Access and proposals
 
-The official repository is maintained by Noctyros at
-https://github.com/Noktyros/RetroHatch. It remains private until the owner makes
-a separate release decision. The owner controls repository access, review and
-merges; these guidelines do not change visibility, remotes or account settings.
-Once access is available, search existing issues, explain the concrete problem
-and propose a focused PR on a topic branch. Large changes benefit from prior
-design discussion. No CLA or transfer of copyright is requested by these files.
+The public repository is maintained by Finn Lülsdorf (Noctyros) at
+https://github.com/noctyros-de/RetroHatch. Search existing issues, explain the
+concrete problem and propose a focused PR on a topic branch. Large changes
+benefit from prior design discussion. The maintainer reviews changes and
+controls merges. No CLA or transfer of copyright is requested by these files.
 GPL rights to lawful copies, including redistribution/forking, remain intact.
 
 ## Windows development
@@ -48,15 +46,21 @@ checkout using `RETROHATCH_DATA_DIR` so ordinary settings/saves stay untouched.
   ROM library, settings and safe save storage.
 - `app/src/ui.rs`, `ui/`, `lcd_render.rs`: egui presentation and input handling.
 - `app/assets/lcd`, generated geometry files: display-only data; independent
-  symbol provenance is a current public-release blocker.
+  symbol provenance/preferred vectors remain specific open review items.
 - `app/tests/data`: synthetic programs and reference expectations, not firmware.
 - `app/tools`, `app/examples`: differential checks and local-only diagnostics.
 - `developer/`: public, sanitized technical documentation.
 - `LICENSES/`, `THIRD_PARTY_LICENSES.md`: dependency inventory and full notices.
 
-The local `references/`, `roms/`, `saves/`, `docs/` and `AGENTS.md` are private and
-excluded from publication. Do not unignore the entire docs directory. Place new
-public documentation in `developer/`; use factual examples without personal paths.
+Local `references/`, `resources/`, ROMs, saves, internal research and AGENTS.md
+remain excluded. Public docs exceptions are the approved logo in `docs/assets/`
+and the manually managed `docs/screenshots/` gallery. Do not unignore all docs.
+Place technical guides in `developer/`, without personal paths.
+
+The README Screenshots/Gameplay Videos sections and selected gallery files are
+owner-managed. Preserve their entries, order and captions. Do not add captures,
+delete/rename media or regenerate the gallery without explicit authorization.
+See [gallery instructions](docs/screenshots/README.md).
 
 ## Adding or changing a device
 
@@ -76,7 +80,8 @@ public documentation in `developer/`; use factual examples without personal path
    when available, while keeping firmware, traces, saves and captures out of Git.
    Distinguish verified behavior, untested behavior and evidence blockers.
 7. Record asset origin, authorship, licenses and the preferred editable source.
-   Unclear icon rights block distribution even if an upstream repository says CC0.
+   Record unresolved icon rights; a repository CC0 declaration alone does not
+   establish rights that the upstream author did not hold.
 
 ## Optional Python/reference checks
 

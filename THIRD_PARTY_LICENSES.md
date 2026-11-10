@@ -3,11 +3,12 @@
 
 # Third-party licensing and provenance
 
-Audit scope: the current RetroHatch working tree, Cargo.lock and default
-`x86_64-pc-windows-msvc` dependency graph, inspected on 9 November 2026.
-This is distribution preparation, **not legal clearance**. The repository
-remains private and the unresolved LCD artwork/source-form issues block public
-distribution. License declarations do not establish rights to every asset.
+Reviewed on 11 November 2026 against the current source, local upstream copies,
+public upstream declarations and locked default Windows dependency graph.
+RetroHatch is public and its original contributions use **GPL-3.0-only**.
+Third-party notices remain applicable. Public availability does not by itself
+resolve the specific evidence gaps below; this review is not legal clearance.
+See [current audit findings](developer/OPEN_SOURCE_AUDIT.md).
 
 ## Incorporated reference material
 
@@ -28,16 +29,16 @@ distribution. License declarations do not establish rights to every asset.
   ownership that the upstream author may not hold.
 - The five LCD resource sets cover P1/P2 (shared), Genjintch, Angel, Morino and
   Umino. No shell, decorative background or complete SVG is embedded in the
-  executable. The independently owned icon silhouettes have **unresolved
-  provenance**. A repository-level CC0 file is insufficient clearance.
+  executable. The original icon silhouettes have **unresolved independent
+  provenance**. A repository-level CC0 file does not verify all third-party rights.
 
 Affected material includes `app/assets/lcd/*.alpha`,
 `app/src/lcd_geometry.rs`, `*_lcd_geometry.rs` and `lcd_masks.rs`.
 Do not describe the symbols as newly authored by Noctyros. Their editable source
-vectors remain in the private reference checkout; rights and suitable
-Corresponding Source/preferred-source availability must be resolved before
-distributing the affected assets or executable. This preparation does not remove,
-redraw, relicense or publicly package them.
+vectors remain in the excluded reference checkout, rather than the public
+source tree. Record the original icon rights and provide the preferred editable
+inputs where required; derived spans/masks are not equivalent provenance proof.
+This audit does not remove, redraw or relicense these assets.
 
 ## TG18-Emu implementation incorporated under MIT
 
@@ -70,11 +71,15 @@ Rust translation/integration contributions are Copyright (C) 2026 Noctyros,
 GPL-3.0-only. `UPSTREAM.json` records local source hashes and scope. No tamaemu
 frontend, icons, firmware, user saves, network service or DLC assets are included.
 
-**Release blocker:** upstream's README also says not to charge for the software.
-That conflicts with the ordinary GPL permission to redistribute for a fee.
-This integration does not adopt or impose that restriction on RetroHatch;
-the contradictory upstream wording needs clarification before distributing
-the translated material. Local implementation and tests are not legal clearance.
+**Unresolved upstream wording:** the [README Licence section](https://github.com/maragotchi/tamaemu#licence)
+also says not to charge for the software and attributes that instruction to GPL.
+The actual [GPLv3 text, section 4](https://www.gnu.org/licenses/gpl-3.0.html#section4)
+permits conveying copies for a price. No no-charge clause exists in the retained
+GPL text, and RetroHatch does not adopt such an extra restriction. The observed
+contradiction is between upstream prose and its GPL declaration, not a finding
+that GPLv3 itself is incompatible with RetroHatch. Upstream intent/any claimed
+additional condition still needs clarification; no permission or resolution is
+invented, and this is not a categorical claim that all publication is forbidden.
 
 The original CPU header credits [GMMan/s1c33_sleigh](https://github.com/GMMan/s1c33_sleigh)
 as its instruction-set reference. That credit is retained. No SLEIGH source is
@@ -99,6 +104,17 @@ These rows distinguish inspected material and actual engineering use from
 blanket claims about every upstream file or version. Future copied code/assets
 need a fresh, version-specific provenance/licensing review and retained notices.
 No license from a research-only project is silently imported into this program.
+
+## Branding and promotional media
+
+The owner supplied the RetroHatch branding. The public logo is
+`docs/assets/retrohatchlogo.png`; the optional local ICO is excluded from Git
+but can be embedded in local Windows builds. No separate artist or rights-chain
+document was supplied in this audit; record its intended asset license and any
+third-party elements without inventing an author or blanket artwork clearance.
+`docs/screenshots/` is reserved for owner-selected promotional images. Generated
+Pictures captures remain local. A screenshot can contain firmware artwork and
+is not automatically licensed by GPL or CC0 merely because RetroHatch made it.
 
 ## Rust/Cargo dependencies actually resolved for Windows
 
@@ -195,12 +211,10 @@ and System Library treatment before conveying a future package.
 Python/PyQt6/Qt are used by optional local comparison/SVG-generation tools, not
 linked into the Rust executable. PyQt6 has GPL/commercial terms; consult the
 version's own license before redistributing those development dependencies.
-Using a generator does not cure the underlying icon ownership gap. The private
-reference repositories and firmware are not part of the intended public source.
+Using a generator does not cure the underlying icon ownership gap. The local
+reference repositories and firmware are excluded from the public source.
 
-The GPL grant for original project work does not authorize publication of
-private material or unresolved third-party assets. Before any source/binary
-release, resolve symbol rights and preferred source availability, review font
-embedding/notice coverage and exact dependency/toolchain scope, inspect the
-intended refs, and provide complete matching source/build information as required
-by GPLv3. See [developer/RELEASE.md](developer/RELEASE.md).
+Keep private user data and copyrighted firmware out of contributions. For
+redistribution, retain applicable notices and provide exact matching source and
+build information under GPLv3; track the concrete icon/vector, tamaemu wording,
+SLEIGH and font obligations above. See [developer/RELEASE.md](developer/RELEASE.md).

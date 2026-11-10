@@ -64,3 +64,18 @@ __pycache__/
 # Local branding originals and user-generated captures
 /resources/
 **/screenshots/
+
+# User-generated media (including Pictures-style local validation roots)
+**/Screenshots/
+**/Recordings/
+*.mp4
+
+# Owner-selected public gallery only; generated captures/videos remain ignored.
+!/docs/screenshots/
+/docs/screenshots/*
+!/docs/screenshots/README.md
+!/docs/screenshots/*.png
+!/docs/screenshots/*.jpg
+!/docs/screenshots/*.jpeg
+!/docs/screenshots/*.webp
+!/docs/screenshots/*.gif

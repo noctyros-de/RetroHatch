@@ -130,6 +130,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     }
     let config = Settings {
+        display_scale: 100,
         theme: Theme::Lilac,
         labels: false,
         muted: true,

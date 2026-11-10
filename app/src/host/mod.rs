@@ -20,3 +20,5 @@ pub mod library;
 pub mod pending_devices;
 
 pub mod screenshots;
+
+pub mod recording;

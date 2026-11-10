@@ -4,6 +4,7 @@
 //! Minimal themed device view; all machine state and disk I/O belong to the host worker.
 mod help;
 mod library_ui;
+mod recording;
 mod screenshots;
 use crate::lcd_geometry::{ICON_BITS, ICON_SPANS, LCD_SIZE, PIXELS};
 use eframe::egui;
@@ -17,7 +18,7 @@ use retrohatch::host::{
     platform, roms,
     runner::{Command, Controller, Snapshot},
     saves::{SavePolicy, SaveTarget},
-    settings::{AUTOSAVES, Settings, Theme},
+    settings::{AUTOSAVES, DISPLAY_SCALES, Settings, Theme},
     storage,
 };
 use std::{
@@ -36,6 +37,8 @@ type PickerResult = (PickerKind, Result<Option<PathBuf>, String>);
 pub struct RetroHatchApp {
     controller: Controller,
     captures: screenshots::Captures,
+    recording: recording::RecordingUi,
+    media_dir: Option<PathBuf>,
     library: LibraryUi,
     settings: Settings,
     data_dir: Option<PathBuf>,
@@ -54,6 +57,7 @@ pub struct RetroHatchApp {
     allow_close: bool,
     exit_was_running: bool,
     applied_theme: Option<Theme>,
+    initial_scale_applied: bool,
     title: String,
     color_texture: Option<egui::TextureHandle>,
     color_pixels: Option<std::sync::Arc<Vec<u8>>>,
@@ -114,11 +118,20 @@ impl RetroHatchApp {
                 })
             })
             .unwrap_or_default();
-        if let Some(root) = &data_dir {
-            if let Err(e) = retrohatch::host::screenshots::prepare(root) {
-                error = Some(e);
+        let media_dir = if persistent {
+            match retrohatch::host::screenshots::media_root().and_then(|p| {
+                retrohatch::host::screenshots::prepare(&p)?;
+                Ok(p)
+            }) {
+                Ok(p) => Some(p),
+                Err(e) => {
+                    error = Some(e);
+                    None
+                }
             }
-        }
+        } else {
+            None
+        };
         let policy = SavePolicy {
             autosave_minutes: settings.autosave_minutes,
             save_on_exit: settings.save_on_exit,
@@ -139,6 +152,8 @@ impl RetroHatchApp {
         let mut app = Self {
             controller,
             captures: screenshots::Captures::default(),
+            recording: recording::RecordingUi::default(),
+            media_dir,
             library: LibraryUi::default(),
             selected_profile: settings.last_profile,
             settings,
@@ -161,6 +176,7 @@ impl RetroHatchApp {
             allow_close: false,
             exit_was_running: false,
             applied_theme: None,
+            initial_scale_applied: false,
             title: String::new(),
             color_texture: None,
             color_pixels: None,
@@ -226,6 +242,7 @@ impl RetroHatchApp {
         }
     }
     fn begin_exit(&mut self, s: &Snapshot) {
+        self.stop_recording();
         if self.library.busy() {
             self.library.close_after = true;
             self.release_inputs();
@@ -296,6 +313,7 @@ impl RetroHatchApp {
         let bar=egui::Frame::new().fill(blend(bg,accent,0.22)).inner_margin(egui::Margin::symmetric(6,3)).show(ui,|ui| {
         ui.set_min_width(ui.available_width());
         egui::MenuBar::new().ui(ui, |ui| {
+        ui.horizontal_wrapped(|ui| {
             ui.menu_button("File", |ui| {
                 if ui
                     .add_enabled(
@@ -311,13 +329,6 @@ impl RetroHatchApp {
                 {
                     self.picker(PickerKind::Rom, &ctx);
                     ui.close();
-                }
-                ui.separator();
-                for (label,kind,enabled) in [
-                    ("Take LCD Screenshot",retrohatch::host::screenshots::Kind::Lcd,s.loaded&&!s.loading),
-                    ("Take Full Screenshot",retrohatch::host::screenshots::Kind::Full,true),
-                ] {
-                    if ui.add_enabled(enabled&&self.data_dir.is_some()&&!self.captures.busy()&&!self.exit_pending,egui::Button::new(label)).clicked(){self.queue_screenshot(kind);ui.close();}
                 }
                 ui.separator();
                 if ui
@@ -381,6 +392,7 @@ impl RetroHatchApp {
                 }
             });
             self.library_menu(ui, s);
+            self.capture_menu(ui, s);
             ui.menu_button("Emulation", |ui| {
                 if ui
                     .add_enabled(
@@ -416,6 +428,15 @@ impl RetroHatchApp {
                             .selectable_value(&mut self.settings.theme, t, t.name())
                             .clicked()
                         {
+                            ui.close();
+                        }
+                    }
+                });
+                ui.menu_button("Display Scale", |ui| {
+                    for scale in DISPLAY_SCALES {
+                        if ui.selectable_value(&mut self.settings.display_scale, scale, format!("{scale}%")).clicked() {
+                            let profile = if s.loaded {s.profile} else {self.selected_profile};
+                            request_display_size(&ctx,profile,scale);
                             ui.close();
                         }
                     }
@@ -464,6 +485,7 @@ impl RetroHatchApp {
             }
         });
         });
+        });
         ui.painter().line_segment(
             [
                 bar.response.rect.left_bottom(),
@@ -477,6 +499,12 @@ impl RetroHatchApp {
     }
     fn content(&mut self, ui: &mut egui::Ui) {
         let ctx = ui.ctx().clone();
+        if !self.initial_scale_applied {
+            self.initial_scale_applied = true;
+            if self.settings.display_scale != 100 {
+                request_display_size(&ctx, self.selected_profile, self.settings.display_scale);
+            }
+        }
         self.poll_library();
         self.apply_theme(&ctx);
         ui.set_style(ctx.global_style());
@@ -504,6 +532,7 @@ impl RetroHatchApp {
         }
         let s = self.controller.snapshot();
         self.poll_screenshots(&ctx, &s);
+        self.poll_recording(&ctx, &s);
         if self.last_restore != s.restores {
             self.last_restore = s.restores;
             self.release_inputs();
@@ -552,6 +581,7 @@ impl RetroHatchApp {
         if self.exit_pending
             && s.exit_ready
             && !self.captures.busy()
+            && !self.recording.busy()
             && self.local_error.is_none()
             && s.save_error.is_none()
         {
@@ -580,6 +610,7 @@ impl RetroHatchApp {
                 i.key_pressed(egui::Key::F5),
                 i.key_pressed(egui::Key::F8),
                 i.key_pressed(egui::Key::F9),
+                i.key_pressed(egui::Key::F10),
             )
         });
         let blocked = self.picker.is_some()
@@ -608,6 +639,13 @@ impl RetroHatchApp {
         if accepts && keys.6 && !self.captures.busy() {
             self.queue_screenshot(retrohatch::host::screenshots::Kind::Full);
         }
+        if accepts && keys.7 {
+            if self.recording.busy() {
+                self.stop_recording();
+            } else {
+                self.start_recording(retrohatch::host::screenshots::Kind::Full, &s);
+            }
+        }
         self.menus(ui, &s);
         let mut pointer = [false; 4];
         let (_, accent, ink) = palette(self.settings.theme);
@@ -618,7 +656,28 @@ impl RetroHatchApp {
                     .inner_margin(8.0),
             )
             .show(ui, |ui| {
-                egui::ScrollArea::vertical().show(ui, |ui| {
+                egui::ScrollArea::both().show(ui, |ui| {
+                    let profile = if s.loaded {
+                        s.profile
+                    } else {
+                        self.selected_profile
+                    };
+                    // 100% retains the responsive normal layout; larger scales can scroll.
+                    let reserve = if s.loaded && profile.has_knock() {
+                        192.0
+                    } else {
+                        130.0
+                    };
+                    let aspect = if profile.is_color() {
+                        1.0
+                    } else {
+                        329.0 / 352.0
+                    };
+                    let normal = (ui.available_width() - 40.0)
+                        .min((ui.available_height() - reserve - 32.0) / aspect)
+                        .clamp(160.0, display_width(profile, 100));
+                    let desired_width = normal * f32::from(self.settings.display_scale) / 100.0;
+                    ui.set_min_width((desired_width + 40.).max(ui.available_width()));
                     ui.vertical_centered(|ui| {
                         let reserve = if s.loaded && s.profile.has_knock() {
                             192.0
@@ -632,9 +691,7 @@ impl RetroHatchApp {
                         })
                         .is_color();
                         let aspect = if color { 1.0 } else { 329.0 / 352.0 };
-                        let width = (ui.available_width() - 40.0)
-                            .min((ui.available_height() - reserve) / aspect)
-                            .clamp(160.0, 384.0);
+                        let width = desired_width;
                         let total = width * aspect + reserve;
                         ui.add_space(((ui.available_height() - total) / 2.0).max(14.0));
                         let profile = if s.loaded {
@@ -737,11 +794,12 @@ impl RetroHatchApp {
             }
         }
         self.screenshot_notice(&ctx);
+        self.recording_notice(&ctx);
         ctx.request_repaint_after(Duration::from_millis(16));
     }
     fn paint_color_lcd(&mut self, ui: &mut egui::Ui, s: &Snapshot, width: f32) -> egui::Response {
         let ppp = ui.ctx().pixels_per_point();
-        let width = ((width * ppp / 128.0).floor().max(1.0) * 128.0) / ppp;
+        let width = (width * ppp).round().max(1.0) / ppp;
         if let Some(pixels) = &s.color_display {
             if self.color_pixels.as_deref() != Some(pixels.as_ref()) || self.color_texture.is_none()
             {
@@ -793,7 +851,8 @@ impl RetroHatchApp {
                     ui.label("Reset (confirmation): F5");
                     ui.separator();
                     ui.label("LCD screenshot: F8");
-                    ui.label("Full-window screenshot: F9");
+                    ui.label("Emulator screenshot: F9");
+                    ui.label("Start / stop emulator recording: F10");
                     if s.loaded && s.profile.has_knock() {
                         ui.separator();
                         ui.label("Tap / Knock: Up Arrow");
@@ -909,6 +968,22 @@ fn palette(t: Theme) -> (egui::Color32, egui::Color32, egui::Color32) {
 fn blend(a: egui::Color32, b: egui::Color32, t: f32) -> egui::Color32 {
     let c = |x: u8, y: u8| (f32::from(x) * (1.0 - t) + f32::from(y) * t).round() as u8;
     egui::Color32::from_rgb(c(a.r(), b.r()), c(a.g(), b.g()), c(a.b(), b.b()))
+}
+fn request_display_size(ctx: &egui::Context, profile: DeviceProfile, percent: u16) {
+    let width = display_width(profile, percent);
+    let screen = ctx
+        .input(|i| i.viewport().monitor_size)
+        .unwrap_or(egui::vec2(1280., 900.));
+    let size = egui::vec2(
+        (width + 80.).max(460.).min((screen.x - 80.).max(350.)),
+        (width * if profile.is_color() { 1. } else { 329. / 352. } + 260.)
+            .max(500.)
+            .min((screen.y - 100.).max(400.)),
+    );
+    ctx.send_viewport_cmd(egui::ViewportCommand::InnerSize(size));
+}
+fn display_width(profile: DeviceProfile, percent: u16) -> f32 {
+    (if profile.is_color() { 384.0 } else { 352.0 }) * f32::from(percent) / 100.0
 }
 fn round_button(
     ui: &mut egui::Ui,
@@ -1383,7 +1458,7 @@ mod tests {
         std::fs::remove_dir(folder).unwrap();
     }
     #[test]
-    fn all_pastel_views_have_five_menus_optional_labels_and_unchanged_lcd_colors() {
+    fn all_pastel_views_have_capture_menu_optional_labels_and_unchanged_lcd_colors() {
         fn texts(shapes: &[egui::epaint::ClippedShape]) -> Vec<String> {
             fn walk(s: &egui::epaint::Shape, out: &mut Vec<String>) {
                 match s {
@@ -1410,7 +1485,14 @@ mod tests {
                 app.settings.labels = labels;
                 let mut output = ctx.run_ui(egui::RawInput::default(), |ui| app.content(ui));
                 let strings = texts(&output.shapes);
-                for menu in ["File", "My Tamagotchis", "Emulation", "Settings", "Help"] {
+                for menu in [
+                    "File",
+                    "My Tamagotchis",
+                    "Screenshots",
+                    "Emulation",
+                    "Settings",
+                    "Help",
+                ] {
                     assert!(
                         strings.iter().any(|s| s == menu),
                         "Missing {menu}: {strings:?}"

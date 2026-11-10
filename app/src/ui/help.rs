@@ -14,7 +14,7 @@ impl ExternalLink {
     pub fn url(self) -> &'static str {
         match self {
             Self::Website => "https://tamatown.de",
-            Self::Source => "https://github.com/Noktyros/RetroHatch",
+            Self::Source => "https://github.com/noctyros-de/RetroHatch",
             Self::Discord => "https://discord.gg/w4zuzCKaZf",
         }
     }
@@ -85,11 +85,11 @@ pub(super) fn dialogs(ctx: &egui::Context, state: &mut HelpUi) -> Option<Externa
                     ui.label(DeviceProfile::Ps.name());
                     ui.weak("P's: local firmware boot, controls and saves verified. Infrared and DLC are unavailable.");
                     ui.separator();
-                    ui.strong("Color devices (experimental)");
+                    ui.strong("Color devices (limited support)");
                     for profile in DeviceProfile::ALL.into_iter().filter(|p| *p==DeviceProfile::On) {
                         ui.label(profile.name());
                     }
-                    ui.weak("On/Meets integration is implemented, but real firmware boot and gameplay have not been verified. Bluetooth and infrared are unavailable.");
+                    ui.weak("On/Meets is integrated; working use is reported by the project owner. Individual variants are not all independently verified. Bluetooth and infrared are unavailable.");
                 }
             });
     }

@@ -8,6 +8,7 @@ use crate::core::{
     state::{hex, sha256},
 };
 use std::path::{Path, PathBuf};
+pub const DISPLAY_SCALES: [u16; 7] = [33, 50, 75, 100, 150, 200, 300];
 pub const AUTOSAVES: [u32; 6] = [0, 1, 5, 10, 15, 30];
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Theme {
@@ -39,6 +40,7 @@ impl Theme {
 pub struct Settings {
     pub theme: Theme,
     pub labels: bool,
+    pub display_scale: u16,
     pub muted: bool,
     pub volume: u8,
     pub autosave_minutes: u32,
@@ -54,6 +56,7 @@ impl Default for Settings {
         Self {
             theme: Theme::Green,
             labels: true,
+            display_scale: 100,
             muted: false,
             volume: 100,
             autosave_minutes: 1,
@@ -92,9 +95,10 @@ fn parse_path(v: &str) -> Result<Option<PathBuf>, String> {
 impl Settings {
     pub fn encode(&self) -> Vec<u8> {
         let body = format!(
-            "RETROHATCH_SETTINGS=1\ntheme={}\nlabels={}\nmuted={}\nvolume={}\nautosave_minutes={}\nsave_on_exit={}\ndiagnostics={}\nkeep_screen_awake={}\nlast_profile={}\nlast_rom={}\nrom_folder={}\n",
+            "RETROHATCH_SETTINGS=1\ntheme={}\nlabels={}\ndisplay_scale={}\nmuted={}\nvolume={}\nautosave_minutes={}\nsave_on_exit={}\ndiagnostics={}\nkeep_screen_awake={}\nlast_profile={}\nlast_rom={}\nrom_folder={}\n",
             self.theme.name(),
             self.labels,
+            self.display_scale,
             self.muted,
             self.volume,
             self.autosave_minutes,
@@ -130,6 +134,9 @@ impl Settings {
                         .find(|t| t.name() == v)
                         .ok_or("Invalid theme")?
                 }
+                "display_scale" => {
+                    s.display_scale = v.parse().map_err(|_| "Invalid display scale")?
+                }
                 "labels" => s.labels = v.parse().map_err(|_| "Invalid labels setting")?,
                 "muted" => s.muted = v.parse().map_err(|_| "Invalid mute setting")?,
                 "volume" => s.volume = v.parse().map_err(|_| "Invalid volume")?,
@@ -151,8 +158,10 @@ impl Settings {
                 _ => return Err(format!("Unsupported settings field/version: {k}")),
             }
         }
-        if !(seen.len() == 11 && !seen.contains("keep_screen_awake")
-            || seen.len() == 12 && seen.contains("keep_screen_awake"))
+        let optional = usize::from(seen.contains("keep_screen_awake"))
+            + usize::from(seen.contains("display_scale"));
+        if seen.len() != 11 + optional
+            || !DISPLAY_SCALES.contains(&s.display_scale)
             || s.volume > 100
             || !AUTOSAVES.contains(&s.autosave_minutes)
         {
@@ -192,6 +201,35 @@ impl Settings {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn display_scale_roundtrips_and_missing_legacy_field_defaults_to_100() {
+        for scale in DISPLAY_SCALES {
+            let s = Settings {
+                display_scale: scale,
+                ..Settings::default()
+            };
+            assert_eq!(Settings::decode(&s.encode()).unwrap().display_scale, scale);
+        }
+        let s = Settings::default();
+        let encoded = String::from_utf8(s.encode()).unwrap();
+        let body = encoded
+            .split("integrity=")
+            .next()
+            .unwrap()
+            .replace("display_scale=100\n", "");
+        let old = format!("{body}integrity={}\n", hex(&sha256(body.as_bytes())));
+        assert_eq!(Settings::decode(old.as_bytes()).unwrap().display_scale, 100);
+        assert!(
+            Settings::decode(
+                &Settings {
+                    display_scale: 99,
+                    ..s
+                }
+                .encode()
+            )
+            .is_err()
+        );
+    }
     #[test]
     fn every_device_profile_round_trips_without_changing_user_preferences() {
         for profile in DeviceProfile::ALL {
@@ -238,6 +276,7 @@ mod tests {
                     labels: false,
                     muted: true,
                     volume: 37,
+                    display_scale: 150,
                     autosave_minutes: interval,
                     save_on_exit: false,
                     diagnostics: true,

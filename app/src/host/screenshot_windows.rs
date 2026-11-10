@@ -153,3 +153,6 @@ pub fn compose(window: usize, client: Image) -> Result<Image, String> {
         Image::new(cw, ch, cropped)
     }
 }
+pub fn visible(window: usize) -> bool {
+    unsafe { IsWindowVisible(window as HWND) != 0 && IsIconic(window as HWND) == 0 }
+}

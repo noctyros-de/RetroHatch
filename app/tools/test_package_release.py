@@ -31,6 +31,16 @@ class PackagingTests(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertTrue(source_allowed(name))
 
+    def test_only_selected_top_level_gallery_images_and_guide_are_public(self):
+        for name in ("docs/screenshots/README.md", "docs/screenshots/angel.png",
+                     "docs/screenshots/ps.jpg", "docs/screenshots/on.webp", "docs/screenshots/p1.gif"):
+            self.assertTrue(source_allowed(name), name)
+        for name in ("docs/screenshots/recording.mp4", "docs/screenshots/firmware.bin",
+                     "docs/screenshots/notes.txt", "docs/screenshots/raw/private.png",
+                     "docs/screenshots/../private.png", "resources/logo.png",
+                     "Screenshots/LCD/capture.png", "Recordings/LCD/video.mp4"):
+            self.assertFalse(source_allowed(name), name)
+
     def test_private_files_and_path_traversal_are_rejected(self):
         for name in ("roms/game.bin", "resources/retrohatchicon.ico", "resources/retrohatchlogo.png", "docs/assets/private.png", "screenshots/full/capture.png", "references/license.txt", "docs/private.md",
                      "AGENTS.md", ".git/config", "saves/slot.rhstate", ".env",
@@ -70,8 +80,8 @@ class PackagingTests(unittest.TestCase):
                 self.assertEqual(package.read("old-source.rs"), b"// synthetic source")
 
     def test_system_libraries_are_accepted_without_bundling_dlls(self):
-        with patch("package_release.pe_imports", return_value=["kernel32.dll", "opengl32.dll"]):
-            self.assertEqual(validate_executable(b"image", []), ["kernel32.dll", "opengl32.dll"])
+        with patch("package_release.pe_imports", return_value=["combase.dll", "kernel32.dll", "opengl32.dll"]):
+            self.assertEqual(validate_executable(b"image", []), ["combase.dll", "kernel32.dll", "opengl32.dll"])
 
     def test_separate_msvc_runtime_dependency_is_rejected(self):
         with patch("package_release.pe_imports", return_value=["vcruntime140.dll"]):

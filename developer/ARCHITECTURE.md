@@ -43,11 +43,12 @@ Rust tests contain synthetic programs and stored reference expectations. Optiona
 Python tools regenerate/check expectations using a separately obtained local
 BrickEmuPy source tree. Cargo compilation/tests require no proprietary firmware
 or private reference directory. Current generated LCD data can compile by itself,
-but the original editable vector inputs are not in the proposed source snapshot;
+but the original editable vector inputs are not in the public source snapshot;
 resolving their rights and source-form availability is a release gate.
 
-Privacy boundaries: `docs/` contains private research/audits; `developer/` is the
-public documentation area. Keep ROMs, saves, library indexes, credentials and
+Privacy boundaries: most `docs/` content is local research/audits. The public
+exceptions are docs/assets/retrohatchlogo.png and docs/screenshots/; developer/
+contains public technical guides. Keep ROMs, saves, library indexes, credentials and
 diagnostic captures outside public source. Do not publish `.git` or tool refs.
 
 

@@ -220,10 +220,40 @@ mod url_tests {
     fn default_browser_opens_the_requested_community_links() {
         for url in [
             "https://tamatown.de",
-            "https://github.com/Noktyros/RetroHatch",
+            "https://github.com/noctyros-de/RetroHatch",
             "https://discord.gg/w4zuzCKaZf",
         ] {
             open_url(url).unwrap();
         }
+    }
+}
+
+/// Resolve the actual (possibly redirected/OneDrive) Windows Pictures known folder.
+pub fn pictures_dir() -> Result<PathBuf, String> {
+    #[cfg(windows)]
+    {
+        use std::os::windows::ffi::OsStringExt;
+        use windows_sys::Win32::{System::Com::CoTaskMemFree, UI::Shell::*};
+        let mut raw = std::ptr::null_mut();
+        // SAFETY: Shell allocates a terminated UTF-16 path, freed with CoTaskMemFree.
+        unsafe {
+            let hr = SHGetKnownFolderPath(&FOLDERID_Pictures, 0, std::ptr::null_mut(), &mut raw);
+            if hr < 0 || raw.is_null() {
+                return Err(format!("Cannot locate Windows Pictures ({hr:#x})"));
+            }
+            let mut len = 0;
+            while *raw.add(len) != 0 {
+                len += 1;
+            }
+            let path = PathBuf::from(std::ffi::OsString::from_wide(std::slice::from_raw_parts(
+                raw, len,
+            )));
+            CoTaskMemFree(raw.cast());
+            Ok(path)
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        Err("Windows Pictures capture storage is unavailable on this platform".into())
     }
 }

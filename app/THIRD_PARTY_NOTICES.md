@@ -9,8 +9,8 @@ unchanged license remains in LICENSES/BrickEmuPy-CC0-1.0.txt.
 
 Display-only resources cover P1/P2 (the reference explicitly shares one SVG),
 Genjintch, Angel, Morino and Umino. No shell or decorative background is embedded.
-The independent provenance of derived icon silhouettes remains unresolved and
-blocks public distribution of affected assets/binaries. No exclusive project
+The independent provenance and preferred editable source of derived icon
+silhouettes remain unresolved review items. No exclusive project
 authorship or fabricated GPL license is claimed for them.
 
 The On/Meets ARM library is incorporated from oreo-fox/tg18-emu under MIT,

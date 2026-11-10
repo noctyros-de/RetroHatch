@@ -22,7 +22,7 @@ third-party rights, CC0 provenance, separate font conditions or mandatory notice
 | S1C33 CPU/memory/LCD/peripheral port | Derived from maragotchi/tamaemu (declared GPLv3); GPL-3.0-only Rust translation by Noctyros; unresolved upstream README/provenance issues are documented separately |
 | Cargo libraries and embedded fonts | Their own licenses/notices; see the generated Windows inventory and full notices |
 | Rust standard-library components | Toolchain attribution and applicable component licenses retained separately |
-| ROMs, firmware, private saves and reference checkouts | Not part of the proposed public source distribution; no rights granted by this project |
+| ROMs, firmware, private saves and reference checkouts | Excluded from the public source distribution; no rights granted by this project |
 
 The GPL document itself is Copyright (C) 2007 Free Software Foundation, Inc.
 That identifies the license document's author, not the author of RetroHatch or
@@ -32,4 +32,5 @@ license declarations, not from editing that text.
 
 Preserve copyright/license notices when contributing. Do not add a project-wide
 notice to borrowed files that implies ownership of their underlying material.
-Unresolved provenance must be cleared before the affected material is released.
+Public availability is not proof of third-party rights. Track unresolved
+provenance in THIRD_PARTY_LICENSES.md and developer/OPEN_SOURCE_AUDIT.md.

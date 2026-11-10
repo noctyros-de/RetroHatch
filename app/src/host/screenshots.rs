@@ -16,8 +16,8 @@ pub enum Kind {
 impl Kind {
     pub fn folder(self) -> &'static str {
         match self {
-            Self::Lcd => "lcd",
-            Self::Full => "full",
+            Self::Lcd => "LCD",
+            Self::Full => "Emulator",
         }
     }
 }
@@ -39,14 +39,30 @@ impl Image {
         Ok(Self { width, height, rgb })
     }
 }
+pub fn media_root() -> Result<PathBuf, String> {
+    if let Some(root) = std::env::var_os("RETROHATCH_CAPTURE_DIR") {
+        if root.is_empty() {
+            return Err("Capture directory override is empty".into());
+        }
+        return Ok(root.into());
+    }
+    Ok(super::platform::pictures_dir()?.join("RetroHatch"))
+}
+pub fn folder(root: &Path, kind: Kind) -> PathBuf {
+    root.join("Screenshots").join(kind.folder())
+}
 pub fn prepare(root: &Path) -> Result<(), String> {
     for kind in [Kind::Lcd, Kind::Full] {
-        fs::create_dir_all(root.join("screenshots").join(kind.folder()))
+        fs::create_dir_all(root.join("Screenshots").join(kind.folder()))
             .map_err(|e| format!("Cannot create screenshot folder: {e}"))?;
+    }
+    for kind in [Kind::Lcd, Kind::Full] {
+        fs::create_dir_all(root.join("Recordings").join(kind.folder()))
+            .map_err(|e| format!("Cannot create recording folder: {e}"))?;
     }
     Ok(())
 }
-fn timestamp(time: SystemTime) -> Result<String, String> {
+pub(crate) fn timestamp(time: SystemTime) -> Result<String, String> {
     let t = time.duration_since(UNIX_EPOCH).map_err(|e| e.to_string())?;
     let mut days = t.as_secs() / 86400;
     let mut year = 1970u64;
@@ -106,7 +122,7 @@ pub fn save(root: &Path, model: &str, kind: Kind, image: Image) -> Result<PathBu
     for _ in 0..100 {
         let n = SERIAL.fetch_add(1, Ordering::Relaxed);
         let path = root
-            .join("screenshots")
+            .join("Screenshots")
             .join(kind.folder())
             .join(format!("{model}_{}_{stamp}_{n:04}.png", kind.folder()));
         match OpenOptions::new().write(true).create_new(true).open(&path) {
@@ -168,7 +184,7 @@ mod tests {
         .unwrap();
         assert_ne!(first, second);
         assert_eq!(fs::read(first).unwrap(), bytes);
-        assert!(root.join("screenshots/full").is_dir());
+        assert!(root.join("Screenshots/Emulator").is_dir());
         let cleanup = root.canonicalize().unwrap();
         assert_eq!(
             cleanup.parent().unwrap(),

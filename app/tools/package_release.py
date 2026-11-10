@@ -25,8 +25,10 @@ PREFIXES = (".github/", "developer/", "LICENSES/", "app/src/", "app/assets/lcd/"
             "app/examples/", "app/tests/", "app/tools/", "app/LICENSES/", "app/third_party/")
 SUFFIXES = {".rs", ".toml", ".lock", ".md", ".txt", ".py", ".ps1", ".json",
             ".html", ".alpha", ".yml", ".yaml", ".c"}
+GALLERY = PurePosixPath("docs/screenshots")
+GALLERY_IMAGES = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 SYSTEM_DLLS = {"kernel32.dll", "kernelbase.dll", "user32.dll", "dwmapi.dll",
-              "ole32.dll", "oleaut32.dll", "shell32.dll", "shlwapi.dll", "uxtheme.dll",
+              "ole32.dll", "combase.dll", "oleaut32.dll", "shell32.dll", "shlwapi.dll", "uxtheme.dll",
               "winmm.dll", "comdlg32.dll", "comctl32.dll", "advapi32.dll", "bcrypt.dll",
               "bcryptprimitives.dll", "opengl32.dll", "gdi32.dll", "imm32.dll",
               "ntdll.dll", "ws2_32.dll", "secur32.dll", "userenv.dll", "version.dll",
@@ -37,6 +39,8 @@ def source_allowed(name):
     path = PurePosixPath(name)
     if path.is_absolute() or ".." in path.parts or "\\" in name or ":" in name:
         return False
+    if path.parent == GALLERY and (path.name == "README.md" or path.suffix.lower() in GALLERY_IMAGES):
+        return True
     if name in ROOT_FILES or name in APP_FILES:
         return True
     return name.startswith(PREFIXES) and (path.suffix.lower() in SUFFIXES or path.name == "LICENSE")
@@ -189,7 +193,7 @@ Version: {args.tag}
 Revision: {revision}
 Local uncommitted draft: {dirty}
 Matching source archive: {source_name}
-Repository: https://github.com/Noktyros/RetroHatch
+Repository: https://github.com/noctyros-de/RetroHatch
 
 The source ZIP is supplied beside the Windows ZIP in the same GitHub Release.
 It includes locked vendored Cargo dependencies and an offline configuration.
@@ -211,7 +215,7 @@ ROMs, firmware, personal libraries, settings and saves are not included.
         binary = stage/"windows"
         shutil.copyfile(executable, binary/"RetroHatch.exe")
         for name in files:
-            if name in ROOT_FILES-{".gitignore"} or name.startswith(("LICENSES/", "developer/", "app/LICENSES/")) or name in {"app/THIRD_PARTY_NOTICES.md", "app/third_party/tg18-core/LICENSE"}:
+            if name.startswith("docs/screenshots/") or name in ROOT_FILES-{".gitignore"} or name.startswith(("LICENSES/", "developer/", "app/LICENSES/")) or name in {"app/THIRD_PARTY_NOTICES.md", "app/third_party/tg18-core/LICENSE"}:
                 destination = binary/name
                 destination.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(source/name, destination)

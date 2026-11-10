@@ -150,11 +150,11 @@ fn about_metadata_profile_list_and_links_render_from_the_current_implementation(
     for profile in DeviceProfile::ALL {
         position(&out, profile.name());
     }
-    position(&out, "Color devices (experimental)");
+    position(&out, "Color devices (limited support)");
     assert!(
         texts(&out)
             .iter()
-            .any(|(text, _)| text.contains("have not been verified"))
+            .any(|(text, _)| text.contains("working use is reported by the project owner"))
     );
     assert!(
         !texts(&out)
@@ -169,7 +169,7 @@ fn external_actions_use_exact_urls_and_return_useful_failures() {
         (ExternalLink::Website, "https://tamatown.de"),
         (
             ExternalLink::Source,
-            "https://github.com/Noktyros/RetroHatch",
+            "https://github.com/noctyros-de/RetroHatch",
         ),
         (ExternalLink::Discord, "https://discord.gg/w4zuzCKaZf"),
     ] {

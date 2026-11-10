@@ -6,8 +6,8 @@
 
 `resources/` remains ignored and contains the unmodified owner-supplied PNG/ICO.
 Only the byte-identical PNG copy at `docs/assets/retrohatchlogo.png` is public.
-The Git ignore exception allows precisely that file; other private docs/assets
-remain ignored. Release source/package allowlists include the logo and build.rs,
+The branding exception allows precisely that logo; other private docs/assets
+remain ignored. The separately approved docs/screenshots/ gallery is public. Release source/package allowlists include the logo and build.rs,
 and continue rejecting private resources and screenshots. No new artwork is made.
 
 `app/build.rs` optionally compiles the ICO as Windows resource group 101 with
@@ -27,14 +27,14 @@ invalidates the build-script output. Public checkouts need no private icon.
 
 ## Capture pipeline
 
-The existing immutable worker Snapshot supplies display data. F8/File captures
+The existing immutable worker Snapshot supplies display data. F8/Screenshots captures
 color pixels at 128×128 directly. Classic segment LCDs are vector geometries,
 not ordinary framebuffers: the export rasterizes the canonical 352×329 reference
 bounds, all matrix segments and eight symbols using existing icon coverage.
 It retains the intrinsic LCD substrate/on/off colors, excludes app decoration,
 and never resizes a rendered window or changes segment data.
 
-F9/File requests the next clean egui frame after the menu closes. On Windows,
+F9/Screenshots requests the next clean egui frame after the menu closes. On Windows,
 PrintWindow renders only this process's native window; its unreliable OpenGL
 client area is replaced with egui's actual GPU readback. DWM visible-frame
 bounds remove invisible resize margins. This includes caption/icon without
@@ -46,7 +46,8 @@ PNG compression/writing uses the existing attributed tg18::png encoder on a
 background thread. Only one job is in flight, with a timeout and visible
 confirmation/error. Pending captures finish before normal application exit.
 There is no pause, emulation command or state/time change for a screenshot.
-Both folders are created automatically below the existing user-data root.
+Capture folders are created below the Windows Pictures known folder; see
+[updated storage/recording behavior](CAPTURE_MEDIA.md). Old AppData PNGs remain untouched.
 Filenames contain the model ID, mode, UTC timestamp (Z) and counter. create_new
 provides atomic collision refusal; previous files are never overwritten.
 Generated captures remain ignored/private and may contain firmware artwork.
@@ -54,8 +55,8 @@ Generated captures remain ignored/private and may contain firmware artwork.
 ## Validation
 
 - Original asset hashes are preserved; the public PNG is byte-identical.
-- Git tracks only the public logo copy, not resources/. GitHub rendering itself
-  requires the owner to commit/push; no such publication is performed here.
+- Git tracks the public branding logo copy, not resources/. The owner-managed
+  gallery has its own narrow exception; captures are never automatically added.
 - Windows loads EXE resource 101 at 16/32/48/128/256 pixels with correct bitmap
   dimensions. Small and large native window icons are both installed.
 - A separate copy of current public build sources without resources/, ROMs,

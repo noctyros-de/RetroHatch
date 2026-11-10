@@ -14,18 +14,38 @@ minimal native egui interface and a deterministic E0C6200 CPU/MCU core. Its goal
 is accurate, approachable emulation and a maintainable foundation for community
 contributions, without decorative device shells.
 
-**Development status:** this repository is currently private. These files
-prepare a future open-source release; they are not a release announcement.
-Unresolved LCD artwork provenance currently blocks public distribution of the
-affected source assets and binaries. See [third-party licensing](THIRD_PARTY_LICENSES.md)
-and the [release checklist](developer/RELEASE.md).
+**Project status:** RetroHatch is a public open-source project maintained by
+Finn Lülsdorf (**Noctyros**) at [noctyros-de/RetroHatch](https://github.com/noctyros-de/RetroHatch).
+This README describes current source; downloadable builds may lag behind it.
+See [third-party notices](THIRD_PARTY_LICENSES.md) for component licenses and
+specific provenance questions, separate from the project's public status.
+
+<!-- BEGIN USER-MANAGED SCREENSHOT GALLERY: preserve entries, order and captions -->
+## Screenshots
+
+Selected screenshots will be added here by the project owner.
+<!-- Add approved relative images from docs/screenshots/ only.
+See docs/screenshots/README.md for copy-and-paste examples. -->
+<!-- END USER-MANAGED SCREENSHOT GALLERY -->
+
+<!-- BEGIN USER-MANAGED GAMEPLAY VIDEOS: preserve links, order and captions -->
+<details>
+<summary>Gameplay Videos</summary>
+
+### Gameplay Videos
+
+Gameplay links will be added here when available.
+<!-- Optional linked thumbnails: see docs/screenshots/README.md. -->
+</details>
+<!-- END USER-MANAGED GAMEPLAY VIDEOS -->
 
 ## Installation
 
-1. Open [GitHub Releases](https://github.com/Noktyros/RetroHatch/releases).
-2. Download the latest **`RetroHatch-v<version>-Windows.zip`** under
-   **Assets**. The source ZIP is intended for developers.
-3. Extract the entire archive into a folder of your choice.
+1. Open [GitHub Releases](https://github.com/noctyros-de/RetroHatch/releases).
+2. Download the Windows asset. The currently published **RetroHatch** release
+   provides **`RetroHatch.exe`** directly. Future packaged releases can provide
+   **`RetroHatch-v<version>-Windows.zip`** instead.
+3. If you download a ZIP, extract the entire archive.
 4. Double-click **`RetroHatch.exe`**.
 
 **No Rust or Visual Studio installation is required.** The portable package
@@ -35,14 +55,13 @@ included; import firmware that you have the appropriate rights to use after
 starting the application. Settings, imported ROMs and saves are stored in your
 Windows user-data directory, outside the extracted application folder.
 
-Release downloads are available only to people with access while the repository
-is private. If no release has been published yet, there is no Windows ZIP to
-download; developers can [build from source](#build-from-source). Preparing the
-workflow does not resolve the artwork-provenance blockers described above.
+Public source availability, development builds and published releases are
+separate. Current download/packaging evidence and follow-up items are recorded
+in the [public-project audit](developer/OPEN_SOURCE_AUDIT.md).
 
 ## Supported devices
 
-| Device | Implemented and locally verified |
+| Device | Implementation and validation scope |
 | --- | --- |
 | Tamagotchi P1 | Japanese user-provided firmware boot, input and gameplay; shared complete saves |
 | Tamagotchi P2 | Boot, hatching, buttons/LCD/audio, reference comparison, timing and complete saves |
@@ -51,6 +70,7 @@ workflow does not resolve the artwork-provenance blockers described above.
 | Tamagotchi Morino | Dedicated LCD, buttons and sensor; local firmware/reference validation |
 | Tamagotchi Umino (Ocean) | Dedicated LCD, buttons and tap sensor; local firmware/reference validation |
 | Tamagotchi P's | Native S1C33; local firmware boot, color LCD, buttons, audio and full-state resume/reference validation; infrared/DLC unavailable |
+| Tamagotchi On / Meets | Integrated MIT TG18 ARM backend; working use reported by the project owner. Color LCD, buttons, audio and saves are connected; individual regional editions are not all independently tested. Bluetooth/infrared unavailable |
 
 Verification covers the available local images and focused gameplay sequences,
 not every regional revision, minigame or complete device lifetime. TamaOtch is
@@ -64,11 +84,10 @@ audio, slots and autosave. Other S1C33 families (Plus Color, iD, iD L and 4U)
 remain internal hardware configurations, unavailable as supported profiles.
 Infrared, DLC and upstream `.sav`/`.tamasave` import are not implemented.
 
-**On/Meets integration, firmware validation pending:** the reused MIT TG18 ARM
-backend is connected to the existing library, color LCD, A/B/C controls, audio,
-pause/reset and private saves. No suitable local On/Meets firmware was available
-for a real boot or gameplay test; this is not a claim of verified playable On
-support. See [TG18 integration](developer/TG18.md).
+On/Meets is available through the same ROM library and interface. Its operating
+status combines implemented/tested host integration with the project owner's
+reported working use. This documentation audit did not repeat a firmware boot
+or verify every On/Meets variant. See [TG18 integration](developer/TG18.md).
 
 ## Build from source
 
@@ -101,8 +120,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for checks.
 
 ## Import your own firmware
 
-Choose **File > Import ROM...**. RetroHatch validates the unpacked big-endian
-12-bit word structure and computes SHA-256. A verified known hash identifies
+Choose **File > Import ROM...**. RetroHatch validates the image against its
+hardware profile and computes SHA-256. A verified known hash identifies
 its device; genuinely ambiguous content asks for the model once and remembers
 that association locally. Filenames do not establish identity or region.
 
@@ -112,14 +131,16 @@ click. **Manage ROMs...** edits associations and repairs/removes internal
 copies; removal never deletes original ROMs or saved games. Identical imports
 share content storage. P1/P2 expect 12,288-byte unpacked images; the four
 supported sensor-equipped profiles expect 16,384 bytes. Size alone does not
-prove that a model is supported. Packed dumps are not accepted.
+prove that a model is supported. Classic images use unpacked big-endian 12-bit
+words; packed classic dumps are not accepted. P's uses its dedicated 8-MiB
+S1C33 flash-image validation, separate from classic and On/Meets formats.
 
 On/Meets imports require an exact 8-MiB flash image beginning with `SPII`.
 Nine upstream code fingerprints supply revision labels for known On (EN) and
 Meets (JP) images; these are FNV-1a code fingerprints, not invented full-ROM
 SHA-256 entries. Full-dump SHA-256 still isolates every local library entry and
 save. An unknown TG18-shaped image asks for confirmation once. Filenames never
-prove a variant; SOME is not supported. Real On/Meets firmware testing is pending.
+prove a variant; SOME is not supported. On/Meets validation scope is described above.
 
 ## Controls and settings
 
@@ -156,13 +177,13 @@ private. See [privacy and architecture](developer/ARCHITECTURE.md).
 ## Contribute
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md), use English, and submit small changes
-with reproducible tests and hardware/provenance evidence. While the repository
-remains private, access is controlled by the owner. Future public contributions
-will follow the same issue/PR guidelines; no repository setting is changed here.
+with reproducible tests and hardware/provenance evidence. Issues and pull
+requests are welcome in the public repository; the maintainer reviews changes
+and controls merges. Preserve the owner-managed media gallery.
 
 ## License and acknowledgements
 
-Original RetroHatch contributions are Copyright (C) 2026 Noctyros and licensed
+Original RetroHatch contributions are Copyright (C) 2026 Finn Lülsdorf / Noctyros and licensed
 under **GNU GPL-3.0-only**, not an automatic grant of later GPL versions. See
 [LICENSE](LICENSE), [COPYRIGHT.md](COPYRIGHT.md),
 [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) and [LICENSES](LICENSES/).
@@ -175,21 +196,30 @@ respective owners. Copyrighted ROMs and firmware are **not included**; users
 must obtain appropriate rights to use their own images. Do not request or
 submit firmware downloads, dumps or private saves.
 
-## Screenshots and optional local branding
+## Capture tools and optional local branding
 
-File → **Take LCD Screenshot** (**F8**) exports native LCD content without
-application controls: 128×128 RGB for color models, or the complete 352×329
-reference segment layout for classic LCDs (including their icons). Classic
-segment LCDs have no single physical pixel resolution; this uses their canonical
-layout rather than enlarging a window crop. Firmware-drawn backgrounds remain
-part of a color LCD's native content.
+The **Screenshots** menu provides **Take LCD Screenshot (F8)** and
+**Take Emulator Screenshot (F9)**, plus folder shortcuts. LCD PNGs retain native
+content (classic segment bounds 352×329; color framebuffer 128×128). Emulator
+PNGs include the visible Windows frame, menus and controls without other desktop
+content. Older AppData screenshots are left untouched.
 
-File → **Take Full Screenshot** (**F9**) captures the application interface and,
-on Windows, its title bar and visible frame. Unrelated desktop content is excluded.
-PNG files use unique model/time names under `%LOCALAPPDATA%/RetroHatch/screenshots/lcd/`
-and `screenshots/full/`, or the configured `RETROHATCH_DATA_DIR`. A confirmation
-shows the filename; hover it for the full path. Captures never replace existing
-files and do not pause or change the emulated clock.
+Captures use the actual Windows Pictures known folder, including redirected or
+OneDrive folders: `Pictures/RetroHatch/Screenshots/LCD/` and `Screenshots/Emulator/`.
+Recordings use `Pictures/RetroHatch/Recordings/LCD/` and `Recordings/Emulator/`.
+Names include the model and UTC timestamp and never replace existing files.
+
+**Settings → Display Scale** offers 33%, 50%, 75%, 100%, 150%, 200% and 300%.
+100% is the normal responsive display; only the LCD scales, with fixed-size
+controls and scrolling when needed. Color pixels use nearest-neighbor sampling.
+The setting persists; F8 always remains native-size.
+
+Use **Start Emulator Recording (F10)** or **Start LCD Recording** in Screenshots.
+F10 or **Stop Recording** finishes the MP4. Windows Media Foundation encodes
+H.264 at 30 FPS on a background thread; no external encoder installation is
+required. **Recording is currently video-only: game audio is not included.**
+The indicator shows elapsed time and a confirmation gives the saved location.
+See [capture details and limitations](developer/CAPTURE_MEDIA.md).
 
 The README logo is the owner-supplied public copy at `docs/assets/retrohatchlogo.png`.
 Private originals stay in ignored `resources/`. To brand a local Windows build,

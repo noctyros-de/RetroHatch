@@ -3,14 +3,15 @@
 
 # Release and redistribution checklist
 
-The repository remains private. Local build and packaging commands never push,
-publish or change repository visibility. The tag-triggered workflow described
-below **does publish a GitHub Release** when an authorized maintainer pushes a
-matching `v*` version tag. Resolve the known LCD artwork provenance and
-preferred-source gaps before authorizing distribution; automation is not legal
-clearance.
+RetroHatch is a public project at https://github.com/noctyros-de/RetroHatch.
+Local build/packaging commands never publish or change repository settings.
+The tag workflow publishes only when a maintainer pushes a matching `v*` tag;
+that action needs explicit authorization. Public source, local development
+builds and published binary releases are distinct. See the current
+[audit](OPEN_SOURCE_AUDIT.md) for observed release assets and unresolved rights
+questions; an existing public release is not evidence of complete clearance.
 
-## Gates before any public source or binary distribution
+## Redistribution requirements and open review items
 
 - Resolve rights to every derived LCD symbol, or replace affected material with
   verified original/permitted assets through a separate functional change. Keep
@@ -25,7 +26,7 @@ clearance.
 - Verify all required source, synthetic fixtures, Cargo.toml, Cargo.lock, public
   docs and notices are in the intended source snapshot. Local uncommitted files
   are not automatically present in an archive of HEAD.
-- Build/check/test a clean source snapshot without `references/`, `docs/`, ROMs,
+- Build/check/test a clean source snapshot without `references/`, internal docs, ROMs,
   saves or user configuration. Record the exact source revision, toolchain,
   target, features, build command and artifact hashes. Re-run the license
   inventory when Cargo.lock, features, target or toolchain changes.
@@ -33,7 +34,7 @@ clearance.
   and unresolved-risk report, before pushing the version tag. A tag push starts
   publication automatically; local packaging does not.
 
-The staged tamaemu translation adds a separate release gate: clarify the
+The incorporated tamaemu translation has a specific open question: clarify the
 upstream README's no-charge instruction against its GPLv3 declaration, and
 review the CPU's credited SLEIGH derivation. Retain
 `app/LICENSES/TamaEmu-GPL-3.0.txt` in source/binary packages. Passing synthetic
@@ -142,10 +143,9 @@ upload fails, inspect any remaining draft before retrying the workflow. No
 personal access token is required. Actions must be enabled and repository or
 organization policy must permit the workflow token to write release contents.
 
-Private repository releases remain access-controlled. This workflow neither
-makes the repository public nor grants access to additional people. Do not push
-a release tag until the rights/provenance gates above are resolved. There is no
-separate approval prompt after a matching tag has been pushed.
+The repository is already public. The workflow does not change visibility or
+Git remotes. Review the specific rights/source/notice questions above before
+authorizing a release tag. There is no separate approval prompt after its push.
 
 ## Local package verification
 
@@ -178,10 +178,9 @@ may warn about unsigned downloads; these builds are not code-signed.
 ## Central version and developer attribution
 
 The creator is Finn Lülsdorf and the developer alias is Noctyros. Existing
-GitHub URLs deliberately retain the actual account identifier `Noktyros`, as
-recorded in the unchanged origin remote. An alias correction does not rename
-an external account. Upstream notices remain unchanged; only RetroHatch's own
-MIT integration-addition attribution in tg18-core is corrected.
+GitHub links use the verified public address https://github.com/noctyros-de/RetroHatch.
+The local origin remote may still show the former account; this audit does not
+modify Git configuration. Third-party authors and license texts remain intact.
 
 `app/Cargo.toml` is the sole application version source. `app/Cargo.lock`
 records the same version; About uses `env!("CARGO_PKG_VERSION")`. The permanent
@@ -214,6 +213,11 @@ Cargo string version, fixed four-part version and Unicode author. An isolated
 Windows build without resources/ also retains correct version/author fields.
 The license inventory verifies 106 packages. Upstream license texts and the
 Cargo lockfile are unchanged. Only copyright comments change in emulator cores.
-An unauthenticated request to the unchanged GitHub repository URL returns 404;
-private-repository availability cannot be verified publicly. No archive, tag,
-commit, push, release, remote or visibility change is performed.
+The earlier private/old-URL check was historical. On 11 November 2026 the
+GitHub API confirms the new public address. The published `RetroHatch` tag
+currently has only a RetroHatch.exe asset; its tagged Cargo version is 0.1.0.
+No Windows ZIP, separate matching-source bundle, notices bundle or BUILD_INFO
+asset is attached. GitHub tag source archives exist, but the exact EXE/source
+match and preferred-source completeness were not established by this audit.
+The current packager is designed to provide those artifacts for future releases;
+no archive, tag, commit, push, release or visibility change is performed here.

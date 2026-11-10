@@ -31,7 +31,7 @@ fn write_later(
 }
 impl RetroHatchApp {
     pub(super) fn queue_screenshot(&mut self, kind: Kind) {
-        if self.data_dir.is_none() {
+        if self.media_dir.is_none() {
             self.local_error = Some("Screenshot storage is unavailable".into());
             return;
         }
@@ -74,7 +74,7 @@ impl RetroHatchApp {
         let Some(kind) = self.captures.pending.take() else {
             return;
         };
-        let Some(root) = self.data_dir.clone() else {
+        let Some(root) = self.media_dir.clone() else {
             return;
         };
         let model = if s.loaded {
