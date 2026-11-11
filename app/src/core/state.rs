@@ -94,6 +94,8 @@ pub fn profile_code(p: DeviceProfile) -> u8 {
         DeviceProfile::Idl15 => 13,
         DeviceProfile::PlusColor => 14,
         DeviceProfile::PlusColorHexa => 15,
+        DeviceProfile::FourUPlus => 16,
+        DeviceProfile::FourUPlusEnglish => 17,
     }
 }
 pub fn fingerprint(words: &[u16]) -> [u8; 32] {

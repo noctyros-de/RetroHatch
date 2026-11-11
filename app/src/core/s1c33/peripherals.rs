@@ -13,6 +13,7 @@ pub struct Timer {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Peripherals {
     pub io: Vec<u8>,
+    pub nfc: Option<super::pn512::Pn512>,
     pub timers: [Timer; 6],
     pub sccr: u32,
     pub pllc: u32,
@@ -46,6 +47,7 @@ impl Peripherals {
     pub fn new(p: HardwareProfile) -> Self {
         Self {
             io: vec![0; 8192],
+            nfc: p.nfc_pn512.then(super::pn512::Pn512::new),
             timers: std::array::from_fn(|_| Timer::default()),
             sccr: 0,
             pllc: 0,
@@ -219,10 +221,19 @@ impl Peripherals {
         }
         v
     }
-    fn tx(&mut self, p: HardwareProfile) {
+    fn tx(&mut self, p: HardwareProfile, byte: u8) {
+        if let Some(n) = &mut self.nfc {
+            n.host_byte(byte, self.cycles, self.mclk);
+        }
         let div =
             self.byte(p.ir_base + 6) as u32 | (((self.byte(p.ir_base + 7) & 15) as u32) << 16);
-        let baud = 576000.0 / (div + 1) as f64;
+        // tamaemu periph.c: PN512 UART uses MCLK/16; IR keeps its fixed clock.
+        let base = if p.nfc_pn512 {
+            self.mclk / 16.0
+        } else {
+            576000.0
+        };
+        let baud = base / (div + 1) as f64;
         let baud = if (300.0..=1e6).contains(&baud) {
             baud
         } else {
@@ -244,7 +255,7 @@ impl Peripherals {
         }
         self.store32(a, v);
         if a == 0x301704 {
-            self.tx(p);
+            self.tx(p, v as u8);
         }
     }
     fn tone(&mut self) {
@@ -294,7 +305,7 @@ impl Peripherals {
         if (p.ir_base..=p.ir_base + 7).contains(&a) {
             self.set(a, v);
             if a == p.ir_base {
-                self.tx(p);
+                self.tx(p, v as u8);
             }
             return;
         }
@@ -404,14 +415,14 @@ impl Peripherals {
         if self.ir_ready_at != 0 && self.cycles >= self.ir_ready_at {
             self.ir_ready_at = 0;
             let en = self.byte(0x300276);
-            let bit = if en & 32 != 0 {
+            let bit = if p.nfc_pn512 || en & 32 != 0 {
                 5
             } else if en & 8 != 0 {
                 3
             } else {
                 4
             };
-            if en & (32 | 8 | 16) != 0 {
+            if p.nfc_pn512 || en & (32 | 8 | 16) != 0 {
                 self.set(0x300286, self.byte(0x300286) | (1 << bit));
             }
         }
@@ -449,13 +460,52 @@ impl Peripherals {
                 self.set(base + 5, (count >> 8) as u8);
             }
         }
+        if p.nfc_pn512 {
+            let div =
+                self.byte(p.ir_base + 6) as u32 | (((self.byte(p.ir_base + 7) & 15) as u32) << 16);
+            let baud = self.mclk / 16.0 / (div + 1) as f64;
+            let baud = if (300.0..=1e6).contains(&baud) {
+                baud
+            } else {
+                115200.0
+            };
+            let byte_cycles = (self.mclk * 10.0 / baud).max(1.0) as u64;
+            let can_receive = self.byte(p.ir_base + 5) != 0;
+            let unread = self.byte(p.ir_base + 2) & 1 != 0;
+            let n = self.nfc.as_mut().unwrap();
+            let answer = if !n.replies.is_empty()
+                && can_receive
+                && (!unread || self.cycles >= n.reply_at + 64 * byte_cycles)
+            {
+                n.reply_at = self.cycles;
+                Some(n.replies.remove(0))
+            } else {
+                None
+            };
+            n.tick(self.cycles);
+            if let Some(b) = answer {
+                self.set(p.ir_base + 1, b);
+                self.set(p.ir_base + 2, self.byte(p.ir_base + 2) | 1);
+                self.set(0x300286, self.byte(0x300286) | 16);
+            }
+        }
         self.scan();
         let _ = p;
     }
     /// Integrate samples before register/clock changes. Preserve phase through silence.
+    #[inline]
     pub fn audio_until(&mut self, cycle: u64) {
+        if cycle == self.cycles {
+            return;
+        }
         let elapsed = cycle.saturating_sub(self.cycles) as f64 / self.mclk;
         self.sample_fraction += elapsed * 44100.0;
+        // Most CPU steps are shorter than one sample. Preserve the exact fraction
+        // without a floating-point floor/conversion when the sample count is zero.
+        if self.sample_fraction < 1.0 {
+            self.cycles = cycle;
+            return;
+        }
         let count = self.sample_fraction.floor() as usize;
         self.sample_fraction -= count as f64;
         for _ in 0..count {

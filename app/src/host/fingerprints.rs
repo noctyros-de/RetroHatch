@@ -16,6 +16,16 @@ pub struct Fingerprint<'a> {
 }
 pub const CATALOG: &[Fingerprint<'static>] = &[
     Fingerprint {
+        sha256: "a8f42d045529a2bdcd9db2aeabc3b04b1461affb93ff681f4b12da5967239c57",
+        profile: DeviceProfile::FourUPlus,
+        variant: "Japanese",
+    },
+    Fingerprint {
+        sha256: "a9fa972ec0e481214902906b3b91ab5d56142329dae6961e919442be7f36162f",
+        profile: DeviceProfile::FourUPlusEnglish,
+        variant: "English translation; some Japanese input labels remain",
+    },
+    Fingerprint {
         sha256: "ed97fa667fe7389cbd4fb10e6eaec8927cdab2ddd88ee8fb4e3c1aa145b57128",
         profile: DeviceProfile::PlusColor,
         variant: "Japanese",

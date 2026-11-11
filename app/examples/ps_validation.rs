@@ -127,6 +127,13 @@ fn main() -> Result<(), String> {
         paused.audio_status,
         paused.audio_drops
     );
+    println!("Audio queue: {:?}", paused.audio_stats);
+    if paused.audio_status != "Audio: Windows PCM output active" {
+        return Err(format!(
+            "Actual Windows playback failed: {}",
+            paused.audio_status
+        ));
+    }
     let export = root.join("gameplay.rhstate");
     c.send(Command::Save(SaveTarget::Slot(1)));
     wait(&c, |s| s.slots[0])?;
@@ -149,6 +156,19 @@ fn main() -> Result<(), String> {
     }
     if resumed.color_display != paused.color_display {
         return Err("Restart lost display state".into());
+    }
+    if args.iter().any(|v| v == "--check-reset") {
+        // Only this tool's isolated test device, after verifying its saved continuation.
+        again.send(Command::Pause);
+        let prior = wait(&again, |s| !s.running)?;
+        again.send(Command::Reset);
+        wait(&again, |s| s.ticks < prior.ticks)?;
+        again.send(Command::Run);
+        let running = wait(&again, |s| s.running && s.ticks > 102_400_000)?;
+        if running.profile != profile {
+            return Err("Reset changed the model".into());
+        }
+        println!("Verified explicit pause, reset and resume on the isolated test device.");
     }
     again.send(Command::PrepareExit);
     wait(&again, |s| s.exit_ready)?;

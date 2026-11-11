@@ -142,10 +142,21 @@ impl Machine {
         for &sample in &p.pcm {
             e.u16(sample as u16);
         }
+        require(
+            p.nfc.is_some() == m.profile.nfc_pn512,
+            "Missing or unexpected PN512 state",
+        )?;
+        if let Some(n) = &p.nfc {
+            require(
+                n.fifo.len() <= 64 && n.replies.len() <= 64 && n.pending.len() <= 64,
+                "Invalid PN512 queue length",
+            )?;
+            n.encode(&mut e);
+        }
         let mut out = Encoder(vec![]);
         out.bytes(MAGIC);
         out.u16(1);
-        out.u16(3);
+        out.u16(if m.profile.nfc_pn512 { 4 } else { 3 });
         out.u8(match self.memory.profile.key {
             "ps" => 7,
             "id" => 8,
@@ -156,6 +167,8 @@ impl Machine {
             "idl-15" => 13,
             "plus-color" => 14,
             "plus-color-hexa" => 15,
+            "4u" => 16,
+            "4u-en" => 17,
 
             _ => return Err("Save support is unavailable for this S1C33 hardware profile".into()),
         });
@@ -178,9 +191,11 @@ impl Machine {
         )?;
         let mut r = Decoder::new(body);
         require(
-            &r.array::<8>()? == MAGIC && r.u16()? == 1 && r.u16()? == 3,
-            "Unsupported S1C33 save format or profile",
+            &r.array::<8>()? == MAGIC && r.u16()? == 1,
+            "Unsupported S1C33 save format",
         )?;
+        let schema = r.u16()?;
+        require(matches!(schema, 3 | 4), "Unsupported S1C33 save schema")?;
         let profile = match r.u8()? {
             7 => HardwareProfile::find("ps").unwrap(),
             8 => HardwareProfile::find("id").unwrap(),
@@ -191,9 +206,15 @@ impl Machine {
             13 => HardwareProfile::find("idl-15").unwrap(),
             14 => HardwareProfile::find("plus-color").unwrap(),
             15 => HardwareProfile::find("plus-color-hexa").unwrap(),
+            16 => HardwareProfile::find("4u").unwrap(),
+            17 => HardwareProfile::find("4u-en").unwrap(),
 
             _ => return Err("Unsupported S1C33 save profile".into()),
         };
+        require(
+            (schema == 4) == profile.nfc_pn512,
+            "Save schema does not match device",
+        )?;
         require(r.array::<32>()? == hash, "Save belongs to a different ROM")?;
         require(
             r.u32()? as usize == body.len() - r.at,
@@ -319,6 +340,9 @@ impl Machine {
         require(count <= 88200, "Invalid S1C33 audio queue")?;
         for _ in 0..count {
             p.pcm.push(r.u16()? as i16);
+        }
+        if schema == 4 {
+            p.nfc = Some(super::pn512::Pn512::decode(&mut r)?);
         }
         r.finish()?;
         require(

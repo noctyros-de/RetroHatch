@@ -59,10 +59,10 @@ GPL-3.0-only. No TG18 frontend, logo, shell graphics, screenshots or firmware
 are copied. Display artwork for this backend comes from the user's firmware
 while it runs. The separate classic-LCD provenance blockers remain unchanged.
 
-## tamaemu S1C33 translation (P's backend)
+## tamaemu S1C33 translation
 
 The native Rust implementation under `app/src/core/s1c33/` translates CPU, memory/
-NOR, LCD-controller and P's peripheral behavior from [maragotchi/tamaemu](https://github.com/maragotchi/tamaemu),
+NOR, LCD-controller, shared peripheral and disconnected PN512 register/UART behavior from [maragotchi/tamaemu](https://github.com/maragotchi/tamaemu),
 revision `79e19b65a1c970b9e1cd0b58ee6e929507257234`. Credit maragotchi as the
 original author. The upstream README declares GNU GPL-3.0; no separate original
 code copyright year or later-version grant is invented. The unchanged upstream

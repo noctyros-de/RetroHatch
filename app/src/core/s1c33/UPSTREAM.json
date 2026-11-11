@@ -3,7 +3,7 @@
   "revision": "79e19b65a1c970b9e1cd0b58ee6e929507257234",
   "author": "maragotchi",
   "declared_license": "GNU GPL version 3; README additionally contains an unresolved no-charge instruction",
-  "scope": "Native Rust CPU, memory/NOR, LCD and P's peripherals translation; no firmware, frontend or artwork copied",
+  "scope": "Native Rust CPU, memory/NOR, LCD, shared peripherals and disconnected PN512 register/UART translation; no firmware, frontend, artwork or RF peer copied",
   "files": {
     ".gitattributes": "11a926c7e8448554d9cad24867a585fe1d3910c0420d8e2ff2d7519298c8874d",
     ".gitignore": "b12f4c79b2743143915ea31402410c9d414806bb97e8641e909f6275b4fc01b3",

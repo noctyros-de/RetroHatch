@@ -305,6 +305,7 @@ impl Bus for Memory {
         // The reference explicitly returns zero for LCD status and unmapped data reads.
         Ok(0)
     }
+    #[inline]
     fn read16(&mut self, a: u32) -> Result<u16, BusError> {
         let p = self.profile;
         if let Some(off) = Self::offset(a, p.rom_base, p.rom_size, 2) {
@@ -402,10 +403,12 @@ impl Bus for Memory {
         self.write16(a, value as u16)?;
         self.write16(a.wrapping_add(2), (value >> 16) as u16)
     }
+    #[inline]
     fn executable(&self, a: u32) -> bool {
         let p = self.profile;
         Self::offset(a, p.rom_base, p.rom_size, 1).is_some() || self.ram_offset(a, 1).is_some()
     }
+    #[inline]
     fn begin(&mut self) {
         assert!(self.transaction.is_none(), "Nested CPU bus transaction");
         self.transaction = Some(Transaction {
@@ -416,6 +419,7 @@ impl Bus for Memory {
             peripherals: None,
         });
     }
+    #[inline]
     fn commit(&mut self) {
         self.transaction = None;
     }

@@ -70,6 +70,8 @@ in the [public-project audit](developer/OPEN_SOURCE_AUDIT.md).
 | Tamagotchi Umino (Ocean) | Dedicated LCD, buttons and tap sensor; local firmware/reference validation |
 | Tamagotchi Plus Color | Three distinct local 4-MiB images: boot, hatching, menus, buttons, audio, standby/RTC, real-time pacing and full saves validated |
 | Tamagotchi Plus Color Hexagontchi | Dedicated profile on the shared S1C33 core; local firmware boot, hatching, distinctive LCD/content, buttons, audio and full saves validated |
+| Tamagotchi 4U+ | Japanese local 8-MiB firmware: native boot, hatching, menus, LCD/input/PCM, RTC/standby and full saves validated; NFC connections/DLC unavailable |
+| Tamagotchi 4U+ (English) | Locally verified translated image on the shared 4U+ board; English menus confirmed, some Japanese input labels remain; independent saves |
 | Tamagotchi iD | Original Japanese October 2009 4-MiB firmware: native S1C33, color LCD, input, audio and save/resume validated; unidentified 8-MiB images are not verified as iD |
 | Tamagotchi iD Lovely Melody | Dedicated 4-MiB profile; local firmware boot, heart-themed LCD, inputs, PCM, sleep/wake and full saves validated |
 | Tamagotchi iD L | Japanese firmware: boot, LCD, menus, inputs, PCM and full saves validated; one exact verified archive import is accepted |
@@ -86,10 +88,11 @@ and board settings are unresolved. Recognized TamaOtch firmware is refused with
 an explanation; another device's display is not substituted. Tamagotchi
 Connection and other MCU families are not available as playable profiles.
 The [native S1C33 backend](developer/S1C33.md) now runs the locally verified
-Tamagotchi P's, Plus Color/Hexagontchi, original iD, Lovely Melody and the listed iD L editions with the
+Tamagotchi P's, Plus Color/Hexagontchi, 4U+, original iD, Lovely Melody and the listed iD L editions with the
 shared library, 128x128 color display, controls, audio, slots and autosave. See the
 [iD and iD L validation scope](developer/ID_FAMILY.md) and
-[Plus Color validation scope](developer/PLUS_COLOR.md). 4U remains an internal
+[Plus Color validation scope](developer/PLUS_COLOR.md) and [4U+ validation](developer/4UPLUS.md).
+Original 4U (without the plus) remains an internal
 configuration, unavailable as a supported profile. The unidentified
 8-MiB file named as February 2010 iD runs with the iD-L board, but is not
 fingerprinted as any model: import requires explicit compatible model selection.

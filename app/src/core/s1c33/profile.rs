@@ -343,6 +343,18 @@ pub const PROFILES: [HardwareProfile; 11] = [
 ];
 impl HardwareProfile {
     pub fn find(key: &str) -> Option<Self> {
-        PROFILES.iter().find(|p| p.key == key).copied()
+        let board = PROFILES
+            .iter()
+            .find(|p| p.key == if key == "4u-en" { "4u" } else { key })
+            .copied()?;
+        Some(if key == "4u-en" {
+            Self {
+                key: "4u-en",
+                title: "Tamagotchi 4U+ (English)",
+                ..board
+            }
+        } else {
+            board
+        })
     }
 }

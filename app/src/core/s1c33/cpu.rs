@@ -173,6 +173,7 @@ impl Cpu {
         Ok(())
     }
     /// Failed instructions roll back both CPU and bus side effects, including delay slots.
+    #[inline]
     pub fn step(&mut self, bus: &mut impl Bus) -> Result<Step, CpuError> {
         let before = self.clone();
         bus.begin();

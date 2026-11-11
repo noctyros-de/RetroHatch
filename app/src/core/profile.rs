@@ -21,6 +21,8 @@ pub enum DeviceProfile {
     Idl15,
     PlusColor,
     PlusColorHexa,
+    FourUPlus,
+    FourUPlusEnglish,
 }
 impl DeviceProfile {
     pub const CLASSIC: [Self; 6] = [
@@ -31,7 +33,7 @@ impl DeviceProfile {
         Self::Morino,
         Self::Umino,
     ];
-    pub const ALL: [Self; 16] = [
+    pub const ALL: [Self; 18] = [
         Self::P1,
         Self::P2,
         Self::Genjintch,
@@ -48,6 +50,8 @@ impl DeviceProfile {
         Self::Idl15,
         Self::PlusColor,
         Self::PlusColorHexa,
+        Self::FourUPlus,
+        Self::FourUPlusEnglish,
     ];
     pub const fn is_color(self) -> bool {
         self.s1c33_key().is_some() || matches!(self, Self::On)
@@ -63,6 +67,8 @@ impl DeviceProfile {
             Self::Idl15 => Some("idl-15"),
             Self::PlusColor => Some("plus-color"),
             Self::PlusColorHexa => Some("plus-color-hexa"),
+            Self::FourUPlus => Some("4u"),
+            Self::FourUPlusEnglish => Some("4u-en"),
 
             _ => None,
         }
@@ -85,6 +91,8 @@ impl DeviceProfile {
             Self::Idl15 => "tamagotchi-idl-15",
             Self::PlusColor => "tamagotchi-plus-color",
             Self::PlusColorHexa => "tamagotchi-plus-color-hexa",
+            Self::FourUPlus => "tamagotchi-4u-plus",
+            Self::FourUPlusEnglish => "tamagotchi-4u-plus-en",
         }
     }
     pub const fn name(self) -> &'static str {
@@ -105,6 +113,8 @@ impl DeviceProfile {
             Self::Idl15 => "Tamagotchi iD L 15th Anniversary",
             Self::PlusColor => "Tamagotchi Plus Color",
             Self::PlusColorHexa => "Tamagotchi Plus Color Hexagontchi",
+            Self::FourUPlus => "Tamagotchi 4U+",
+            Self::FourUPlusEnglish => "Tamagotchi 4U+ (English)",
         }
     }
     pub const fn rom_bytes(self) -> usize {
@@ -115,7 +125,9 @@ impl DeviceProfile {
             | Self::Idl
             | Self::IdlEnglish
             | Self::IdlPrincess
-            | Self::Idl15 => 0x80_0000,
+            | Self::Idl15
+            | Self::FourUPlus
+            | Self::FourUPlusEnglish => 0x80_0000,
             Self::Id | Self::IdMelody | Self::PlusColor | Self::PlusColorHexa => 0x40_0000,
             Self::Genjintch | Self::Angel | Self::Morino | Self::Umino => 0x4000,
         }
@@ -124,6 +136,7 @@ impl DeviceProfile {
         match self {
             Self::P1 | Self::P2 => 1_600_000,
             Self::On => 96_000_000,
+            Self::FourUPlus | Self::FourUPlusEnglish => 30_000_000,
             Self::PlusColor | Self::PlusColorHexa => 20_000_000,
             Self::Ps
             | Self::Id
@@ -171,6 +184,8 @@ impl DeviceProfile {
             "plus-color-hexa" | "hexagontchi" | "tamagotchi-plus-color-hexa" => {
                 Some(Self::PlusColorHexa)
             }
+            "4u" | "4u-plus" | "tamagotchi-4u-plus" => Some(Self::FourUPlus),
+            "4u-en" | "tamagotchi-4u-plus-en" => Some(Self::FourUPlusEnglish),
             _ => None,
         }
     }

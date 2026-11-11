@@ -1,13 +1,13 @@
 [package]
 name = "retrohatch"
-version = "0.5.0"
+version = "0.6.0"
 edition = "2024"
 license = "GPL-3.0-only"
 authors = ["Finn Lülsdorf (Noctyros)"]
 repository = "https://github.com/noctyros-de/RetroHatch"
 readme = "../README.md"
 publish = false
-description = "Native Windows Tamagotchi emulator for classic devices, On/Meets, P's, the iD family and Plus Color"
+description = "Native Windows Tamagotchi emulator for classic devices, On/Meets, P's, the iD family, Plus Color and 4U+"
 
 [[bin]]
 name = "RetroHatch"

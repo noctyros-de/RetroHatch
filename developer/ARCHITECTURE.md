@@ -89,3 +89,9 @@ NOR. Codes 14/15 append model identities without altering existing saves. Model
 capabilities gate the optional keep-awake policy; it is disabled for Plus Color
 because early firmware revisions do not use the reference's 0x368 RAM marker.
 Normal power management is always firmware-controlled. See [PLUS_COLOR.md](PLUS_COLOR.md).
+
+4U+ and its locally verified translated image reuse the 30-MHz S1C33 board.
+Codes 16/17 use schema 4, adding the PN512 register/UART state; old devices still
+write/read their original schemas. Disconnected RF supplies no virtual peer,
+connectivity or DLC. See [4UPLUS.md](4UPLUS.md). Exact zero-time/zero-sample audio
+fast paths and inlining remove CPU overhead without changing clocks or samples.

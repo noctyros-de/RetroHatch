@@ -636,3 +636,126 @@ fn plus_color_boards_preserve_retail_gpio_clock_flash_and_complete_states() {
         assert_eq!(m.memory.peripherals.as_ref().unwrap().mclk, 20_000_000.0);
     }
 }
+
+#[test]
+fn four_u_plus_uart_uses_mclk_and_latches_masked_tx_done_on_its_actual_line() {
+    use super::peripherals::Peripherals;
+    let board = HardwareProfile::find("4u").unwrap();
+    assert_eq!(board.title, "Tamagotchi 4U+");
+    assert_eq!(
+        (
+            board.rom_base,
+            board.rom_size,
+            board.ttbr_reset,
+            board.osc3_hz
+        ),
+        (0x02000000, 0x800000, 0x02400000, 30_000_000)
+    );
+    assert!(board.nfc_pn512 && board.wake_press_lost);
+    for enable in [0, 8, 32] {
+        let mut p = Peripherals::new(board);
+        p.cycles = 100;
+        p.write8(0x300b16, 3, board);
+        p.write8(0x300276, enable, board);
+        p.write8(0x300b10, 0x42, board);
+        assert_eq!(p.ir_ready_at, 740); // 8N1: 160 * (divisor+1) MCLK cycles.
+        p.cycles = 739;
+        p.tick(639, board);
+        assert_eq!(p.read8(0x300286, board), 0);
+        p.cycles = 740;
+        p.tick(1, board);
+        assert_eq!(p.read8(0x300286, board), 32);
+        assert_eq!(p.pending, if enable == 32 { 62 } else { 0 });
+        p.write8(0x300276, 32, board);
+        assert_eq!(p.pending, 62);
+        p.write8(0x300286, 32, board);
+        assert_eq!(p.pending, 0);
+        p.tick(30_000_000, board);
+        assert_eq!(p.rtc_seconds, 1);
+    }
+    let ir = HardwareProfile::find("ps").unwrap();
+    let mut p = Peripherals::new(ir);
+    p.cycles = 100;
+    p.write8(0x300b16, 3, ir);
+    p.write8(0x300276, 8, ir);
+    p.write8(0x300b10, 0x42, ir);
+    assert_eq!(p.ir_ready_at, 1380); // Existing 18.432-MHz / 144-kbaud IR behavior.
+    p.cycles = 1380;
+    p.tick(1280, ir);
+    assert_eq!(p.read8(0x300286, ir), 8);
+    assert_eq!(p.pending, 60);
+}
+
+#[test]
+fn pn512_uart_fifo_crc_and_partial_commands_survive_serialization() {
+    use super::pn512::Pn512;
+    use crate::core::state::{Decoder, Encoder};
+    let mut n = Pn512::new();
+    n.host_byte(0xb7, 0, 30_000_000.0);
+    assert_eq!(n.replies, vec![0x82]);
+    n.replies.clear();
+    for b in [0x09, 1, 0x09, 2, 0x09, 3, 0x01, 3] {
+        n.host_byte(b, 100, 30_000_000.0);
+    }
+    assert_eq!(n.reg[5] & 4, 4);
+    assert!(n.fifo.is_empty());
+    assert_eq!((n.reg[0x21], n.reg[0x22]), (0x62, 0xc4));
+    n.host_byte(0x09, 200, 30_000_000.0); // Mid-write, with unread UART acknowledgements.
+    let mut e = Encoder(vec![]);
+    n.encode(&mut e);
+    let mut r = Decoder::new(&e.0);
+    let mut restored = Pn512::decode(&mut r).unwrap();
+    r.finish().unwrap();
+    assert_eq!(n, restored);
+    for v in [9, 0x01, 0x0f, 0xb7] {
+        n.host_byte(v, 201, 30_000_000.0);
+        restored.host_byte(v, 201, 30_000_000.0);
+    }
+    assert_eq!(n, restored);
+    assert_eq!(n.replies.last(), Some(&0x82));
+    for _ in 0..65 {
+        n.host_byte(9, 300, 30_000_000.0);
+        n.host_byte(1, 300, 30_000_000.0);
+    }
+    assert_eq!(n.fifo.len(), 64);
+    assert_eq!(n.reg[6] & 16, 16);
+    assert_eq!(n.replies.len(), 64);
+}
+#[test]
+fn four_u_plus_states_preserve_controller_and_old_schemas_and_reset_flash() {
+    use super::machine::Machine;
+    use crate::core::state::sha256;
+    for (key, code) in [("4u", 16), ("4u-en", 17)] {
+        let p = HardwareProfile::find(key).unwrap();
+        let mut bytes = vec![255; 0x800000];
+        bytes[0x400000..0x400004].copy_from_slice(&0x2401000u32.to_le_bytes());
+        bytes[0x401000..0x401004].copy_from_slice(&[0x11, 0x60, 0xff, 0x1e]);
+        let mut m = Machine::new(&bytes, p).unwrap();
+        m.memory
+            .peripherals
+            .as_mut()
+            .unwrap()
+            .write8(0x300b10, 0xb7, p);
+        for _ in 0..100 {
+            m.step().unwrap();
+        }
+        let hash = sha256(&bytes);
+        let data = m.save_state(hash).unwrap();
+        assert_eq!(&data[10..13], &[4, 0, code]);
+        let mut restored = Machine::restored(&data, hash).unwrap();
+        assert_eq!(data, restored.save_state(hash).unwrap());
+        for _ in 0..100 {
+            m.step().unwrap();
+            restored.step().unwrap();
+        }
+        assert_eq!(
+            m.save_state(hash).unwrap(),
+            restored.save_state(hash).unwrap()
+        );
+        assert!(Machine::restored(&data, [1; 32]).is_err());
+        let flash = m.memory.flash().to_vec();
+        m.reset().unwrap();
+        assert_eq!(m.memory.flash(), flash);
+        assert_eq!(m.cpu.pc, 0x2401000);
+    }
+}

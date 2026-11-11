@@ -12,3 +12,5 @@ mod rom;
 pub mod state;
 #[cfg(test)]
 mod tests;
+
+mod pn512;

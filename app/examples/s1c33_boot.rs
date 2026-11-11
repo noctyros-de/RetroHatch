@@ -158,6 +158,12 @@ fn main() -> Result<(), String> {
     }
     // Capture the requested checkpoint before the continuation test presses A.
     let checkpoint_display = m.rgb();
+    if let Some(path) = args.get(3) {
+        let mut ppm = b"P6\n128 128\n255\n".to_vec();
+        ppm.extend(checkpoint_display);
+        fs::write(path, ppm).map_err(|e| e.to_string())?;
+    }
+
     let hash = retrohatch::core::state::sha256(&image);
     let saved = m.save_state(hash)?;
     if let Some(path) = args.windows(2).find(|v| v[0] == "--state").map(|v| &v[1]) {
@@ -186,10 +192,5 @@ fn main() -> Result<(), String> {
     println!(
         "Full-state and 10000-step continuation match, including flash, LCD, peripherals and PCM."
     );
-    if let Some(path) = args.get(3) {
-        let mut ppm = b"P6\n128 128\n255\n".to_vec();
-        ppm.extend(checkpoint_display);
-        fs::write(path, ppm).map_err(|e| e.to_string())?;
-    }
     Ok(())
 }

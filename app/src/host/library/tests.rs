@@ -377,7 +377,9 @@ fn ambiguous_eight_mib_images_offer_all_supported_compatible_boards() {
             DeviceProfile::Idl,
             DeviceProfile::IdlEnglish,
             DeviceProfile::IdlPrincess,
-            DeviceProfile::Idl15
+            DeviceProfile::Idl15,
+            DeviceProfile::FourUPlus,
+            DeviceProfile::FourUPlusEnglish
         ]
     );
     let root = Temp::new();

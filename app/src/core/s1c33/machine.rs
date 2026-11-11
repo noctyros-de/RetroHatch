@@ -35,9 +35,10 @@ impl Machine {
             keep_screen_awake: false,
         })
     }
+    #[inline]
     pub fn step(&mut self) -> Result<(), CpuError> {
         let p = self.memory.peripherals.as_mut().unwrap();
-        p.audio_until(self.cpu.cycles);
+        // Previous step already integrated audio through these same CPU cycles.
         self.cpu.pending_irq = p.pending;
         self.cpu.pending_level = p.level;
         self.cpu.wake_request = p.wake;

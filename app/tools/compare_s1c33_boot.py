@@ -7,8 +7,8 @@ REFERENCES = references_dir()
 import argparse,os,subprocess,re,array,math
 ROOT=Path(__file__).resolve().parents[2]
 def main():
- parser=argparse.ArgumentParser();parser.add_argument("--hardware",choices=["ps","id","id-melody","idl","plus-color","plus-color-hexa"],default="ps");parser.add_argument('rom',type=Path);parser.add_argument('--cycles',type=int,default=184320000);parser.add_argument("--buttons",default="");parser.add_argument("--native-log",type=Path);parser.add_argument("--native-pcm",type=Path);args=parser.parse_args()
- clock=20000000.0 if args.hardware.startswith("plus-color") else 18432000.0
+ parser=argparse.ArgumentParser();parser.add_argument("--hardware",choices=["ps","id","id-melody","idl","plus-color","plus-color-hexa","4u"],default="ps");parser.add_argument('rom',type=Path);parser.add_argument('--cycles',type=int,default=184320000);parser.add_argument("--buttons",default="");parser.add_argument("--native-log",type=Path);parser.add_argument("--native-pcm",type=Path);args=parser.parse_args()
+ clock=30000000.0 if args.hardware=="4u" else 20000000.0 if args.hardware.startswith("plus-color") else 18432000.0
  target=target_dir()/('s1c33-boot-reference-'+args.hardware);target.mkdir(exist_ok=True,parents=True)
  vswhere=Path(os.environ.get('ProgramFiles(x86)','C:/Program Files (x86)'))/'Microsoft Visual Studio/Installer/vswhere.exe'
  vs=subprocess.check_output([str(vswhere),'-latest','-products','*','-requires','Microsoft.VisualStudio.Component.VC.Tools.x86.x64','-property','installationPath'],text=True).strip()

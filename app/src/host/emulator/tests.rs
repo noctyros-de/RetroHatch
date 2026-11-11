@@ -438,3 +438,30 @@ fn plus_color_imports_require_evidence_and_isolate_profile_and_revision_saves() 
     assert!(revision.restored(&state).is_err());
     assert!(Emulator::from_bytes(&image, DeviceProfile::Ps).is_err());
 }
+
+#[test]
+fn four_u_plus_variants_have_independent_schema_four_saves_and_reject_old_device_mixing() {
+    let mut bytes = vec![255; 0x800000];
+    bytes[0x400000..0x400004].copy_from_slice(&0x2401000u32.to_le_bytes());
+    bytes[0x401000..0x401004].copy_from_slice(&[0x11, 0x60, 0xff, 0x1e]);
+    let jp = Emulator::from_bytes(&bytes, DeviceProfile::FourUPlus).unwrap();
+    let en = Emulator::from_bytes(&bytes, DeviceProfile::FourUPlusEnglish).unwrap();
+    assert_ne!(jp.identity(), en.identity());
+    let saved = jp.save_state().unwrap();
+    assert_eq!(&saved[10..13], &[4, 0, 16]);
+    let before = en.save_state().unwrap();
+    assert!(en.restored(&saved).is_err());
+    assert_eq!(en.save_state().unwrap(), before);
+    assert_eq!(jp.restored(&saved).unwrap().save_state().unwrap(), saved);
+    let ps = Emulator::from_bytes(&bytes, DeviceProfile::Ps).unwrap();
+    assert_eq!(&ps.save_state().unwrap()[10..12], &[3, 0]);
+    assert!(ps.restored(&saved).is_err());
+    bytes[0x2000] ^= 1;
+    let other = Emulator::from_bytes(&bytes, DeviceProfile::FourUPlus).unwrap();
+    assert_ne!(jp.identity(), other.identity());
+    assert!(other.restored(&saved).is_err());
+    assert_eq!(
+        DeviceProfile::parse("tamagotchi-4u-plus-en"),
+        Some(DeviceProfile::FourUPlusEnglish)
+    );
+}

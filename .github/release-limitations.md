@@ -5,3 +5,4 @@
 - Windows builds are unsigned. Review the included THIRD_PARTY_LICENSES.md for outstanding asset/provenance questions; automated checks are not legal clearance.
 - Japanese iD L archive and English short-dump compatibility is restricted to exact tested hashes; missing original trailing bytes are not recovered. Infrared/DLC and upstream save conversion remain unavailable.
 - Plus Color/Hexagontchi validation covers four local images and focused hatching/menu sequences, not every game or full lifetime. The optional keep-awake override is disabled for Plus Color because early revisions have an unverified RAM marker; normal standby/wakeup works.
+- 4U+ validation covers two local images. The translated image has confirmed English text but retains some Japanese input labels; patch author and completeness are unverified. PN512 register/UART behavior is implemented, but no NFC peer, connectivity or DLC is supplied. Original 4U remains unsupported.

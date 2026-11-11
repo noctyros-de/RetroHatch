@@ -20,7 +20,9 @@ pub fn masks(p: DeviceProfile) -> &'static Masks {
         | DeviceProfile::IdlPrincess
         | DeviceProfile::Idl15
         | DeviceProfile::PlusColor
-        | DeviceProfile::PlusColorHexa => {
+        | DeviceProfile::PlusColorHexa
+        | DeviceProfile::FourUPlus
+        | DeviceProfile::FourUPlusEnglish => {
             panic!("On has a color LCD, not fixed segment masks")
         }
     }
@@ -106,7 +108,9 @@ pub fn paint(
             | DeviceProfile::IdlPrincess
             | DeviceProfile::Idl15
             | DeviceProfile::PlusColor
-            | DeviceProfile::PlusColorHexa => {
+            | DeviceProfile::PlusColorHexa
+            | DeviceProfile::FourUPlus
+            | DeviceProfile::FourUPlusEnglish => {
                 unreachable!("Color LCD does not use segment coverage")
             }
         },

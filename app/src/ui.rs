@@ -86,7 +86,7 @@ impl RetroHatchApp {
                     }
                 } else {
                     app.local_error = Some(
-                        "Use --profile p1, p2, genjintch, angel, morino, umino, on, ps, id, id-melody, idl, idl-en, idl-princess, idl-15, plus-color or plus-color-hexa followed by a local ROM path.".into(),
+                        "Use --profile p1, p2, genjintch, angel, morino, umino, on, ps, id, id-melody, idl, idl-en, idl-princess, idl-15, plus-color, plus-color-hexa, 4u or 4u-en followed by a local ROM path.".into(),
                     );
                 }
             } else {
@@ -1099,7 +1099,9 @@ fn paint_profile_lcd(
         | DeviceProfile::IdlPrincess
         | DeviceProfile::Idl15
         | DeviceProfile::PlusColor
-        | DeviceProfile::PlusColorHexa => {
+        | DeviceProfile::PlusColorHexa
+        | DeviceProfile::FourUPlus
+        | DeviceProfile::FourUPlusEnglish => {
             unreachable!("On uses the color framebuffer renderer")
         }
         DeviceProfile::Umino => {
@@ -1880,7 +1882,9 @@ mod tests {
                 | DeviceProfile::IdlPrincess
                 | DeviceProfile::Idl15
                 | DeviceProfile::PlusColor
-                | DeviceProfile::PlusColorHexa => {
+                | DeviceProfile::PlusColorHexa
+                | DeviceProfile::FourUPlus
+                | DeviceProfile::FourUPlusEnglish => {
                     unreachable!("Classic geometry test")
                 }
             };
@@ -1979,6 +1983,12 @@ mod tests {
         }
     }
 
+    #[test]
+    fn four_u_plus_variants_use_the_existing_library_and_color_controls() {
+        for p in [DeviceProfile::FourUPlus, DeviceProfile::FourUPlusEnglish] {
+            unidentified_rom_workflow(p);
+        }
+    }
     fn unidentified_rom_workflow(profile: DeviceProfile) {
         fn find(shape: &egui::epaint::Shape, label: &str) -> Option<egui::Pos2> {
             match shape {

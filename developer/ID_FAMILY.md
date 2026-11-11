@@ -100,7 +100,8 @@ license evidence for 106 packages, formatting/locked check and Windows release b
 
 These are focused local engineering checks, not a full lifetime playthrough or
 subjective loudspeaker certification. IR/connectivity/DLC, upstream .sav/
-.tamasave conversion and 4U remain unsupported. Plus Color/Hexagontchi were subsequently validated in
+.tamasave conversion and original 4U remain unsupported. 4U+ was subsequently
+validated in [4UPLUS.md](4UPLUS.md). Plus Color/Hexagontchi were subsequently validated in
 [PLUS_COLOR.md](PLUS_COLOR.md). Asset and upstream
 licensing questions in THIRD_PARTY_LICENSES.md remain separate. No firmware,
 private saves, screenshots or audio captures are included in the source tree.
