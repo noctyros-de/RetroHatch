@@ -10,11 +10,16 @@ timer/interrupt scheduling, oscillator phases and audio generation live above
 instruction execution. Emulated time uses integer master ticks; the worker
 paces this deterministic state against a monotonic host clock.
 
-`DeviceProfile` describes P1, P2, Genjintch, Angel, Morino and Umino. P2 shares
+`DeviceProfile` describes P1, P2, Genjintch, Angel, Morino, Umino and Yasashii. P2 shares
 P1 hardware and LCD because the reference explicitly confirms it. Sensor models
 keep their own electrical display mappings. Profiles have stable canonical IDs;
 save codes are explicit (P1=0, Genjintch=1, Angel=2, Morino=3, Umino=4, P2=5).
+Yasashii appends classic save code 18 without changing schema 1 or existing
+payloads. It adds K1 care keys and push-pull R outputs; its six GPIO indicators
+are derived presentation state, separate from the unchanged 160 LCD nibbles.
+Board masks are reconstructed from the profile on restore and reset.
 TamaOtch is a pending research descriptor outside the executable profile list.
+See [hardware evidence and validation](YASASHII_AND_TAMAOTCH.md).
 
 The single-owner worker processes commands, advances bounded emulated work,
 and publishes a latest immutable snapshot. Native Windows PCM queues and file
@@ -61,6 +66,10 @@ growth or closed-application clock advance is implemented. Work and input remain
 on the same single-owner worker, independent of UI focus/repaint frequency.
 ROM content and device profile isolate state directories. Classic profile codes
 0..5 and their schema remain unchanged; On/Meets appends code 6, backend schema 2.
+Meets Fairy/Magical/Fantasy/Pastel/Sanrio/Sweets share the same ARM backend and
+schema, appending codes 19..24. They read matching legacy code-6 states without
+rewriting legacy files; new captures use the selected edition code and directory.
+See [MEETS.md](MEETS.md) for exact firmware and migration validation.
 TG18 capture runs on the owner, while compression and ordered atomic writes run
 on the existing I/O worker. See [TG18.md](TG18.md) for verification limits.
 

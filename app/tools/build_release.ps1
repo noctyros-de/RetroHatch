@@ -7,6 +7,9 @@ $ErrorActionPreference = 'Stop'
 $appRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $projectRoot = [IO.Path]::GetFullPath((Join-Path $appRoot '..'))
 $userRoot = [Environment]::GetFolderPath('UserProfile')
+$cargoMetadata = & cargo metadata --manifest-path (Join-Path $appRoot 'Cargo.toml') --locked --no-deps --format-version 1
+if ($LASTEXITCODE -ne 0) { throw 'Cannot locate the Cargo output directory' }
+$cargoOutput = ($cargoMetadata | ConvertFrom-Json).target_directory
 $compilerRoot = (& rustc --print sysroot).Trim()
 if ($LASTEXITCODE -ne 0) { throw 'Cannot locate the Rust toolchain' }
 $previousEncoded = $env:CARGO_ENCODED_RUSTFLAGS
@@ -16,7 +19,7 @@ if ($env:RUSTFLAGS -and -not $previousEncoded) {
 $flags = @()
 if ($previousEncoded) { $flags += $previousEncoded.Split([char]31) }
 $flags += '-Ctarget-feature=+crt-static'
-foreach ($mapping in @(@($userRoot, '/build-user'), @($projectRoot, '/retrohatch'), @($compilerRoot, '/rust-toolchain'))) {
+foreach ($mapping in @(@($userRoot, '/build-user'), @($projectRoot, '/retrohatch'), @($compilerRoot, '/rust-toolchain'), @($cargoOutput, '/cargo-output'))) {
     if (-not [string]::IsNullOrWhiteSpace($mapping[0])) {
         $flags += '--remap-path-prefix=' + $mapping[0] + '=' + $mapping[1]
         $flags += '--remap-path-prefix=' + $mapping[0].Replace('\', '/') + '=' + $mapping[1]

@@ -16,6 +16,41 @@ pub struct Fingerprint<'a> {
 }
 pub const CATALOG: &[Fingerprint<'static>] = &[
     Fingerprint {
+        sha256: "d4639d3ecf464762c7911dccae6404ee3737c9bea71bd9fc43b20a6ad1e53b8a",
+        profile: DeviceProfile::MeetsFairy,
+        variant: "Japanese",
+    },
+    Fingerprint {
+        sha256: "ab2cc5c488b3b0bce2b5d5598b148bf3105394535d9ce4f1b1d646dfd31c6953",
+        profile: DeviceProfile::MeetsMagical,
+        variant: "Japanese",
+    },
+    Fingerprint {
+        sha256: "315c473af925b47b3025db1ba4b3c66d923a4c3eadbce877065e22d255a1e587",
+        profile: DeviceProfile::MeetsFantasy,
+        variant: "Japanese",
+    },
+    Fingerprint {
+        sha256: "b527e68dcdf10cf4b56228512f14b6e587be6e73ce8ef5abc1a7eb91b1ebccac",
+        profile: DeviceProfile::MeetsPastel,
+        variant: "Japanese",
+    },
+    Fingerprint {
+        sha256: "43479ce1253f4ae6c8f3c25fce9f0d091e3a6c2400a68e707208e90334be3ce7",
+        profile: DeviceProfile::MeetsSanrio,
+        variant: "Japanese",
+    },
+    Fingerprint {
+        sha256: "1b0972205bc104183e2406510f264d7ed4193bb5dc08c4811447ab986bbd2305",
+        profile: DeviceProfile::MeetsSweets,
+        variant: "Japanese",
+    },
+    Fingerprint {
+        sha256: "6722497ff4ce7c12fb380da31a067485ad8e42e0de156d770e426c9059d5eb6c",
+        profile: DeviceProfile::Yasashii,
+        variant: "Japanese",
+    },
+    Fingerprint {
         sha256: "a8f42d045529a2bdcd9db2aeabc3b04b1461affb93ff681f4b12da5967239c57",
         profile: DeviceProfile::FourUPlus,
         variant: "Japanese",
@@ -123,7 +158,9 @@ pub fn matches(hash: &str, catalog: &[Fingerprint<'_>]) -> Vec<Assignment> {
         .map(|f| Assignment {
             profile: f.profile,
             variant: f.variant.into(),
-            evidence: if f.profile.s1c33_key().is_some() {
+            evidence: if f.profile.is_tg18() {
+                "Verified full SHA-256; local TG18 firmware validation and upstream code identity"
+            } else if f.profile.s1c33_key().is_some() {
                 "Verified SHA-256 (local tamaemu firmware boot comparison)"
             } else {
                 "Verified SHA-256 (local BrickEmuPy comparison)"
@@ -149,4 +186,36 @@ pub fn for_profile(choices: &[Assignment], profile: DeviceProfile) -> Assignment
         }
         .into(),
     }
+}
+
+/// Narrow TG18 editions once per import; exact hashes take precedence over code metadata.
+pub fn tg18_candidates(bytes: &[u8], hash: &str) -> Option<Vec<DeviceProfile>> {
+    if !tg18::is_image(bytes) {
+        return None;
+    }
+    let mut choices = vec![DeviceProfile::On];
+    let exact: Vec<_> = matches(hash, CATALOG)
+        .into_iter()
+        .filter(|a| a.profile.is_meets())
+        .map(|a| a.profile)
+        .collect();
+    if !exact.is_empty() {
+        choices.extend(exact);
+        return Some(choices);
+    }
+    if let Some(rom) = tg18::roms::identify(bytes) {
+        if rom.region == "jp" {
+            let slug = if rom.slug == "magic" {
+                "magical"
+            } else {
+                rom.slug
+            };
+            if let Some(p) = DeviceProfile::parse(&format!("meets-{slug}")) {
+                choices.push(p);
+            }
+        }
+    } else {
+        choices.extend(DeviceProfile::MEETS);
+    }
+    Some(choices)
 }

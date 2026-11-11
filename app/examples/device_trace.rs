@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2026 Noctyros
 // Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Local firmware diagnostic: record deterministic states for comparison with BrickEmuPy.
-//! Usage: cargo run --release --locked --example device_trace -- PROFILE ROM TRACE [--gameplay]
+//! Usage: cargo run --release --locked --example device_trace -- PROFILE ROM TRACE [--gameplay [--state PRIVATE_PATH]]
 //! The trace is private diagnostic state; firmware must be supplied by the user.
 use retrohatch::core::{
     device::{Button, Device},
@@ -17,7 +17,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let profile = args
         .next()
         .and_then(|v| v.to_str().and_then(DeviceProfile::parse))
-        .ok_or("Specify p1, p2, genjintch, angel, morino or umino")?;
+        .ok_or("Specify a supported classic device profile, such as yasashii")?;
     let path = args.next().ok_or("Provide a local ROM path")?;
     let target = args.next().ok_or("Provide a private trace output path")?;
     let gameplay = match args.next() {
@@ -28,6 +28,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "Unknown option; use --gameplay for the extended button acceptance sequence".into(),
             );
         }
+    };
+    let save = match args.next() {
+        None => None,
+        Some(option) if option == "--state" => Some(
+            args.next()
+                .ok_or("--state requires a private output path")?,
+        ),
+        _ => return Err("Unknown option; use --state PRIVATE_PATH after --gameplay".into()),
     };
     let mut out = BufWriter::new(std::fs::File::create(target)?);
     let rom = roms::load_for_profile(std::path::Path::new(&path), profile)?;
@@ -79,6 +87,47 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             [(12.0, Button::B, 2, true), (12.15, Button::B, 2, false)],
         );
     }
+    if profile == DeviceProfile::Yasashii {
+        events = vec![
+            (5.0, Button::A, 2, true),
+            (5.15, Button::A, 2, false),
+            (6.0, Button::A, 2, true),
+            (6.15, Button::A, 2, false),
+            (7.0, Button::A, 2, true),
+            (7.15, Button::A, 2, false),
+        ];
+        for (i, b, mask) in [
+            (0, Button::Food, 8),
+            (1, Button::Smile, 4),
+            (2, Button::Heart, 2),
+            (3, Button::Clean, 1),
+            (4, Button::Light, 8),
+            (5, Button::Status, 4),
+            (6, Button::B, 1),
+        ] {
+            let t = 12.0 + i as f64 * 3.0;
+            events.push((t, b, mask, true));
+            events.push((t + 0.15, b, mask, false));
+        }
+        if gameplay {
+            for (i, button, mask) in [
+                (0, Button::Food, 8),
+                (1, Button::A, 2),
+                (2, Button::Food, 8),
+                (3, Button::B, 1),
+                (4, Button::Smile, 4),
+                (5, Button::Heart, 2),
+                (6, Button::Clean, 1),
+                (7, Button::Light, 8),
+                (8, Button::Status, 4),
+                (9, Button::B, 1),
+            ] {
+                let time = 400.0 + i as f64 * 2.0;
+                events.push((time, button, mask, true));
+                events.push((time + 0.15, button, mask, false));
+            }
+        }
+    }
     let mut event = 0;
     let mut next = 0;
     let mut samples = 0u64;
@@ -92,10 +141,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             if button != Button::Knock || profile.has_knock() {
                 writeln!(
                     out,
-                    "E|{}|{}|{}",
+                    "E|{}|{}|{}|{}",
                     d.mcu.counters.clock_calls,
                     mask,
-                    u8::from(pressed)
+                    u8::from(pressed),
+                    if matches!(
+                        button,
+                        Button::Food | Button::Smile | Button::Heart | Button::Clean
+                    ) {
+                        1
+                    } else {
+                        0
+                    }
                 )?;
                 d.set_button(button, pressed);
             }
@@ -131,14 +188,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .collect();
             writeln!(
                 out,
-                "S|{}|{}|{}|{}|{}|{:X},{:X}",
+                "S|{}|{}|{}|{}|{}|{:X},{:X}|{}",
                 d.mcu.counters.clock_calls,
                 d.time(),
                 state,
                 ram,
                 lcd,
                 d.mcu.read(0xF70)?,
-                d.mcu.read(0xF71)?
+                d.mcu.read(0xF71)?,
+                d.display()
+                    .indicators
+                    .map(|v| if v { "1" } else { "0" })
+                    .join("")
             )?;
             next += MASTER_HZ / sample_hz;
             for sample in d.drain_audio() {
@@ -150,6 +211,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     writeln!(out, "A|{}|{}|{}", samples, nonzero, peak)?;
     out.flush()?;
+    if let Some(path) = save {
+        std::fs::write(path, d.save_state()?)?;
+    }
     println!(
         "Generated {samples} PCM samples; {nonzero} nonzero; peak {peak}. No host audio playback in this trace mode."
     );

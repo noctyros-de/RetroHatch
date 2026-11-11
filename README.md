@@ -68,6 +68,7 @@ in the [public-project audit](developer/OPEN_SOURCE_AUDIT.md).
 | Tamagotchi Angel (Angelgotchi) | Dedicated LCD, buttons and tap sensor; local firmware/reference validation |
 | Tamagotchi Morino | Dedicated LCD, buttons and sensor; local firmware/reference validation |
 | Tamagotchi Umino (Ocean) | Dedicated LCD, buttons and tap sensor; local firmware/reference validation |
+| Tamagotchi Yasashii | Local firmware boot and hatching; original matrix mapping, eight care/select/cancel inputs, six GPIO indicators, audio, real-time pacing and full save/resume validated |
 | Tamagotchi Plus Color | Three distinct local 4-MiB images: boot, hatching, menus, buttons, audio, standby/RTC, real-time pacing and full saves validated |
 | Tamagotchi Plus Color Hexagontchi | Dedicated profile on the shared S1C33 core; local firmware boot, hatching, distinctive LCD/content, buttons, audio and full saves validated |
 | Tamagotchi 4U+ | Japanese local 8-MiB firmware: native boot, hatching, menus, LCD/input/PCM, RTC/standby and full saves validated; NFC connections/DLC unavailable |
@@ -80,9 +81,18 @@ in the [public-project audit](developer/OPEN_SOURCE_AUDIT.md).
 | Tamagotchi iD L 15th Anniversary | Dedicated identity on the shared iD-L board; local boot, themed LCD/setup, input, PCM, flash initialization and saves validated |
 | Tamagotchi P's | Native S1C33; local firmware boot, color LCD, buttons, audio and full-state resume/reference validation; infrared/DLC unavailable |
 | Tamagotchi On / Meets | Integrated MIT TG18 ARM backend; working use reported by the project owner. Color LCD, buttons, audio and saves are connected; individual regional editions are not all independently tested. Bluetooth/infrared unavailable |
+| Tamagotchi Meets Fairy | Japanese v030 firmware: boot, hatching, LCD, A/B/C, Windows audio, real-time pacing, standby/wakeup and full saves individually validated |
+| Tamagotchi Meets Magical | Japanese v031 firmware: boot, hatching, LCD, A/B/C, Windows audio, real-time pacing, standby/wakeup and full saves individually validated |
+| Tamagotchi Meets Fantasy | Japanese v047 firmware: boot, hatching, LCD, A/B/C, Windows audio, real-time pacing, standby/wakeup and full saves individually validated |
+| Tamagotchi Meets Pastel | Japanese v055 firmware: boot, hatching, LCD, A/B/C, Windows audio, real-time pacing, standby/wakeup and full saves individually validated |
+| Tamagotchi Meets Sanrio | Japanese v056 firmware: boot, hatching, LCD, A/B/C, Windows audio, real-time pacing, standby/wakeup and full saves individually validated |
+| Tamagotchi Meets Sweets | Japanese v062 firmware: boot, hatching, LCD, A/B/C, Windows audio, real-time pacing, standby/wakeup and full saves individually validated |
 
 Verification covers the available local images and focused gameplay sequences,
-not every regional revision, minigame or complete device lifetime. TamaOtch is
+not every regional revision, minigame or complete device lifetime. Yasashii uses
+its original eight controls, not a tap sensor: Left/Z selects, Down/X cancels,
+and 1-6 or Q/W/E/A/S/D operate the six care keys. See
+[device validation](developer/YASASHII_AND_TAMAOTCH.md). TamaOtch is
 a recognized **unsupported research target**: its exact LCD mapping, geometry
 and board settings are unresolved. Recognized TamaOtch firmware is refused with
 an explanation; another device's display is not substituted. Tamagotchi

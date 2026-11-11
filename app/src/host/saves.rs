@@ -80,6 +80,18 @@ impl Saves {
     pub fn directory(&self, d: &Emulator) -> PathBuf {
         self.root.join("saves").join(d.identity())
     }
+    pub fn read_path(&self, d: &Emulator, filename: &str) -> PathBuf {
+        let current = self.directory(d).join(filename);
+        if !current.exists()
+            && let Some(legacy) = d.legacy_identity()
+        {
+            let old = self.root.join("saves").join(legacy).join(filename);
+            if old.is_file() {
+                return old;
+            }
+        }
+        current
+    }
     pub fn configure(&mut self, p: SavePolicy) {
         let reset = p.autosave_minutes != self.policy.autosave_minutes;
         self.policy = p;
@@ -144,11 +156,10 @@ impl Saves {
         self.resume_blocked = false;
         self.reset_timer();
         s.slots = std::array::from_fn(|i| {
-            self.directory(d)
-                .join(format!("slot{}.rhstate", i + 1))
+            self.read_path(d, &format!("slot{}.rhstate", i + 1))
                 .is_file()
         });
-        let result = self.load(d, self.directory(d).join("autosave.rhstate"), true);
+        let result = self.load(d, self.read_path(d, "autosave.rhstate"), true);
         if result.is_err() {
             self.resume_blocked = true;
         }

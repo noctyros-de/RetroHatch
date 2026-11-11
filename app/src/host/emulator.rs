@@ -20,6 +20,23 @@ use tg18::sound::ToneSynth;
 use tg18::{CPU_HZ, Key, Machine, Outcome};
 
 pub fn validate_rom(bytes: &[u8], profile: DeviceProfile) -> Result<(), String> {
+    if profile.is_meets() {
+        require(
+            tg18::is_image(bytes),
+            "Meets requires an exact 8-MiB SPII flash image",
+        )?;
+        if let Some(rom) = tg18::roms::identify(bytes) {
+            let edition = match rom.slug {
+                "magic" => "magical",
+                v => v,
+            };
+            require(
+                rom.region == "jp" && profile.id() == format!("tamagotchi-meets-{edition}"),
+                "TG18 code identity conflicts with the selected Meets edition",
+            )?;
+        }
+        return Ok(());
+    }
     if let Some(key) = profile.s1c33_key() {
         return crate::core::s1c33::machine::validate_image(
             bytes,
@@ -53,6 +70,16 @@ pub struct Emulator {
 }
 impl Emulator {
     pub fn from_bytes(bytes: &[u8], profile: DeviceProfile) -> Result<Self, String> {
+        let hash = sha256(bytes);
+        // Direct worker loads must enforce the same research-device boundary as library imports.
+        super::pending_devices::ensure_supported(&hex(&hash))?;
+        if profile.is_meets() {
+            let exact = super::fingerprints::matches(&hex(&hash), super::fingerprints::CATALOG);
+            require(
+                exact.is_empty() || exact.iter().any(|a| a.profile == profile),
+                "Firmware belongs to a different verified Meets edition",
+            )?;
+        }
         validate_rom(bytes, profile)?;
         let (backend, metadata) = if let Some(key) = profile.s1c33_key() {
             (
@@ -77,7 +104,7 @@ impl Emulator {
         };
         Ok(Self {
             profile,
-            hash: sha256(bytes),
+            hash,
             metadata,
             backend,
         })
@@ -87,6 +114,13 @@ impl Emulator {
     }
     pub fn identity(&self) -> String {
         format!("{}-{}", self.profile.id(), hex(&self.hash))
+    }
+    /// Legacy On/Meets saves already isolated every firmware by its full SHA-256.
+    /// New edition writes use their own directory; legacy files are read only.
+    pub fn legacy_identity(&self) -> Option<String> {
+        self.profile
+            .is_meets()
+            .then(|| format!("{}-{}", DeviceProfile::On.id(), hex(&self.hash)))
     }
     pub fn classic_rom_metadata(&self) -> (Option<u32>, bool) {
         self.metadata
@@ -204,7 +238,7 @@ impl Emulator {
                     Button::A => 1,
                     Button::B => 2,
                     Button::C => 4,
-                    Button::Knock => 0,
+                    _ => 0,
                 };
                 let mask = d.memory.peripherals.as_ref().unwrap().buttons;
                 d.buttons(if pressed { mask | bit } else { mask & !bit });
@@ -326,7 +360,16 @@ impl Emulator {
             "Unsupported TG18 save format or backend schema",
         )?;
         require(
-            r.u8()? == profile_code(self.profile) && r.array::<32>()? == self.hash,
+            {
+                let code = r.u8()?;
+                let compatible = code == profile_code(self.profile)
+                    || (self.profile.is_meets() && code == profile_code(DeviceProfile::On))
+                    || (self.profile == DeviceProfile::On
+                        && DeviceProfile::MEETS
+                            .into_iter()
+                            .any(|p| profile_code(p) == code));
+                compatible && r.array::<32>()? == self.hash
+            },
             "Save belongs to a different ROM or device",
         )?;
         require(
@@ -409,7 +452,7 @@ impl OnDevice {
             Button::A => Key::A,
             Button::B => Key::B,
             Button::C => Key::C,
-            Button::Knock => return,
+            _ => return,
         };
         let i = key.index();
         if pressed && !self.machine.sys.live_keys[i] {

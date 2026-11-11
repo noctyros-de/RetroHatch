@@ -70,10 +70,12 @@ fn maximum() -> usize {
 pub fn inspect_bytes(bytes: Vec<u8>, source_name: String) -> Result<Prepared, String> {
     let hash = hex(&sha256(&bytes));
     super::pending_devices::ensure_supported(&hash)?;
-    let candidates: Vec<_> = DeviceProfile::ALL
-        .into_iter()
-        .filter(|p| super::emulator::validate_rom(&bytes, *p).is_ok())
-        .collect();
+    let candidates = fingerprints::tg18_candidates(&bytes, &hash).unwrap_or_else(|| {
+        DeviceProfile::ALL
+            .into_iter()
+            .filter(|p| super::emulator::validate_rom(&bytes, *p).is_ok())
+            .collect()
+    });
     let p = *candidates
         .first()
         .ok_or("Unsupported ROM format or size. Import a supported classic image, color NOR image or explicitly verified archive.")?;
@@ -305,6 +307,17 @@ impl Library {
             .map(Entry::assignment)
             .collect();
         if !remembered.is_empty() {
+            let editions: Vec<_> = fingerprints::matches(&p.hash, fingerprints::CATALOG)
+                .into_iter()
+                .filter(|a| a.profile.is_meets())
+                .collect();
+            if editions.len() == 1
+                && remembered
+                    .iter()
+                    .all(|a| a.profile == DeviceProfile::On || a.profile == editions[0].profile)
+            {
+                return editions;
+            }
             // A new verified identity must not silently retain an old guessed model.
             // Keep both choices and all existing saves when evidence conflicts.
             for known in fingerprints::matches(&p.hash, fingerprints::CATALOG) {

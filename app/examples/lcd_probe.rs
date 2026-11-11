@@ -28,6 +28,10 @@ mod morino_lcd_geometry;
 #[allow(dead_code)]
 #[path = "../src/umino_lcd_geometry.rs"]
 mod umino_lcd_geometry;
+#[rustfmt::skip]
+#[allow(dead_code)]
+#[path = "../src/yasashii_lcd_geometry.rs"]
+mod yasashii_lcd_geometry;
 use retrohatch::core::profile::DeviceProfile;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let a: Vec<_> = std::env::args().skip(1).collect();
@@ -35,6 +39,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let scale: f32 = a[1].parse()?;
     let root = std::path::Path::new(&a[2]);
     std::fs::create_dir_all(root)?;
+    if p == DeviceProfile::Yasashii {
+        println!("Yasashii has 512 matrix segments and no fixed LCD icons.");
+        return Ok(());
+    }
     let source = lcd_render::masks(p);
     for (i, icon) in source.icons.iter().enumerate() {
         let c = lcd_render::coverage(source.data, icon, scale);

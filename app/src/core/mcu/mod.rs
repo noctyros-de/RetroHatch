@@ -40,6 +40,7 @@ pub struct Mcu {
     osc2_remainder: u64,
     // Derived presentation policy, not an MCU register or serialized hardware field.
     audio_headroom: bool,
+    r_pushpull: bool,
 }
 
 impl Mcu {
@@ -55,12 +56,14 @@ impl Mcu {
                 | DeviceProfile::Angel
                 | DeviceProfile::Morino
                 | DeviceProfile::Umino
+                | DeviceProfile::Yasashii
         ) {
             cpu.enable_lcd_gap_bus();
         }
-        if profile == DeviceProfile::Umino {
+        if matches!(profile, DeviceProfile::Umino | DeviceProfile::Yasashii) {
             cpu.enable_reference_unmapped_bus();
         }
+        cpu.with_io(|io| io.set_r_pushpull(profile == DeviceProfile::Yasashii));
         Ok(Self {
             cpu,
             now: 0,
@@ -76,6 +79,7 @@ impl Mcu {
             osc2_hz: profile.osc2_hz(),
             osc2_remainder: 0,
             audio_headroom: profile == DeviceProfile::Angel,
+            r_pushpull: profile == DeviceProfile::Yasashii,
         })
     }
     pub fn set_profiling(&mut self, enabled: bool) {
@@ -103,6 +107,7 @@ impl Mcu {
     pub fn reset(&mut self) {
         // A UI reset is a cold device reset: all external buttons are released.
         self.cpu.reset_mcu();
+        self.cpu.with_io(|io| io.set_r_pushpull(self.r_pushpull));
         self.next_osc1 = self.now;
         self.audio.clear();
         self.instructions = 0;

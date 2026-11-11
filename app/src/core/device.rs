@@ -10,15 +10,26 @@ pub enum Button {
     B,
     C,
     Knock,
+    Food,
+    Smile,
+    Heart,
+    Clean,
+    Light,
+    Status,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DisplaySnapshot {
     pub nibbles: [u8; 160],
+    /// External GPIO indicators, not additional LCD RAM. Yasashii only.
+    pub indicators: [bool; 6],
 }
 impl Default for DisplaySnapshot {
     fn default() -> Self {
-        Self { nibbles: [0; 160] }
+        Self {
+            nibbles: [0; 160],
+            indicators: [false; 6],
+        }
     }
 }
 impl DisplaySnapshot {

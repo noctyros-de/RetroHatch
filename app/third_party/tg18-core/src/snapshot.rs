@@ -273,7 +273,8 @@ impl Snapshot {
             t.periods_seen = r.u64()?;
             t.pending = r.u8()? != 0;
         }
-        s.timers_resync();
+        // RetroHatch: the snapshot already stores exact period/IRQ state.
+        // Recomputing it here resets disabled timers and can discard a pending edge.
         let mut r = R(need("lcd")?, 0);
         let l = &mut s.lcd;
         let n = l.fb.len();

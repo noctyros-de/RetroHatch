@@ -79,7 +79,11 @@ impl RetroHatchApp {
             .show(ui, |ui| {
                 ui.spacing_mut().item_spacing.y = 2.0;
                 ui.vertical_centered(|ui| {
-                    ui.weak("Left = A    Down = B    Right = C");
+                    ui.weak(if s.loaded && s.profile == DeviceProfile::Yasashii {
+                        "Left = Select    Down = Cancel    1-6 = Care"
+                    } else {
+                        "Left = A    Down = B    Right = C"
+                    });
                     ui.add_sized(
                         [ui.available_width(), 22.0],
                         egui::Label::new(

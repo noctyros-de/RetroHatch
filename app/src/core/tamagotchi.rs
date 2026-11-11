@@ -49,18 +49,45 @@ impl Device for Tamagotchi {
         self.mcu.cpu().state()
     }
     fn set_button(&mut self, button: Button, pressed: bool) {
+        if self.profile == DeviceProfile::Yasashii {
+            let (port, mask) = match button {
+                Button::Food => (Port::K1, 8),
+                Button::Smile => (Port::K1, 4),
+                Button::Heart => (Port::K1, 2),
+                Button::Clean => (Port::K1, 1),
+                Button::Light => (Port::K0, 8),
+                Button::Status => (Port::K0, 4),
+                Button::A => (Port::K0, 2), // Select in the reference.
+                Button::B => (Port::K0, 1), // Cancel in the reference.
+                _ => return,
+            };
+            self.mcu
+                .pin(port, mask, if pressed { Some(false) } else { None });
+            return;
+        }
         let mask = match button {
             Button::A => 4,
             Button::B => 2,
             Button::C => 1,
             Button::Knock if self.profile.has_knock() => 8,
-            Button::Knock => return,
+            _ => return,
         };
         self.mcu
             .pin(Port::K0, mask, if pressed { Some(false) } else { None });
     }
     fn release_inputs(&mut self) {
-        for button in [Button::A, Button::B, Button::C, Button::Knock] {
+        for button in [
+            Button::A,
+            Button::B,
+            Button::C,
+            Button::Knock,
+            Button::Food,
+            Button::Smile,
+            Button::Heart,
+            Button::Clean,
+            Button::Light,
+            Button::Status,
+        ] {
             self.set_button(button, false);
         }
     }
@@ -77,7 +104,25 @@ impl Device for Tamagotchi {
         } else {
             *self.mcu.cpu().lcd_memory()
         };
-        DisplaySnapshot { nibbles }
+        let mut indicators = [false; 6];
+        if self.profile == DeviceProfile::Yasashii {
+            let io = self.mcu.cpu().io();
+            for (i, port) in [Port::P0, Port::P1, Port::P2, Port::R0, Port::R1, Port::R2]
+                .into_iter()
+                .enumerate()
+            {
+                let value = if i < 3 {
+                    io.output_latch(port)
+                } else {
+                    io.port(port)
+                };
+                indicators[i] = !self.mcu.reset_held() && ctrl & 12 == 0 && value & 1 != 0;
+            }
+        }
+        DisplaySnapshot {
+            nibbles,
+            indicators,
+        }
     }
     fn drain_audio(&mut self) -> Vec<i16> {
         self.mcu.drain_audio()
@@ -291,6 +336,56 @@ mod tests {
         let mut malformed = vec![0; 16384];
         malformed[0] = 0x10;
         assert!(RomImage::decode_for_profile(&malformed, DeviceProfile::Umino).is_err());
+    }
+    #[test]
+    fn yasashii_uses_eight_inputs_and_six_gpio_indicators_without_borrowed_lcd_icons() {
+        let mut d = device(DeviceProfile::Yasashii);
+        assert_eq!(d.profile.rom_bytes(), 16384);
+        assert_eq!(d.profile.osc2_hz(), 1060000);
+        assert!(!d.profile.has_knock());
+        assert_eq!(DeviceProfile::parse("yasashii"), Some(d.profile));
+        for (button, address, mask) in [
+            (Button::Food, 0xF42, 8),
+            (Button::Smile, 0xF42, 4),
+            (Button::Heart, 0xF42, 2),
+            (Button::Clean, 0xF42, 1),
+            (Button::Light, 0xF40, 8),
+            (Button::Status, 0xF40, 4),
+            (Button::A, 0xF40, 2),
+            (Button::B, 0xF40, 1),
+        ] {
+            d.set_button(button, true);
+            assert_eq!(d.mcu.read(address), Ok(15 ^ mask));
+            d.set_button(button, false);
+            assert_eq!(d.mcu.read(address), Ok(15));
+        }
+        d.mcu.write(0xF15, 15).unwrap();
+        d.set_button(Button::Food, true);
+        assert_eq!(d.mcu.read(0xF05), Ok(1));
+        d.release_inputs();
+        assert_eq!(d.mcu.read(0xF42), Ok(15));
+        d.set_button(Button::Knock, true);
+        d.set_button(Button::C, true);
+        assert_eq!(d.mcu.read(0xF40), Ok(15));
+        d.mcu.write(0xF71, 0).unwrap();
+        for address in [0xF60, 0xF61, 0xF62, 0xF50, 0xF51, 0xF52] {
+            d.mcu.write(address, 1).unwrap();
+        }
+        assert_eq!(d.display().indicators, [true; 6]);
+        let saved = d.save_state().unwrap();
+        let mut restored = d.restored(&saved).unwrap();
+        assert_eq!(restored.display(), d.display());
+        assert_eq!(restored.save_state().unwrap(), saved);
+        assert!(device(DeviceProfile::Angel).restored(&saved).is_err());
+        restored.reset();
+        assert_eq!(restored.display(), DisplaySnapshot::default());
+        restored.mcu.write(0xF71, 0).unwrap();
+        restored.mcu.write(0xF50, 1).unwrap();
+        assert!(restored.display().indicators[3]); // Mask survives reset and restore.
+        let mut p1 = device(DeviceProfile::P1);
+        p1.mcu.write(0xF50, 1).unwrap();
+        assert_eq!(p1.mcu.cpu().io().port(Port::R0), 0); // Existing open-drain mask unchanged.
+        assert!(p1.display().indicators.iter().all(|v| !v));
     }
     #[test]
     fn p2_uses_p1_hardware_with_distinct_identity_and_no_sensor() {

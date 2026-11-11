@@ -72,22 +72,47 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         (DeviceProfile::Angel, "TamagotchiAngel.bin"),
         (DeviceProfile::Morino, "TamagotchiMorino.bin"),
         (DeviceProfile::Umino, "TamagotchiUmino.bin"),
+        (DeviceProfile::Yasashii, "TamagotchiYasashii.bin"),
     ] {
         let path = folder.join(name);
         let rom = roms::load_for_profile(&path, profile)?;
         let mut d = Tamagotchi::new(&rom)?;
         advance(&mut d, 5.0)?;
-        for b in [Button::B, Button::A, Button::C] {
-            d.set_button(b, true);
-            advance(&mut d, 1.0)?;
-            d.set_button(b, false);
-            advance(&mut d, 1.0)?;
-        }
-        if profile == DeviceProfile::Morino {
-            // Confirm the real firmware's egg-selection screen before waiting for hatching.
-            d.set_button(Button::B, true);
-            advance(&mut d, 1.0)?;
-            d.set_button(Button::B, false);
+        if profile == DeviceProfile::Yasashii {
+            for _ in 0..3 {
+                d.set_button(Button::A, true);
+                advance(&mut d, 0.15)?;
+                d.set_button(Button::A, false);
+                advance(&mut d, 0.85)?;
+            }
+            advance(&mut d, 4.0)?;
+            for button in [
+                Button::Food,
+                Button::Smile,
+                Button::Heart,
+                Button::Clean,
+                Button::Light,
+                Button::Status,
+                Button::B,
+            ] {
+                d.set_button(button, true);
+                advance(&mut d, 0.15)?;
+                d.set_button(button, false);
+                advance(&mut d, 2.85)?;
+            }
+        } else {
+            for b in [Button::B, Button::A, Button::C] {
+                d.set_button(b, true);
+                advance(&mut d, 1.0)?;
+                d.set_button(b, false);
+                advance(&mut d, 1.0)?;
+            }
+            if profile == DeviceProfile::Morino {
+                // Confirm the real firmware's egg-selection screen before waiting for hatching.
+                d.set_button(Button::B, true);
+                advance(&mut d, 1.0)?;
+                d.set_button(Button::B, false);
+            }
         }
         advance(&mut d, 350.0)?;
         let bytes = d.save_state()?;
@@ -177,6 +202,7 @@ fn worker_check(folder: &Path, root: &Path) -> Result<(), Box<dyn std::error::Er
         (DeviceProfile::Angel, "TamagotchiAngel.bin"),
         (DeviceProfile::Morino, "TamagotchiMorino.bin"),
         (DeviceProfile::Umino, "TamagotchiUmino.bin"),
+        (DeviceProfile::Yasashii, "TamagotchiYasashii.bin"),
     ] {
         let rom = roms::load_for_profile(&folder.join(name), profile)?;
         let fresh = Tamagotchi::new(&rom)?;

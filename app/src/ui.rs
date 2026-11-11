@@ -45,8 +45,8 @@ pub struct RetroHatchApp {
     data_dir: Option<PathBuf>,
     dirty: Option<Instant>,
     selected_profile: DeviceProfile,
-    pressed: [bool; 4],
-    click_until: [Option<Instant>; 4],
+    pressed: [bool; 10],
+    click_until: [Option<Instant>; 10],
     picker: Option<mpsc::Receiver<PickerResult>>,
     pending_rom: Option<PathBuf>,
     folder: String,
@@ -167,8 +167,8 @@ impl RetroHatchApp {
             } else {
                 None
             },
-            pressed: [false; 4],
-            click_until: [None; 4],
+            pressed: [false; 10],
+            click_until: [None; 10],
             picker: None,
             pending_rom: None,
             folder,
@@ -206,8 +206,8 @@ impl RetroHatchApp {
             .send(Command::LoadProfile(path, self.selected_profile));
     }
     fn release_inputs(&mut self) {
-        self.pressed = [false; 4];
-        self.click_until = [None; 4];
+        self.pressed = [false; 10];
+        self.click_until = [None; 10];
         self.controller.send(Command::ReleaseInputs);
     }
     fn changed(&mut self, before: &Settings) {
@@ -591,12 +591,34 @@ impl RetroHatchApp {
             self.persist();
         }
         let keys = ctx.input(|i| {
-            let groups: [&[egui::Key]; 4] = [
-                &[egui::Key::A, egui::Key::Num1, egui::Key::ArrowLeft],
-                &[egui::Key::B, egui::Key::Num2, egui::Key::ArrowDown],
-                &[egui::Key::C, egui::Key::Num3, egui::Key::ArrowRight],
-                &[egui::Key::ArrowUp],
-            ];
+            let groups: [&[egui::Key]; 10] = if s.loaded && s.profile == DeviceProfile::Yasashii {
+                use egui::Key::*;
+                [
+                    &[ArrowLeft, Z],
+                    &[ArrowDown, X],
+                    &[],
+                    &[],
+                    &[Num1, Q],
+                    &[Num2, W],
+                    &[Num3, E],
+                    &[Num4, A],
+                    &[Num5, S],
+                    &[Num6, D],
+                ]
+            } else {
+                [
+                    &[egui::Key::A, egui::Key::Num1, egui::Key::ArrowLeft],
+                    &[egui::Key::B, egui::Key::Num2, egui::Key::ArrowDown],
+                    &[egui::Key::C, egui::Key::Num3, egui::Key::ArrowRight],
+                    &[egui::Key::ArrowUp],
+                    &[],
+                    &[],
+                    &[],
+                    &[],
+                    &[],
+                    &[],
+                ]
+            };
             (
                 i.focused,
                 groups.map(|g| g.iter().any(|k| i.key_down(*k))),
@@ -643,7 +665,7 @@ impl RetroHatchApp {
         }
         self.menus(ui, &s);
         self.status_footer(ui, &s);
-        let mut pointer = [false; 4];
+        let mut pointer = [false; 10];
         let (_, accent, ink) = palette(self.settings.theme);
         egui::CentralPanel::default()
             .frame(
@@ -659,7 +681,9 @@ impl RetroHatchApp {
                         self.selected_profile
                     };
                     // 100% retains the responsive normal layout; larger scales can scroll.
-                    let reserve = if s.loaded && profile.has_knock() {
+                    let reserve = if profile == DeviceProfile::Yasashii {
+                        238.0
+                    } else if s.loaded && profile.has_knock() {
                         170.0
                     } else {
                         108.0
@@ -667,7 +691,11 @@ impl RetroHatchApp {
                     let aspect = if profile.is_color() {
                         1.0
                     } else {
-                        329.0 / 352.0
+                        if profile == DeviceProfile::Yasashii {
+                            175.0 / 351.0
+                        } else {
+                            329.0 / 352.0
+                        }
                     };
                     let normal = (ui.available_width() - 40.0)
                         .min((ui.available_height() - reserve - 32.0) / aspect)
@@ -675,7 +703,9 @@ impl RetroHatchApp {
                     let desired_width = normal * f32::from(self.settings.display_scale) / 100.0;
                     ui.set_min_width((desired_width + 40.).max(ui.available_width()));
                     ui.vertical_centered(|ui| {
-                        let reserve = if s.loaded && s.profile.has_knock() {
+                        let reserve = if profile == DeviceProfile::Yasashii {
+                            238.0
+                        } else if s.loaded && s.profile.has_knock() {
                             170.0
                         } else {
                             108.0
@@ -686,7 +716,13 @@ impl RetroHatchApp {
                             self.selected_profile
                         })
                         .is_color();
-                        let aspect = if color { 1.0 } else { 329.0 / 352.0 };
+                        let aspect = if color {
+                            1.0
+                        } else if profile == DeviceProfile::Yasashii {
+                            175.0 / 351.0
+                        } else {
+                            329.0 / 352.0
+                        };
                         let width = desired_width;
                         let total = width * aspect + reserve;
                         ui.add_space(((ui.available_height() - total) / 2.0).max(14.0));
@@ -709,17 +745,63 @@ impl RetroHatchApp {
                             }
                         }
                         ui.add_space(20.0);
+                        if profile == DeviceProfile::Yasashii {
+                            for row in 0..2 {
+                                ui.horizontal(|ui| {
+                                    ui.add_space(((ui.available_width() - 204.0) / 2.0).max(0.0));
+                                    for col in 0..3 {
+                                        let i = row * 3 + col;
+                                        if col > 0 {
+                                            ui.add_space(15.0);
+                                        }
+                                        let response = round_button(
+                                            ui,
+                                            ["Food", "Smile", "Heart", "Clean", "Light", "Status"]
+                                                [i],
+                                            true,
+                                            enabled,
+                                            self.pressed[4 + i],
+                                            accent,
+                                            ink,
+                                        );
+                                        let color = if s.display.indicators[i] {
+                                            egui::Color32::from_rgb(110, 200, 75)
+                                        } else {
+                                            ui.visuals().weak_text_color()
+                                        };
+                                        ui.painter().circle_filled(
+                                            response.rect.center_top() - egui::vec2(0.0, 4.0),
+                                            3.0,
+                                            color,
+                                        );
+                                        pointer[4 + i] =
+                                            response.is_pointer_button_down_on() && enabled;
+                                        if response.clicked() && enabled {
+                                            self.click_until[4 + i] =
+                                                Some(Instant::now() + Duration::from_millis(50));
+                                        }
+                                    }
+                                });
+                                ui.add_space(10.0);
+                            }
+                        }
                         ui.horizontal(|ui| {
-                            let total = 3.0 * 52.0 + 2.0 * 24.0;
+                            let labels: &[&str] = if profile == DeviceProfile::Yasashii {
+                                &["Select", "Cancel"]
+                            } else {
+                                &["A", "B", "C"]
+                            };
+                            let total =
+                                labels.len() as f32 * 52.0 + (labels.len() - 1) as f32 * 24.0;
                             ui.add_space(((ui.available_width() - total) / 2.0).max(0.0));
-                            for (index, label) in ["A", "B", "C"].into_iter().enumerate() {
+                            for (index, &label) in labels.iter().enumerate() {
                                 if index > 0 {
                                     ui.add_space(15.0);
                                 }
                                 let response = round_button(
                                     ui,
                                     label,
-                                    self.settings.labels,
+                                    self.settings.labels || profile == DeviceProfile::Yasashii,
                                     enabled,
                                     self.pressed[index],
                                     accent,
@@ -754,9 +836,20 @@ impl RetroHatchApp {
                 });
             });
         let now = Instant::now();
-        for (index, button) in [Button::A, Button::B, Button::C, Button::Knock]
-            .into_iter()
-            .enumerate()
+        for (index, button) in [
+            Button::A,
+            Button::B,
+            Button::C,
+            Button::Knock,
+            Button::Food,
+            Button::Smile,
+            Button::Heart,
+            Button::Clean,
+            Button::Light,
+            Button::Status,
+        ]
+        .into_iter()
+        .enumerate()
         {
             if accepts && keys.2[index] {
                 self.click_until[index] = Some(now + Duration::from_millis(50));
@@ -767,6 +860,7 @@ impl RetroHatchApp {
                 && !s.loading
                 && !blocked
                 && (index != 3 || s.profile.has_knock())
+                && (index < 4 || s.profile == DeviceProfile::Yasashii)
                 && (pointer[index]
                     || (accepts && keys.1[index])
                     || self.click_until[index].is_some_and(|t| now < t));
@@ -835,9 +929,16 @@ impl RetroHatchApp {
                 .collapsible(false)
                 .resizable(false)
                 .show(ctx, |ui| {
-                    ui.label("A: Left Arrow, A or 1");
-                    ui.label("B: Down Arrow, B or 2");
-                    ui.label("C: Right Arrow, C or 3");
+                    if s.loaded && s.profile == DeviceProfile::Yasashii {
+                        ui.label("Select: Left Arrow or Z");
+                        ui.label("Cancel: Down Arrow or X");
+                        ui.label("Food / Smile / Heart: 1 / 2 / 3 or Q / W / E");
+                        ui.label("Clean / Light / Status: 4 / 5 / 6 or A / S / D");
+                    } else {
+                        ui.label("A: Left Arrow, A or 1");
+                        ui.label("B: Down Arrow, B or 2");
+                        ui.label("C: Right Arrow, C or 3");
+                    }
                     ui.separator();
                     ui.label("Pause / Resume: Space");
                     ui.label("Reset (confirmation): F5");
@@ -968,9 +1069,21 @@ fn request_display_size(ctx: &egui::Context, profile: DeviceProfile, percent: u1
         .unwrap_or(egui::vec2(1280., 900.));
     let size = egui::vec2(
         (width + 80.).max(460.).min((screen.x - 80.).max(350.)),
-        (width * if profile.is_color() { 1. } else { 329. / 352. } + 260.)
-            .max(500.)
-            .min((screen.y - 100.).max(400.)),
+        (width
+            * if profile.is_color() {
+                1.
+            } else if profile == DeviceProfile::Yasashii {
+                175. / 351.
+            } else {
+                329. / 352.
+            }
+            + if profile == DeviceProfile::Yasashii {
+                360.
+            } else {
+                260.
+            })
+        .max(500.)
+        .min((screen.y - 100.).max(400.)),
     );
     ctx.send_viewport_cmd(egui::ViewportCommand::InnerSize(size));
 }
@@ -1078,6 +1191,12 @@ fn paint_profile_lcd(
 ) -> egui::Response {
     let (lcd_size, pixels, _icon_bits, _legacy_spans) = match profile {
         DeviceProfile::P1 | DeviceProfile::P2 => (LCD_SIZE, PIXELS, ICON_BITS, ICON_SPANS),
+        DeviceProfile::Yasashii => (
+            crate::yasashii_lcd_geometry::LCD_SIZE,
+            crate::yasashii_lcd_geometry::PIXELS,
+            &[][..],
+            [&[][..]; 8],
+        ),
         DeviceProfile::Genjintch => {
             use crate::genjintch_lcd_geometry as g;
             (g::LCD_SIZE, g::PIXELS, g::ICON_BITS, g::ICON_SPANS)
@@ -1091,6 +1210,12 @@ fn paint_profile_lcd(
             (g::LCD_SIZE, g::PIXELS, g::ICON_BITS, g::ICON_SPANS)
         }
         DeviceProfile::On
+        | DeviceProfile::MeetsFairy
+        | DeviceProfile::MeetsMagical
+        | DeviceProfile::MeetsFantasy
+        | DeviceProfile::MeetsPastel
+        | DeviceProfile::MeetsSanrio
+        | DeviceProfile::MeetsSweets
         | DeviceProfile::Ps
         | DeviceProfile::Id
         | DeviceProfile::IdMelody
@@ -1268,7 +1393,10 @@ mod tests {
         let mut output = context.run_ui(egui::RawInput::default(), |ui| {
             paint_profile_lcd(
                 ui,
-                &DisplaySnapshot { nibbles: [15; 160] },
+                &DisplaySnapshot {
+                    nibbles: [15; 160],
+                    ..Default::default()
+                },
                 352.0,
                 false,
                 DeviceProfile::Genjintch,
@@ -1287,7 +1415,10 @@ mod tests {
         let mut output = context.run_ui(egui::RawInput::default(), |ui| {
             paint_profile_lcd(
                 ui,
-                &DisplaySnapshot { nibbles: [15; 160] },
+                &DisplaySnapshot {
+                    nibbles: [15; 160],
+                    ..Default::default()
+                },
                 352.0,
                 false,
                 DeviceProfile::Angel,
@@ -1684,6 +1815,133 @@ mod tests {
         std::fs::remove_dir_all(root).unwrap();
     }
     #[test]
+    fn yasashii_matrix_controls_keyboard_and_focus_release_fit_supported_sizes() {
+        use crate::yasashii_lcd_geometry as g;
+        let mut bits = std::collections::HashSet::new();
+        for &(x, y, ram, bit) in g::PIXELS {
+            assert!(
+                x >= 0.
+                    && y >= 0.
+                    && x + 10. <= g::LCD_SIZE[0] + 0.01
+                    && y + 10. <= g::LCD_SIZE[1] + 0.01
+            );
+            assert!(bits.insert((ram, bit)));
+        }
+        assert_eq!(bits.len(), 512);
+        let path =
+            std::env::temp_dir().join(format!("retrohatch-yasashii-ui-{}.bin", std::process::id()));
+        let bytes: Vec<_> = (0..8192).flat_map(|_| 0xFF8u16.to_be_bytes()).collect();
+        std::fs::write(&path, bytes).unwrap();
+        let mut app = RetroHatchApp::create(false);
+        app.selected_profile = DeviceProfile::Yasashii;
+        app.load_rom(path.clone());
+        let deadline = Instant::now() + Duration::from_secs(3);
+        while !app.controller.snapshot().loaded {
+            assert!(Instant::now() < deadline);
+            std::thread::sleep(Duration::from_millis(2));
+        }
+        fn collect(shape: &egui::epaint::Shape, out: &mut Vec<(String, egui::Rect)>) {
+            match shape {
+                egui::epaint::Shape::Text(t) => out.push((
+                    t.galley.text().into(),
+                    t.galley.rect.translate(t.pos.to_vec2()),
+                )),
+                egui::epaint::Shape::Vec(v) => {
+                    for s in v {
+                        collect(s, out)
+                    }
+                }
+                _ => {}
+            }
+        }
+        for ppp in [1.0, 1.25, 1.5, 2.0] {
+            for (w, h) in [(350., 500.), (460., 660.), (640., 800.)] {
+                let ctx = egui::Context::default();
+                let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(w, h));
+                let mut input = egui::RawInput {
+                    screen_rect: Some(screen),
+                    focused: true,
+                    ..Default::default()
+                };
+                input
+                    .viewports
+                    .get_mut(&egui::ViewportId::ROOT)
+                    .unwrap()
+                    .native_pixels_per_point = Some(ppp);
+                let mut out = ctx.run_ui(input, |ui| app.content(ui));
+                let mut text = Vec::new();
+                for s in &out.shapes {
+                    collect(&s.shape, &mut text)
+                }
+                out.textures_delta.clear();
+                for label in [
+                    "Food", "Smile", "Heart", "Clean", "Light", "Status", "Select", "Cancel",
+                ] {
+                    let rect = text.iter().find(|(t, _)| t == label).unwrap().1;
+                    assert!(
+                        screen.contains_rect(rect),
+                        "{ppp}: {label} outside {screen:?}: {rect:?}"
+                    );
+                }
+                assert!(!text.iter().any(|(t, _)| t == "Tap"));
+            }
+        }
+        let ctx = egui::Context::default();
+        let events = [
+            egui::Key::ArrowLeft,
+            egui::Key::ArrowDown,
+            egui::Key::Num1,
+            egui::Key::Num2,
+            egui::Key::Num3,
+            egui::Key::Num4,
+            egui::Key::Num5,
+            egui::Key::Num6,
+            egui::Key::ArrowUp,
+        ]
+        .map(|key| egui::Event::Key {
+            key,
+            physical_key: None,
+            pressed: true,
+            repeat: false,
+            modifiers: egui::Modifiers::NONE,
+        });
+        let mut frame = ctx.run_ui(
+            egui::RawInput {
+                focused: true,
+                events: events.to_vec(),
+                ..Default::default()
+            },
+            |ui| app.content(ui),
+        );
+        frame.textures_delta.clear();
+        assert_eq!(
+            app.pressed,
+            [true, true, false, false, true, true, true, true, true, true]
+        );
+        let mut frame = ctx.run_ui(
+            egui::RawInput {
+                focused: false,
+                ..Default::default()
+            },
+            |ui| app.content(ui),
+        );
+        frame.textures_delta.clear();
+        assert_eq!(app.pressed, [false; 10]);
+        app.shortcuts_open = true;
+        let mut sizing = ctx.run_ui(egui::RawInput::default(), |ui| app.content(ui));
+        sizing.textures_delta.clear();
+        let mut out = ctx.run_ui(egui::RawInput::default(), |ui| app.content(ui));
+        let mut text = Vec::new();
+        for s in &out.shapes {
+            collect(&s.shape, &mut text)
+        }
+        out.textures_delta.clear();
+        assert!(text.iter().any(|(t, _)| t == "Select: Left Arrow or Z"));
+        assert!(!text.iter().any(|(t, _)| t == "Tap / Knock: Up Arrow"));
+        drop(app);
+        std::fs::remove_file(path).unwrap();
+    }
+    #[test]
     fn sensor_layout_shortcuts_and_independent_arrow_releases_work_at_multiple_sizes_and_dpis() {
         fn text_rects(shape: &egui::epaint::Shape, out: &mut Vec<(String, egui::Rect)>) {
             match shape {
@@ -1783,12 +2041,31 @@ mod tests {
                     key(egui::Key::ArrowLeft, true),
                 ],
             );
-            assert_eq!(app.pressed, [true, false, false, profile.has_knock()]);
+            assert_eq!(
+                app.pressed,
+                [
+                    true,
+                    false,
+                    false,
+                    profile.has_knock(),
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false
+                ]
+            );
             std::thread::sleep(Duration::from_millis(60));
             frame(&mut app, vec![key(egui::Key::ArrowUp, false)]);
-            assert_eq!(app.pressed, [true, false, false, false]);
+            assert_eq!(
+                app.pressed,
+                [
+                    true, false, false, false, false, false, false, false, false, false
+                ]
+            );
             frame(&mut app, vec![key(egui::Key::ArrowLeft, false)]);
-            assert_eq!(app.pressed, [false; 4]);
+            assert_eq!(app.pressed, [false; 10]);
             if profile.has_knock() {
                 let mut out = ctx.run_ui(egui::RawInput::default(), |ui| app.content(ui));
                 let mut texts = Vec::new();
@@ -1866,6 +2143,10 @@ mod tests {
             assert!(bits.insert((ram, bit)));
         }
         for profile in DeviceProfile::CLASSIC {
+            if profile == DeviceProfile::Yasashii {
+                assert_eq!(crate::yasashii_lcd_geometry::PIXELS.len(), 512);
+                continue; // Its six external LEDs are not LCD icons.
+            }
             let source = crate::lcd_render::masks(profile);
             let expected = match profile {
                 DeviceProfile::P1 | DeviceProfile::P2 => ICON_BITS,
@@ -1873,7 +2154,14 @@ mod tests {
                 DeviceProfile::Angel => crate::angel_lcd_geometry::ICON_BITS,
                 DeviceProfile::Morino => g::ICON_BITS,
                 DeviceProfile::Umino => crate::umino_lcd_geometry::ICON_BITS,
+                DeviceProfile::Yasashii => unreachable!("No LCD icons"),
                 DeviceProfile::On
+                | DeviceProfile::MeetsFairy
+                | DeviceProfile::MeetsMagical
+                | DeviceProfile::MeetsFantasy
+                | DeviceProfile::MeetsPastel
+                | DeviceProfile::MeetsSanrio
+                | DeviceProfile::MeetsSweets
                 | DeviceProfile::Ps
                 | DeviceProfile::Id
                 | DeviceProfile::IdMelody
@@ -1930,7 +2218,10 @@ mod tests {
         let mut out = ctx.run_ui(egui::RawInput::default(), |ui| {
             paint_profile_lcd(
                 ui,
-                &DisplaySnapshot { nibbles: [15; 160] },
+                &DisplaySnapshot {
+                    nibbles: [15; 160],
+                    ..Default::default()
+                },
                 352.,
                 false,
                 DeviceProfile::Umino,
@@ -1951,6 +2242,13 @@ mod tests {
     #[test]
     fn unidentified_on_import_color_display_and_one_click_library_start_use_the_existing_ui() {
         unidentified_rom_workflow(DeviceProfile::On);
+    }
+
+    #[test]
+    fn six_meets_editions_use_the_existing_library_color_display_and_controls() {
+        for profile in DeviceProfile::MEETS {
+            unidentified_rom_workflow(profile);
+        }
     }
 
     #[test]

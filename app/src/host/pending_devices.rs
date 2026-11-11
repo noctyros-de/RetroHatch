@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2026 Noctyros
 // Applies to original RetroHatch contributions; third-party provenance is retained below and in THIRD_PARTY_LICENSES.md.
 //! Recognized research targets with insufficient evidence for executable device profiles.
-//! Facts and blockers: docs/TAMAOTCH.md. No third-party implementation or artwork is included.
+//! Facts and blockers: developer/YASASHII_AND_TAMAOTCH.md. No third-party implementation or artwork is included.
 
 /// This is intentionally separate from `DeviceProfile`: incomplete hardware cannot be run.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

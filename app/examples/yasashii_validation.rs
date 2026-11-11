@@ -1,0 +1,208 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-FileCopyrightText: 2026 Noctyros
+//! Opt-in local Yasashii firmware, wall-clock and save/reopen validation; writes only a private validation folder.
+use retrohatch::{
+    core::{device::Button, mcu::MASTER_HZ, profile::DeviceProfile, state::sha256},
+    host::{
+        fingerprints::Assignment,
+        library::{Library, inspect},
+        runner::{Command, Controller, Snapshot},
+        saves::{SavePolicy, SaveTarget},
+    },
+};
+use std::{
+    env, fs,
+    path::PathBuf,
+    thread,
+    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
+};
+fn wait(c: &Controller, condition: impl Fn(&Snapshot) -> bool) -> Result<Snapshot, String> {
+    let start = Instant::now();
+    loop {
+        let s = c.snapshot();
+        if let Some(e) = &s.error {
+            return Err(e.clone());
+        }
+        if let Some(e) = &s.save_error {
+            return Err(e.clone());
+        }
+        if condition(&s) {
+            return Ok(s);
+        }
+        if start.elapsed() > Duration::from_secs(25) {
+            return Err("Validation worker timed out".into());
+        }
+        thread::sleep(Duration::from_millis(10));
+    }
+}
+fn main() -> Result<(), String> {
+    let args: Vec<_> = env::args().collect();
+    let profile = args
+        .windows(2)
+        .find(|v| v[0] == "--profile")
+        .and_then(|v| DeviceProfile::parse(&v[1]))
+        .unwrap_or(DeviceProfile::Yasashii);
+    if profile != DeviceProfile::Yasashii {
+        return Err("Select the Yasashii profile".into());
+    }
+    let path = PathBuf::from(
+        env::args()
+            .nth(1)
+            .ok_or("Usage: yasashii_validation ROM [real-time seconds]")?,
+    );
+    let duration: f64 = env::args()
+        .nth(2)
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(60.0);
+    let prepared = inspect(&path)?;
+    if !prepared.candidates.contains(&profile) {
+        return Err("Firmware is incompatible with the selected Yasashii profile".into());
+    }
+    let original_hash = sha256(&fs::read(&path).map_err(|e| e.to_string())?);
+    let root = env::temp_dir().join(format!(
+        "retrohatch-{}-validation-{}",
+        profile.id(),
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+    fs::create_dir_all(&root).map_err(|e| e.to_string())?;
+    println!("Private validation root: {}", root.display());
+    let mut library = Library::open(&root)?;
+    let entry = library.import(
+        &prepared,
+        Assignment {
+            profile,
+            variant: String::new(),
+            evidence: "User-provided Yasashii firmware; local validation".into(),
+        },
+    )?;
+    drop(library);
+    let library = Library::open(&root)?;
+    let internal = library.verified_path(&entry.key)?;
+    let policy = SavePolicy {
+        save_on_exit: true,
+        ..SavePolicy::default()
+    };
+    let c = Controller::with_storage(true, root.clone(), policy.clone());
+    c.send(Command::LoadProfile(internal.clone(), profile));
+    wait(&c, |s| s.loaded && !s.loading && s.ticks > 0)?;
+    let start = Instant::now();
+    let initial = c.snapshot().ticks;
+    let mut pressed = false;
+    let mut released = false;
+    let mut next = 10.0;
+    let mut events = 0usize;
+    while start.elapsed().as_secs_f64() < duration {
+        let wall = start.elapsed().as_secs_f64();
+        if wall >= 8.0 && !pressed {
+            c.send(Command::Button(Button::B, true));
+            pressed = true;
+        }
+        if wall >= 8.12 && !released {
+            c.send(Command::Button(Button::B, false));
+            released = true;
+        }
+        // Exercise every dedicated input through the actual worker.
+        let buttons = [
+            Button::Food,
+            Button::Smile,
+            Button::Heart,
+            Button::Clean,
+            Button::Light,
+            Button::Status,
+            Button::A,
+        ];
+        if events < buttons.len() * 2
+            && wall >= 12.0 + (events / 2) as f64 * 3.0 + if events % 2 == 0 { 0.0 } else { 0.15 }
+        {
+            c.send(Command::Button(buttons[events / 2], events % 2 == 0));
+            events += 1;
+        }
+        let s = c.snapshot();
+        if let Some(e) = s.error {
+            return Err(e);
+        }
+        if wall >= next {
+            println!(
+                "wall={wall:.3} emulated={:.3} speed={:.2}% audio_drops={}",
+                (s.ticks - initial) as f64 / MASTER_HZ as f64,
+                100.0 * (s.ticks - initial) as f64 / MASTER_HZ as f64 / wall,
+                s.audio_drops
+            );
+            next += 10.0;
+        }
+        thread::sleep(Duration::from_millis(10));
+    }
+    c.send(Command::Pause);
+    let paused = wait(&c, |s| !s.running)?;
+    println!(
+        "final wall={:.3} emulated={:.3} audio={} drops={}",
+        start.elapsed().as_secs_f64(),
+        (paused.ticks - initial) as f64 / MASTER_HZ as f64,
+        paused.audio_status,
+        paused.audio_drops
+    );
+    println!("Audio queue: {:?}", paused.audio_stats);
+    if paused.audio_status != "Audio: Windows PCM output active" {
+        return Err(format!(
+            "Actual Windows playback failed: {}",
+            paused.audio_status
+        ));
+    }
+    if paused.audio_drops != 0 {
+        return Err("Audio samples were dropped".into());
+    }
+    let export = root.join("gameplay.rhstate");
+    c.send(Command::Save(SaveTarget::Slot(1)));
+    wait(&c, |s| s.slots[0])?;
+    c.send(Command::LoadSave(SaveTarget::Slot(1)));
+    wait(&c, |s| s.restores > 0)?;
+    let count = c.snapshot().save_count;
+    c.send(Command::Export(export.clone()));
+    wait(&c, |s| s.save_count > count)?;
+    let before = c.snapshot().restores;
+    c.send(Command::Import(export));
+    wait(&c, |s| s.restores > before)?;
+    c.send(Command::PrepareExit);
+    wait(&c, |s| s.exit_ready)?;
+    drop(c);
+    let again = Controller::with_storage(false, root, policy);
+    again.send(Command::LoadProfile(internal, profile));
+    let resumed = wait(&again, |s| s.restores > 0 && !s.loading)?;
+    if resumed.ticks < paused.ticks {
+        return Err("Restart lost emulated progress".into());
+    }
+    if resumed.display != paused.display {
+        return Err("Restart lost display state".into());
+    }
+    println!(
+        "Verified slots, export/import, Save on Exit and fresh-worker full display restoration."
+    );
+    if args.iter().any(|v| v == "--check-reset") {
+        // Only this tool's isolated test device, after verifying its saved continuation.
+        again.send(Command::Pause);
+        let prior = wait(&again, |s| !s.running)?;
+        again.send(Command::Reset);
+        wait(&again, |s| {
+            s.running && s.ticks >= prior.ticks && s.instructions < prior.instructions
+        })?;
+        again.send(Command::Run);
+        let running = wait(&again, |s| s.running && s.ticks > prior.ticks + MASTER_HZ)?;
+        if running.profile != profile {
+            return Err("Reset changed the model".into());
+        }
+        println!("Verified explicit pause, reset and resume on the isolated test device.");
+    }
+    again.send(Command::PrepareExit);
+    wait(&again, |s| s.exit_ready)?;
+    drop(again);
+    if sha256(&fs::read(path).map_err(|e| e.to_string())?) != original_hash {
+        return Err("Original firmware changed".into());
+    }
+    println!(
+        "Verified library persistence, Slot 1, export/import, Save on Exit and fresh-worker autosave resume; original firmware unchanged."
+    );
+    Ok(())
+}

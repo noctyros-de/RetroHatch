@@ -75,6 +75,7 @@ pub(super) fn dialogs(ctx: &egui::Context, state: &mut HelpUi) -> Option<Externa
             .collapsible(false)
             .resizable(false)
             .default_width(400.0)
+            .default_height((DeviceProfile::ALL.len() as f32 + 5.0) * 20.0)
             .max_width((ctx.input(|i| i.content_rect().width()) - 32.0).max(240.0))
             .max_height((ctx.input(|i| i.content_rect().height()) - 64.0).max(200.0))
             .vscroll(true)

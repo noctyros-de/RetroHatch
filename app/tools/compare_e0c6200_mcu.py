@@ -46,7 +46,7 @@ class Recorder:
                 frequency - 32768 / (8, 10, 12, 14, 16, 20, 24, 28)[i]))
 
 
-def load_reference(words, clock=1600000):
+def load_reference(words, clock=1600000, *, mask=None):
     namespace = {}
     for path in (SOUND, CPU):
         tree = ast.parse(path.read_bytes(), filename=str(path))
@@ -56,7 +56,7 @@ def load_reference(words, clock=1600000):
         exec(compile(ast.Module(body=nodes, type_ignores=[]), str(path), "exec"), namespace)
     recorder = Recorder()
     cpu = namespace["E0C6200"](
-        {"rom_path": None, "port_pullup": {"K0": 15, "K1": 15}, "p3_dedicated": 0},
+        {"rom_path": None, "port_pullup": {"K0": 15, "K1": 15}, "p3_dedicated": 0, **(mask or {})},
         clock, recorder)
     return cpu, recorder
 

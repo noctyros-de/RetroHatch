@@ -185,7 +185,10 @@ fn private_library_remembers_unknown_on_model_and_worker_resumes_after_restart()
     let tmp = Temp::new();
     let bytes = image();
     let prepared = inspect_bytes(bytes.clone(), "misleading-P1-name.bin".into()).unwrap();
-    assert_eq!(prepared.candidates, [DeviceProfile::On]);
+    assert_eq!(
+        prepared.candidates,
+        [vec![DeviceProfile::On], DeviceProfile::MEETS.to_vec()].concat()
+    );
     let mut library = Library::open(&tmp.0).unwrap();
     assert!(library.automatic(&prepared).is_none());
     let entry = library
@@ -464,4 +467,68 @@ fn four_u_plus_variants_have_independent_schema_four_saves_and_reject_old_device
         DeviceProfile::parse("tamagotchi-4u-plus-en"),
         Some(DeviceProfile::FourUPlusEnglish)
     );
+}
+
+#[test]
+fn meets_profiles_keep_distinct_saves_and_restore_serialized_timer_history() {
+    let bytes = image();
+    let mut generic = Emulator::from_bytes(&bytes, DeviceProfile::On).unwrap();
+    let arm = on(&mut generic);
+    arm.machine.sys.timers[4].periods_seen = 50;
+    arm.machine.sys.timers[4].pending = true;
+    let legacy = generic.save_state().unwrap();
+    let mut identities = std::collections::HashSet::new();
+    for (i, profile) in DeviceProfile::MEETS.into_iter().enumerate() {
+        assert!(profile.is_tg18() && profile.is_color() && !profile.has_knock());
+        assert_eq!(profile.osc2_hz(), 96_000_000);
+        assert_eq!(profile_code(profile), 19 + i as u8);
+        assert_eq!(DeviceProfile::parse(profile.id()), Some(profile));
+        let fresh = Emulator::from_bytes(&bytes, profile).unwrap();
+        assert!(identities.insert(fresh.identity()));
+        let mut restored = fresh.restored(&legacy).unwrap();
+        assert_eq!(on(&mut restored).machine.sys.timers[4].periods_seen, 50);
+        assert!(on(&mut restored).machine.sys.timers[4].pending);
+        let state = restored.save_state().unwrap();
+        assert_eq!(state[12], profile_code(profile));
+        let other = DeviceProfile::MEETS[(i + 1) % 6];
+        assert!(
+            Emulator::from_bytes(&bytes, other)
+                .unwrap()
+                .restored(&state)
+                .is_err()
+        );
+        let tmp = Temp::new();
+        let saves = crate::host::saves::Saves::new(tmp.0.clone(), SavePolicy::default());
+        let old = saves
+            .root
+            .join("saves")
+            .join(restored.legacy_identity().unwrap());
+        std::fs::create_dir_all(&old).unwrap();
+        std::fs::write(old.join("autosave.rhstate"), &legacy).unwrap();
+        assert_eq!(
+            saves.read_path(&restored, "autosave.rhstate"),
+            old.join("autosave.rhstate")
+        );
+        std::fs::create_dir_all(saves.directory(&restored)).unwrap();
+        std::fs::write(saves.directory(&restored).join("autosave.rhstate"), &state).unwrap();
+        assert_eq!(
+            saves.read_path(&restored, "autosave.rhstate"),
+            saves.directory(&restored).join("autosave.rhstate")
+        );
+        assert_eq!(std::fs::read(old.join("autosave.rhstate")).unwrap(), legacy);
+        let catalog: Vec<_> = crate::host::fingerprints::CATALOG
+            .iter()
+            .filter(|f| f.profile == profile)
+            .collect();
+        assert_eq!(catalog.len(), 1);
+        assert_eq!(catalog[0].sha256.len(), 64);
+        assert_eq!(
+            crate::host::fingerprints::matches(
+                catalog[0].sha256,
+                crate::host::fingerprints::CATALOG
+            )[0]
+            .profile,
+            profile
+        );
+    }
 }

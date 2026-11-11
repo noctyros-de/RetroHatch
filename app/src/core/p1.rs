@@ -24,7 +24,7 @@ impl fmt::Display for RomError {
             ),
             Self::Size(size) => write!(
                 f,
-                "Invalid ROM size: {size} bytes. Expected 12288 bytes for P1/P2 or 16384 bytes for Genjintch/Angel/Morino/Umino, as selected (big-endian 16-bit words). Packed 12-bit dumps are not supported."
+                "Invalid ROM size: {size} bytes. Expected 12288 bytes for P1/P2 or 16384 bytes for Genjintch/Angel/Morino/Umino/Yasashii, as selected (big-endian 16-bit words). Packed 12-bit dumps are not supported."
             ),
             Self::Word { offset, value } => write!(
                 f,

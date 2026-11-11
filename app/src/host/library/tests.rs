@@ -42,7 +42,16 @@ fn detection_uses_verified_hashes_and_never_promotes_filenames_size_or_crc_to_id
         "TamagotchiP1Japanese.bin".into(),
     )
     .unwrap();
-    assert_eq!(p.candidates.len(), 4);
+    assert_eq!(
+        p.candidates,
+        vec![
+            DeviceProfile::Genjintch,
+            DeviceProfile::Angel,
+            DeviceProfile::Morino,
+            DeviceProfile::Umino,
+            DeviceProfile::Yasashii
+        ]
+    );
     assert!(!p.candidates.contains(&DeviceProfile::P1));
     assert!(lib.automatic(&p).is_none());
     let small = inspect_bytes(program(DeviceProfile::P1), "Ocean.bin".into()).unwrap();

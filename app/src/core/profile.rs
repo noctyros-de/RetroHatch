@@ -11,7 +11,14 @@ pub enum DeviceProfile {
     Angel,
     Morino,
     Umino,
+    Yasashii,
     On,
+    MeetsFairy,
+    MeetsMagical,
+    MeetsFantasy,
+    MeetsPastel,
+    MeetsSanrio,
+    MeetsSweets,
     Ps,
     Id,
     IdMelody,
@@ -25,22 +32,30 @@ pub enum DeviceProfile {
     FourUPlusEnglish,
 }
 impl DeviceProfile {
-    pub const CLASSIC: [Self; 6] = [
+    pub const CLASSIC: [Self; 7] = [
         Self::P1,
         Self::P2,
         Self::Genjintch,
         Self::Angel,
         Self::Morino,
         Self::Umino,
+        Self::Yasashii,
     ];
-    pub const ALL: [Self; 18] = [
+    pub const ALL: [Self; 25] = [
         Self::P1,
         Self::P2,
         Self::Genjintch,
         Self::Angel,
         Self::Morino,
         Self::Umino,
+        Self::Yasashii,
         Self::On,
+        Self::MeetsFairy,
+        Self::MeetsMagical,
+        Self::MeetsFantasy,
+        Self::MeetsPastel,
+        Self::MeetsSanrio,
+        Self::MeetsSweets,
         Self::Ps,
         Self::Id,
         Self::IdMelody,
@@ -53,8 +68,30 @@ impl DeviceProfile {
         Self::FourUPlus,
         Self::FourUPlusEnglish,
     ];
+    pub const MEETS: [Self; 6] = [
+        Self::MeetsFairy,
+        Self::MeetsMagical,
+        Self::MeetsFantasy,
+        Self::MeetsPastel,
+        Self::MeetsSanrio,
+        Self::MeetsSweets,
+    ];
+    pub const fn is_meets(self) -> bool {
+        matches!(
+            self,
+            Self::MeetsFairy
+                | Self::MeetsMagical
+                | Self::MeetsFantasy
+                | Self::MeetsPastel
+                | Self::MeetsSanrio
+                | Self::MeetsSweets
+        )
+    }
+    pub const fn is_tg18(self) -> bool {
+        matches!(self, Self::On) || self.is_meets()
+    }
     pub const fn is_color(self) -> bool {
-        self.s1c33_key().is_some() || matches!(self, Self::On)
+        self.s1c33_key().is_some() || self.is_tg18()
     }
     pub const fn s1c33_key(self) -> Option<&'static str> {
         match self {
@@ -81,7 +118,14 @@ impl DeviceProfile {
             Self::Angel => "tamagotchi-angel",
             Self::Morino => "tamagotchi-morino",
             Self::Umino => "tamagotchi-umino",
+            Self::Yasashii => "tamagotchi-yasashii",
             Self::On => "tamagotchi-on-meets",
+            Self::MeetsFairy => "tamagotchi-meets-fairy",
+            Self::MeetsMagical => "tamagotchi-meets-magical",
+            Self::MeetsFantasy => "tamagotchi-meets-fantasy",
+            Self::MeetsPastel => "tamagotchi-meets-pastel",
+            Self::MeetsSanrio => "tamagotchi-meets-sanrio",
+            Self::MeetsSweets => "tamagotchi-meets-sweets",
             Self::Ps => "tamagotchi-ps",
             Self::Id => "tamagotchi-id",
             Self::IdMelody => "tamagotchi-id-melody",
@@ -103,7 +147,14 @@ impl DeviceProfile {
             Self::Angel => "Tamagotchi Angel (Angelgotchi)",
             Self::Morino => "Tamagotchi Morino",
             Self::Umino => "Tamagotchi Umino (Ocean)",
+            Self::Yasashii => "Tamagotchi Yasashii",
             Self::On => "Tamagotchi On / Meets",
+            Self::MeetsFairy => "Tamagotchi Meets Fairy",
+            Self::MeetsMagical => "Tamagotchi Meets Magical",
+            Self::MeetsFantasy => "Tamagotchi Meets Fantasy",
+            Self::MeetsPastel => "Tamagotchi Meets Pastel",
+            Self::MeetsSanrio => "Tamagotchi Meets Sanrio",
+            Self::MeetsSweets => "Tamagotchi Meets Sweets",
             Self::Ps => "Tamagotchi P's",
             Self::Id => "Tamagotchi iD",
             Self::IdMelody => "Tamagotchi iD Lovely Melody",
@@ -121,6 +172,12 @@ impl DeviceProfile {
         match self {
             Self::P1 | Self::P2 => 0x3000,
             Self::On
+            | Self::MeetsFairy
+            | Self::MeetsMagical
+            | Self::MeetsFantasy
+            | Self::MeetsPastel
+            | Self::MeetsSanrio
+            | Self::MeetsSweets
             | Self::Ps
             | Self::Idl
             | Self::IdlEnglish
@@ -129,13 +186,19 @@ impl DeviceProfile {
             | Self::FourUPlus
             | Self::FourUPlusEnglish => 0x80_0000,
             Self::Id | Self::IdMelody | Self::PlusColor | Self::PlusColorHexa => 0x40_0000,
-            Self::Genjintch | Self::Angel | Self::Morino | Self::Umino => 0x4000,
+            Self::Genjintch | Self::Angel | Self::Morino | Self::Umino | Self::Yasashii => 0x4000,
         }
     }
     pub const fn osc2_hz(self) -> u32 {
         match self {
             Self::P1 | Self::P2 => 1_600_000,
-            Self::On => 96_000_000,
+            Self::On
+            | Self::MeetsFairy
+            | Self::MeetsMagical
+            | Self::MeetsFantasy
+            | Self::MeetsPastel
+            | Self::MeetsSanrio
+            | Self::MeetsSweets => 96_000_000,
             Self::FourUPlus | Self::FourUPlusEnglish => 30_000_000,
             Self::PlusColor | Self::PlusColorHexa => 20_000_000,
             Self::Ps
@@ -145,7 +208,9 @@ impl DeviceProfile {
             | Self::IdlEnglish
             | Self::IdlPrincess
             | Self::Idl15 => 18_432_000,
-            Self::Genjintch | Self::Angel | Self::Morino | Self::Umino => 1_060_000,
+            Self::Genjintch | Self::Angel | Self::Morino | Self::Umino | Self::Yasashii => {
+                1_060_000
+            }
         }
     }
     pub fn supports_keep_screen_awake(self) -> bool {
@@ -172,6 +237,13 @@ impl DeviceProfile {
             "angel" | "angelgotchi" | "tamagotchi-angel" => Some(Self::Angel),
             "morino" | "tamagotchi-morino" => Some(Self::Morino),
             "umino" | "ocean" | "tamagotchi-umino" | "tamagotchi-ocean" => Some(Self::Umino),
+            "yasashii" | "tamagotchi-yasashii" => Some(Self::Yasashii),
+            "meets-fairy" | "tamagotchi-meets-fairy" => Some(Self::MeetsFairy),
+            "meets-magical" | "tamagotchi-meets-magical" => Some(Self::MeetsMagical),
+            "meets-fantasy" | "tamagotchi-meets-fantasy" => Some(Self::MeetsFantasy),
+            "meets-pastel" | "tamagotchi-meets-pastel" => Some(Self::MeetsPastel),
+            "meets-sanrio" | "tamagotchi-meets-sanrio" => Some(Self::MeetsSanrio),
+            "meets-sweets" | "tamagotchi-meets-sweets" => Some(Self::MeetsSweets),
             "ps" | "tamagotchi-ps" => Some(Self::Ps),
             "id" | "tamagotchi-id" => Some(Self::Id),
             "on" | "meets" | "tg18" | "tamagotchi-on-meets" => Some(Self::On),
@@ -189,6 +261,7 @@ impl DeviceProfile {
             _ => None,
         }
     }
-    // All six reference profiles use RAM=768, K0/K1 pull-ups=15 and P3 dedicated=0.
-    // These are the existing MCU mask defaults; no other masks are implied supported.
+    // All seven classic reference profiles use RAM=768, K0/K1 pull-ups=15 and P3 dedicated=0.
+    // Yasashii additionally sets all R-port push-pull masks to 15.
+    // Other masks are not implied supported.
 }

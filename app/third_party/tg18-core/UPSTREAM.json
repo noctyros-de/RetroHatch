@@ -18,6 +18,7 @@
     "Library-only Cargo metadata; no CLI or desktop frontend included.",
     "Bounded snapshot decompression and additional peripheral state.",
     "Explicit tone synthesizer state access for host save continuity.",
-    "XOR flash deltas against the required user ROM for RetroHatch saves; original raw snapshot restore remains available."
+    "XOR flash deltas against the required user ROM for RetroHatch saves; original raw snapshot restore remains available.",
+    "Restore serialized timer period/IRQ counters exactly instead of recomputing them, preserving disabled-timer history and pending boundaries."
   ]
 }

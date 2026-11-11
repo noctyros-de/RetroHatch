@@ -28,7 +28,10 @@ See [current audit findings](developer/OPEN_SOURCE_AUDIT.md).
   trademark rights, and its upstream application cannot resolve third-party
   ownership that the upstream author may not hold.
 - The five LCD resource sets cover P1/P2 (shared), Genjintch, Angel, Morino and
-  Umino. No shell, decorative background or complete SVG is embedded in the
+  Umino. Yasashii additionally uses the original 512 matrix coordinates and
+  electrical segment mapping from `TamagotchiYasashii.svg`; its six GPIO LEDs
+  are represented by ordinary host UI circles, without copied LED/shell art.
+  No shell, decorative background or complete SVG is embedded in the
   executable. The original icon silhouettes have **unresolved independent
   provenance**. A repository-level CC0 file does not verify all third-party rights.
 
@@ -42,7 +45,7 @@ This audit does not remove, redraw or relicense these assets.
 
 ## TG18-Emu implementation incorporated under MIT
 
-The On/Meets backend incorporates the Rust library from
+The On/Meets backend (including six dedicated Japanese Meets editions) incorporates the Rust library from
 [oreo-fox/tg18-emu](https://github.com/oreo-fox/tg18-emu), Copyright (c) 2026
 oreo-fox, under MIT. Its ARM926 CPU, bus/peripherals, LCD, timers/RTC,
 signature-based firmware hooks, sound and snapshot/flash logic are preserved

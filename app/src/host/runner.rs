@@ -505,7 +505,7 @@ fn run(
                     let result = match (&mut saves, &device) {
                         (Some(store), Some(d)) => target
                             .filename()
-                            .and_then(|n| store.load(d, store.directory(d).join(n), false)),
+                            .and_then(|n| store.load(d, store.read_path(d, &n), false)),
                         _ => Err("No persistent device is loaded".into()),
                     };
                     if let Err(e) = result {

@@ -23,6 +23,8 @@ pub enum Port {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Io {
     registers: [u8; 0x7F],
+    // Immutable board mask, reconstructed from the profile when restoring states.
+    r_pushpull: bool,
     low: [u8; 11],
     high: [u8; 11],
     latch: [u8; 11],
@@ -45,6 +47,7 @@ impl Default for Io {
         registers[0x73] = 8;
         Self {
             registers,
+            r_pushpull: false,
             low: [0; 11],
             high: [0; 11],
             latch: [0; 11],
@@ -62,6 +65,12 @@ impl Default for Io {
 }
 
 impl Io {
+    pub(crate) fn set_r_pushpull(&mut self, enabled: bool) {
+        self.r_pushpull = enabled;
+    }
+    pub(crate) fn output_latch(&self, port: Port) -> u8 {
+        self.latch[port as usize]
+    }
     pub fn supports(address: u16) -> bool {
         matches!(address, 0xF00..=0xF05 | 0xF10..=0xF15 | 0xF20..=0xF27
             | 0xF30..=0xF31 | 0xF40..=0xF42 | 0xF50..=0xF54
@@ -77,7 +86,7 @@ impl Io {
         let i = port as usize;
         let (direction, pullup, pushpull) = match i {
             0..=1 => (0, 15, 0),
-            2..=6 => (15, 0, 0),
+            2..=6 => (15, 0, if self.r_pushpull { 15 } else { 0 }),
             _ => {
                 let bit = 1 << (i - 7);
                 (

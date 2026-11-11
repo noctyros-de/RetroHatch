@@ -11,7 +11,14 @@ pub fn masks(p: DeviceProfile) -> &'static Masks {
         DeviceProfile::Angel => &crate::lcd_masks::ANGEL,
         DeviceProfile::Morino => &crate::lcd_masks::MORINO,
         DeviceProfile::Umino => &crate::lcd_masks::UMINO,
+        DeviceProfile::Yasashii => unreachable!("Yasashii has no fixed LCD icons"),
         DeviceProfile::On
+        | DeviceProfile::MeetsFairy
+        | DeviceProfile::MeetsMagical
+        | DeviceProfile::MeetsFantasy
+        | DeviceProfile::MeetsPastel
+        | DeviceProfile::MeetsSanrio
+        | DeviceProfile::MeetsSweets
         | DeviceProfile::Ps
         | DeviceProfile::Id
         | DeviceProfile::IdMelody
@@ -88,6 +95,9 @@ pub fn paint(
     on: eframe::egui::Color32,
     off: eframe::egui::Color32,
 ) {
+    if profile == DeviceProfile::Yasashii {
+        return;
+    }
     use eframe::egui::{self, Color32, ColorImage, Rect, Vec2};
     use std::sync::Arc;
     let ppp = ui.ctx().pixels_per_point();
@@ -99,7 +109,14 @@ pub fn paint(
             DeviceProfile::Angel => 2,
             DeviceProfile::Morino => 3,
             DeviceProfile::Umino => 4,
+            DeviceProfile::Yasashii => unreachable!("Yasashii has no fixed LCD icons"),
             DeviceProfile::On
+            | DeviceProfile::MeetsFairy
+            | DeviceProfile::MeetsMagical
+            | DeviceProfile::MeetsFantasy
+            | DeviceProfile::MeetsPastel
+            | DeviceProfile::MeetsSanrio
+            | DeviceProfile::MeetsSweets
             | DeviceProfile::Ps
             | DeviceProfile::Id
             | DeviceProfile::IdMelody
@@ -196,6 +213,10 @@ pub fn native_lcd(
             crate::morino_lcd_geometry::LCD_SIZE,
             crate::morino_lcd_geometry::PIXELS,
         ),
+        DeviceProfile::Yasashii => (
+            crate::yasashii_lcd_geometry::LCD_SIZE,
+            crate::yasashii_lcd_geometry::PIXELS,
+        ),
         DeviceProfile::Umino => (
             crate::umino_lcd_geometry::LCD_SIZE,
             crate::umino_lcd_geometry::PIXELS,
@@ -219,6 +240,9 @@ pub fn native_lcd(
                 rgb[(py * w + px) * 3..(py * w + px) * 3 + 3].copy_from_slice(&color);
             }
         }
+    }
+    if profile == DeviceProfile::Yasashii {
+        return Image::new(w, h, rgb);
     }
     let source = masks(profile);
     for icon in &source.icons {
@@ -258,8 +282,13 @@ mod screenshot_tests {
             on.nibbles = [15; 160];
             let a = super::native_lcd(p, &off).unwrap();
             let b = super::native_lcd(p, &on).unwrap();
-            assert_eq!((a.width, a.height), (352, 329));
-            assert_eq!(a.rgb.len(), 352 * 329 * 3);
+            let size = if p == DeviceProfile::Yasashii {
+                (351, 175)
+            } else {
+                (352, 329)
+            };
+            assert_eq!((a.width, a.height), size);
+            assert_eq!(a.rgb.len(), size.0 * size.1 * 3);
             assert_ne!(a.rgb, b.rgb);
             assert!(b.rgb.chunks_exact(3).any(|v| v == [45, 56, 41]));
         }
