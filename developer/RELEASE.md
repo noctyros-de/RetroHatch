@@ -5,8 +5,9 @@
 
 RetroHatch is a public project at https://github.com/noctyros-de/RetroHatch.
 Local build/packaging commands never publish or change repository settings.
-The tag workflow publishes only when a maintainer pushes a matching `v*` tag;
-that action needs explicit authorization. Public source, local development
+The workflow publishes automatically after an authorized push to main changes
+the Cargo version. No manual tag, release description or archive upload is
+needed. Public source, local development
 builds and published binary releases are distinct. See the current
 [audit](OPEN_SOURCE_AUDIT.md) for observed release assets and unresolved rights
 questions; an existing public release is not evidence of complete clearance.
@@ -31,8 +32,8 @@ questions; an existing public release is not evidence of complete clearance.
   target, features, build command and artifact hashes. Re-run the license
   inventory when Cargo.lock, features, target or toolchain changes.
 - Obtain the owner's release authorization after reviewing the final artifacts
-  and unresolved-risk report, before pushing the version tag. A tag push starts
-  publication automatically; local packaging does not.
+  and unresolved-risk report, before pushing a version change to main. That push starts
+  publication automatically; a local version bump/package does not.
 
 The incorporated tamaemu translation has a specific open question: clarify the
 upstream README's no-charge instruction against its GPLv3 declaration, and
@@ -117,35 +118,43 @@ changing the toolchain or build location. Remapping addresses a privacy issue,
 not the outstanding asset/licensing release gates. See the
 [rustc path-remapping documentation](https://doc.rust-lang.org/rustc/command-line-arguments.html#--remap-path-prefix-remap-source-names-in-output).
 
-## Windows tag workflow
+## Automatic Windows releases
 
-`.github/workflows/windows-release.yml` runs only when a `v*` tag is pushed.
-The tag must equal `v` plus the current version in `app/Cargo.toml`.
-It uses Windows Server 2025, the audited Rust 1.99.1 MSVC toolchain, formatting,
-locked check/test/build commands, license-inventory checks and packaging tests.
-The actual build command is `cargo build --release --locked` from `app/`, with
-the wrapper's path-remapping and static-C-runtime flags configured first.
+Push the reviewed application version and synchronized Cargo.lock/license
+inventories to main. Version detection reads app/Cargo.toml and the preceding
+push commit. Unchanged versions and already published releases skip the build.
+An optional main-branch workflow_dispatch retries an unreleased version; normal
+releases need no manual action beyond the authorized version commit/push.
 
-The packager uses an explicit source allowlist, creates a matching source ZIP
-with `cargo vendor --locked` dependencies and an offline Cargo configuration,
-and checks that the Windows EXE has no non-system DLL imports. An independent
-offline release build of the extracted source must succeed before publication.
-The binary ZIP includes the EXE, README, GPL text, copyright and third-party
-notices, public developer guides and `SOURCE.md` with the exact revision and
-build information. Fonts and LCD masks are embedded in the executable; external
-ROMs, settings and saves are not needed to launch it and are never packaged.
+The Windows job checks formatting, locked Cargo check/tests, an optimized
+statically linked/path-remapped EXE, complete license evidence and regression
+checks. It packages the versioned Windows ZIP, notices and exact matching source
+with vendored dependencies/hashes. An independent extracted offline source build
+must succeed before any tag or draft is created. The final helper rechecks
+checksums, required licenses/build identity and absence of firmware/user-state
+files in the Windows package.
 
-The final step uses the runner's GitHub CLI with the workflow token's
-`contents: write` permission. It verifies that the tag already exists, uploads
-both ZIPs and `SHA256SUMS.txt`, then publishes the release. A version containing
-`-` is marked as a prerelease. Published releases are not overwritten. If an
-upload fails, inspect any remaining draft before retrying the workflow. No
-personal access token is required. Actions must be enabled and repository or
-organization policy must permit the workflow token to write release contents.
+Only then does the repository GITHUB_TOKEN (contents: write) create the version
+tag at the verified SHA, create a draft, upload checked files and publish it.
+No personal access token or manual GitHub release configuration is required.
+Every version below 1.0.0, plus explicit suffixed prerelease versions, is marked
+as a prerelease. Notes group actual Git commit subjects since the last reachable
+published release and include .github/release-limitations.md automatically.
+Keep that standing limitations document accurate when functionality changes.
 
-The repository is already public. The workflow does not change visibility or
-Git remotes. Review the specific rights/source/notice questions above before
-authorizing a release tag. There is no separate approval prompt after its push.
+Tags are never moved, releases never duplicated and published files never
+replaced. Each version has serialized publication. A matching auto-created draft
+can resume missing uploads; a foreign draft, conflicting tag or mismatched
+existing asset stops safely for review. Failed validation never publishes.
+Rerun a failed Actions run instead of recreating v0.2.0 or any other old tag.
+Any token/authentication/ruleset denial is an explicit workflow failure. This
+source configuration does not alter repository visibility, remotes or settings.
+
+License notice hashes use canonical LF text, so Windows CRLF checkouts preserve
+the same evidence; substantive changes still invalidate checks. Before a version
+commit run the existing audit generator, its --check mode and
+app/tools/test_audit_licenses.py. CI verifies the committed evidence strictly;
+it never silently rewrites/accepts an unaudited inventory.
 
 ## Local package verification
 
@@ -198,7 +207,8 @@ and ProductVersion strings retain the Cargo SemVer, while fixed numerical
 fields map MAJOR.MINOR.PATCH to MAJOR,MINOR,PATCH,0 (16-bit components).
 Non-Windows targets skip RC compilation. No new dependency is required.
 
-The packager reads the Cargo manifest and requires a matching version tag.
+The packager reads Cargo and requires the matching version label; the actual
+tag is created only after the workflow validates both archives/source build.
 Windows archives are named `RetroHatch-vX.Y.Z-Windows.zip`; the executable
 inside remains `RetroHatch.exe`. Source archives keep the matching version.
 The workflow upload path and README use the same naming. Packaging only runs

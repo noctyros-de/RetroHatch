@@ -4,34 +4,57 @@ name: Windows release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
-concurrency:
-  group: windows-release-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
+  plan:
+    name: Detect a new application version
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    outputs:
+      publish: ${{ steps.version.outputs.publish }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - name: Check out the exact main commit and history
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Plan an immutable version release
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python -B app/tools/auto_release.py plan
+
   release:
-    name: Build, verify and publish Windows ZIP
+    name: Verify, build and publish Windows distribution
+    needs: plan
+    if: needs.plan.outputs.publish == 'true'
     runs-on: windows-2025
     timeout-minutes: 60
+    concurrency:
+      group: retrohatch-release-${{ needs.plan.outputs.tag }}
+      cancel-in-progress: false
     permissions:
       contents: write
     defaults:
       run:
         shell: pwsh
     env:
-      RELEASE_TAG: ${{ github.ref_name }}
+      RELEASE_TAG: ${{ needs.plan.outputs.tag }}
       CARGO_TERM_COLOR: always
       PYTHONDONTWRITEBYTECODE: '1'
     steps:
-      - name: Check out the tagged source
+      - name: Check out the exact verified candidate and history
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Install the audited Rust toolchain
@@ -40,14 +63,6 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Rust installation failed' }
           rustup default 1.99.1
           if ($LASTEXITCODE -ne 0) { throw 'Rust selection failed' }
-
-      - name: Validate the version tag
-        working-directory: app
-        run: |
-          $metadata = cargo metadata --no-deps --format-version 1 --locked | ConvertFrom-Json
-          if ($LASTEXITCODE -ne 0) { throw 'Cannot read package version' }
-          $version = ($metadata.packages | Where-Object name -eq 'retrohatch').version
-          if ($env:RELEASE_TAG -cne "v$version") { throw 'The tag must match the Cargo.toml package version exactly' }
 
       - name: Check, test and build the Windows executable
         working-directory: app
@@ -61,10 +76,14 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Rust tests failed' }
           cargo build --release --locked
           if ($LASTEXITCODE -ne 0) { throw 'Windows release build failed' }
+          python -B tools/test_audit_licenses.py
+          if ($LASTEXITCODE -ne 0) { throw 'License inventory regression tests failed' }
           python -B tools/audit_licenses.py --check
           if ($LASTEXITCODE -ne 0) { throw 'Dependency notice inventory is stale' }
           python -B tools/test_package_release.py
           if ($LASTEXITCODE -ne 0) { throw 'Packaging tests failed' }
+          python -B tools/test_auto_release.py
+          if ($LASTEXITCODE -ne 0) { throw 'Automatic release tests failed' }
 
       - name: Package Windows and matching source archives
         run: |
@@ -84,19 +103,9 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw 'Independent source build failed' }
           } finally { Pop-Location }
 
-      - name: Publish the verified release assets
+      - name: Tag and publish verified files with automatic release notes
         env:
           GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
         run: |
-          $assets = @(
-            "dist/RetroHatch-$env:RELEASE_TAG-Windows.zip",
-            "dist/RetroHatch-$env:RELEASE_TAG-source.zip",
-            'dist/SHA256SUMS.txt'
-          )
-          $arguments = @('release', 'create', $env:RELEASE_TAG, '--verify-tag',
-            '--title', "RetroHatch $env:RELEASE_TAG", '--notes-file', 'dist/RELEASE_NOTES.md')
-          if ($env:RELEASE_TAG.Contains('-')) { $arguments += '--prerelease' }
-          # The CLI uploads assets into a draft before publishing. Failed uploads do not publish it.
-          & gh @arguments @assets
-          if ($LASTEXITCODE -ne 0) { throw 'Release publication failed; inspect any remaining draft before retrying' }
+          python -B app/tools/auto_release.py publish --dist dist
+          if ($LASTEXITCODE -ne 0) { throw 'Safe release publication failed; inspect the run diagnostics' }

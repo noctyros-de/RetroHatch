@@ -1,0 +1,4 @@
+- ROMs and copyrighted firmware are not included; supply appropriately licensed images.
+- TamaOtch and unexposed color-device configurations are not supported. On/Meets validation does not cover every regional edition.
+- Bluetooth, infrared and DLC are unavailable. Video recordings currently contain no game audio.
+- Windows builds are unsigned. Review the included THIRD_PARTY_LICENSES.md for outstanding asset/provenance questions; automated checks are not legal clearance.

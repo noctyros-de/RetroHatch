@@ -85,6 +85,9 @@ def generate():
         if package["name"] == "profiling":
             for kind in ("MIT", "APACHE"):
                 notices[f"LICENSE-{kind} [published profiling VCS revision 8271551172eb6fa4cba47369aedd93790c623df9]"] = (ROOT/f"LICENSES/profiling-LICENSE-{kind}.txt").read_text(encoding="utf-8")
+        # Git's Windows checkout may convert local license files to CRLF. Hash
+        # and render the same complete LF text on every host; retain all wording.
+        notices = {name: text.replace("\r\n", "\n") for name, text in notices.items()}
         if not notices:
             missing.append(package["name"])
         record = {"name": package["name"], "version": package["version"],

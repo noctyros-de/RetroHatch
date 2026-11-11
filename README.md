@@ -42,9 +42,8 @@ Gameplay links will be added here when available.
 ## Installation
 
 1. Open [GitHub Releases](https://github.com/noctyros-de/RetroHatch/releases).
-2. Download the Windows asset. The currently published **RetroHatch** release
-   provides **`RetroHatch.exe`** directly. Future packaged releases can provide
-   **`RetroHatch-v<version>-Windows.zip`** instead.
+2. Download **`RetroHatch-v<version>-Windows.zip`** when available. Older
+   releases may provide **`RetroHatch.exe`** directly instead.
 3. If you download a ZIP, extract the entire archive.
 4. Double-click **`RetroHatch.exe`**.
 
