@@ -149,6 +149,14 @@ impl Machine {
         out.u8(match self.memory.profile.key {
             "ps" => 7,
             "id" => 8,
+            "id-melody" => 9,
+            "idl" => 10,
+            "idl-en" => 11,
+            "idl-princess" => 12,
+            "idl-15" => 13,
+            "plus-color" => 14,
+            "plus-color-hexa" => 15,
+
             _ => return Err("Save support is unavailable for this S1C33 hardware profile".into()),
         });
         out.bytes(&hash);
@@ -176,6 +184,14 @@ impl Machine {
         let profile = match r.u8()? {
             7 => HardwareProfile::find("ps").unwrap(),
             8 => HardwareProfile::find("id").unwrap(),
+            9 => HardwareProfile::find("id-melody").unwrap(),
+            10 => HardwareProfile::find("idl").unwrap(),
+            11 => HardwareProfile::find("idl-en").unwrap(),
+            12 => HardwareProfile::find("idl-princess").unwrap(),
+            13 => HardwareProfile::find("idl-15").unwrap(),
+            14 => HardwareProfile::find("plus-color").unwrap(),
+            15 => HardwareProfile::find("plus-color-hexa").unwrap(),
+
             _ => return Err("Unsupported S1C33 save profile".into()),
         };
         require(r.array::<32>()? == hash, "Save belongs to a different ROM")?;

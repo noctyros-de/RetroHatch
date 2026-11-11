@@ -8,7 +8,6 @@ pub(super) struct Captures {
     pub pending: Option<Kind>,
     rx: Option<mpsc::Receiver<Result<PathBuf, String>>>,
     deadline: Option<Instant>,
-    notice: Option<(PathBuf, Instant)>,
 }
 impl Captures {
     pub fn busy(&self) -> bool {
@@ -39,7 +38,6 @@ impl RetroHatchApp {
             self.local_error = Some("Please wait for the current screenshot to finish".into());
             return;
         }
-        self.captures.notice = None;
         self.captures.pending = Some(kind);
     }
     pub(super) fn poll_screenshots(&mut self, ctx: &egui::Context, s: &Snapshot) {
@@ -49,10 +47,11 @@ impl RetroHatchApp {
                     self.captures.rx = None;
                     self.captures.deadline = None;
                     match result {
-                        Ok(path) => {
-                            self.captures.notice =
-                                Some((path, Instant::now() + Duration::from_secs(6)))
-                        }
+                        Ok(path) => self.show_status(
+                            "Screenshot saved",
+                            Some(path.display().to_string()),
+                            Duration::from_secs(6),
+                        ),
                         Err(error) => self.local_error = Some(error),
                     }
                 }
@@ -138,23 +137,24 @@ impl RetroHatchApp {
             }
         }
     }
-    pub(super) fn screenshot_notice(&mut self, ctx: &egui::Context) {
-        let Some((path, until)) = &self.captures.notice else {
-            return;
-        };
-        if Instant::now() >= *until {
-            self.captures.notice = None;
-            return;
-        }
-        egui::Area::new(egui::Id::unique("screenshot-confirmation"))
-            .anchor(egui::Align2::RIGHT_BOTTOM, egui::vec2(-12., -12.))
-            .show(ctx, |ui| {
-                egui::Frame::popup(ui.style()).show(ui, |ui| {
-                    ui.set_max_width(310.);
-                    ui.strong("Screenshot saved");
-                    ui.small(path.file_name().unwrap_or_default().to_string_lossy())
-                        .on_hover_text(path.display().to_string());
-                });
-            });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn screenshot_completion_uses_shared_status_and_keeps_failures_in_error_dialogs() {
+        let mut app = RetroHatchApp::create(false);
+        let (tx, rx) = mpsc::channel();
+        app.captures.rx = Some(rx);
+        tx.send(Ok(PathBuf::from("capture.png"))).unwrap();
+        app.poll_screenshots(&egui::Context::default(), &Snapshot::default());
+        assert_eq!(app.last_message.as_deref(), Some("Screenshot saved"));
+        assert_eq!(app.message_details.as_deref(), Some("capture.png"));
+        let (tx, rx) = mpsc::channel();
+        app.captures.rx = Some(rx);
+        tx.send(Err("Cannot write screenshot".into())).unwrap();
+        app.poll_screenshots(&egui::Context::default(), &Snapshot::default());
+        assert_eq!(app.local_error.as_deref(), Some("Cannot write screenshot"));
     }
 }

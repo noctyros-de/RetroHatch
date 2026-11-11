@@ -33,13 +33,16 @@ fn main() -> Result<(), String> {
     if m.memory.profile != profile {
         return Err("Checkpoint uses a different hardware profile".into());
     }
-    m.keep_screen_awake = args.iter().any(|v| v == "--keep-screen-awake");
+    m.keep_screen_awake = profile.has_sleep_flag && args.iter().any(|v| v == "--keep-screen-awake");
+    // Cycle-mode comparisons use the selected board oscillator; elapsed-time mode
+    // follows CMU changes through Machine::seconds(). Neither changes emulation speed.
+    let cycle_hz = profile.osc3_hz as f64;
     let wall = Instant::now();
     let elapsed_time = args.iter().any(|v| v == "--emulated-time");
     let mut next = if elapsed_time {
         m.seconds().floor() + 1.0
     } else {
-        (m.cpu.cycles / 18_432_000) as f64 + 1.0
+        (m.cpu.cycles / profile.osc3_hz as u64) as f64 + 1.0
     };
     let mut edges: Vec<(f64, u8)> = args
         .get(4)
@@ -59,13 +62,13 @@ fn main() -> Result<(), String> {
     while if elapsed_time {
         m.seconds() < end
     } else {
-        m.cpu.cycles < (end * 18432000.0) as u64
+        m.cpu.cycles < (end * cycle_hz) as u64
     } {
         if let Some(&(at, mask)) = edges.last() {
             if if elapsed_time {
                 m.seconds() >= at
             } else {
-                m.cpu.cycles >= (at * 18_432_000.0) as u64
+                m.cpu.cycles >= (at * cycle_hz) as u64
             } {
                 m.buttons(mask);
                 edges.pop();
@@ -86,12 +89,13 @@ fn main() -> Result<(), String> {
         if if elapsed_time {
             m.seconds() >= next
         } else {
-            m.cpu.cycles >= (next * 18432000.0) as u64
+            m.cpu.cycles >= (next * cycle_hz) as u64
         } {
             let p = m.memory.peripherals.as_ref().unwrap();
             println!(
-                "t={:.3} wall={:.3} pc={:08x} cycles={} hz={:.0} irq={} lcd={} pixels={} colors={} tone_events={} flash={}/{}",
+                "t={:.3} checkpoint={} wall={:.3} pc={:08x} cycles={} hz={:.0} irq={} lcd={} pixels={} colors={} tone_events={} flash={}/{}",
                 m.seconds(),
+                next as u64,
                 wall.elapsed().as_secs_f64(),
                 m.cpu.pc,
                 m.cpu.cycles,
@@ -124,6 +128,17 @@ fn main() -> Result<(), String> {
                 hash(&p.io),
                 hash(&gram)
             );
+            if args.iter().any(|v| v == "--power-trace") {
+                println!(
+                    "power asleep={} sleep_flag={} fd8={} efc={} melody={} rtc={}",
+                    !m.memory.lcd.sleep_out || !m.memory.lcd.display_on,
+                    m.memory.a0ram[(profile.sleep_flag - profile.a0ram_base) as usize],
+                    m.memory.a0ram[0xfd8],
+                    m.memory.a0ram[0xefc],
+                    m.memory.a0ram[0x11e0],
+                    p.rtc_seconds
+                );
+            }
             pcm.extend(m.drain_audio());
             next += 1.0;
         }

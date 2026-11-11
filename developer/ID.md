@@ -48,18 +48,10 @@ ROM files are never overwritten. Upstream .sav/.tamasave import remains unavaila
 - Subjective loudspeaker quality, every minigame and a complete device lifetime
   are not certified by these measurements. IR, DLC and connectivity are unavailable.
 
-## Unidentified February image and future models
+## iD-family extension
 
-The user-provided file named as February 2010 iD has 8 MiB, no valid reset vector
-at offset zero and a vector 0x024CA942 at offset 0x400000. It does not fit the
-reference original-iD board. The owner confirmed its model provenance is unsure.
-It executes in the pre-existing 8-MiB diagnostic map, but that does not establish
-its model or iD compatibility. It is not fingerprinted or advertised as iD;
-selecting iD must reject it rather than truncate it or guess a hardware variant.
-A correctly attributed dump or independent board evidence is required to claim
-that revision. The original file remains unchanged and outside Git.
-
-Lovely Melody and the iD L/English/15th Anniversary/Princess Spacy editions remain
-unsupported application profiles. Their reference configuration data can reuse
-the core later, but each requires verified images, board-specific state identities
-and actual boot/input/display/audio/save testing before exposure.
+See [ID_FAMILY.md](ID_FAMILY.md) for the five additional profiles, verified
+Japanese archive/English short-image adapters and the still-unidentified
+February-named 8-MiB image. The original iD board and profile code 8 remain
+unchanged. That 8-MiB image is not an original-iD revision merely because its
+filename says so; selecting the 4-MiB iD profile correctly rejects it.

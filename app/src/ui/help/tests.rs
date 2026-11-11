@@ -151,11 +151,19 @@ fn about_metadata_profile_list_and_links_render_from_the_current_implementation(
         position(&out, profile.name());
     }
     position(&out, "Color devices (limited support)");
-    assert!(
-        texts(&out)
-            .iter()
-            .any(|(text, _)| text.contains("working use is reported by the project owner"))
-    );
+    let mut allowed = vec![
+        "Supported Tamagotchis",
+        "Classic devices",
+        "Color devices",
+        "Color devices (limited support)",
+    ];
+    allowed.extend(DeviceProfile::ALL.into_iter().map(DeviceProfile::name));
+    for (text, _) in texts(&out) {
+        assert!(
+            allowed.contains(&text.as_str()),
+            "Unexpected device-selection explanation: {text}"
+        );
+    }
     assert!(
         !texts(&out)
             .iter()

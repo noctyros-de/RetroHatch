@@ -16,7 +16,6 @@ pub(super) struct RecordingUi {
     next: Option<Instant>,
     window: Option<usize>,
     lcd: Option<(DeviceProfile, [u8; 160], Image)>,
-    notice: Option<(String, Instant)>,
 }
 impl RecordingUi {
     pub fn busy(&self) -> bool {
@@ -134,17 +133,12 @@ impl RetroHatchApp {
             self.recording.lcd = None;
             match result {
                 Ok(done) => {
-                    self.recording.notice = Some((
-                        format!(
-                            "Recording saved: {}\n{:.1}s, {} frames; {} repeated, {} input frames dropped.\nVideo only (no audio).",
-                            done.path.display(),
-                            done.elapsed.as_secs_f64(),
-                            done.frames,
-                            done.repeated,
-                            done.dropped
-                        ),
-                        Instant::now() + Duration::from_secs(12),
-                    ))
+                    self.show_status(
+                        "Recording saved",
+                        Some(format!("{}\n{:.1}s, {} frames; {} repeated, {} input frames dropped.\nVideo only (no audio).",
+                            done.path.display(), done.elapsed.as_secs_f64(), done.frames, done.repeated, done.dropped)),
+                        Duration::from_secs(12),
+                    );
                 }
                 Err(e) => self.local_error = Some(e),
             }
@@ -175,7 +169,6 @@ impl RetroHatchApp {
                     self.recording.frames = Some(rx);
                     self.recording.frame_tx = Some(tx);
                     self.recording.next = None;
-                    self.recording.notice = None;
                 }
                 Err(e) => self.local_error = Some(e),
             }
@@ -276,41 +269,20 @@ impl RetroHatchApp {
             }
         }
     }
-    pub(super) fn recording_notice(&self, ctx: &egui::Context) {
-        if let Some(session) = &self.recording.session {
+    pub(super) fn recording_status(&self) -> Option<String> {
+        self.recording.session.as_ref().map(|session| {
             let seconds = session.started.elapsed().as_secs();
-            egui::Area::new(egui::Id::unique("recording-status"))
-                .anchor(egui::Align2::LEFT_BOTTOM, egui::vec2(10., -10.))
-                .show(ctx, |ui| {
-                    egui::Frame::popup(ui.style()).show(ui, |ui| {
-                        ui.colored_label(
-                            egui::Color32::from_rgb(170, 35, 45),
-                            format!(
-                                "{}  {:02}:{:02}",
-                                if session.stopping {
-                                    "Finalizing"
-                                } else {
-                                    "REC"
-                                },
-                                seconds / 60,
-                                seconds % 60
-                            ),
-                        );
-                        ui.small("MP4 video only - no audio");
-                    });
-                });
-        } else if let Some((notice, until)) = &self.recording.notice {
-            if Instant::now() < *until {
-                egui::Area::new(egui::Id::unique("recording-completed"))
-                    .anchor(egui::Align2::LEFT_BOTTOM, egui::vec2(10., -10.))
-                    .show(ctx, |ui| {
-                        egui::Frame::popup(ui.style()).show(ui, |ui| {
-                            ui.set_max_width(390.);
-                            ui.small(notice);
-                        });
-                    });
-            }
-        }
+            format!(
+                "{} {:02}:{:02}",
+                if session.stopping {
+                    "Finalizing"
+                } else {
+                    "REC"
+                },
+                seconds / 60,
+                seconds % 60
+            )
+        })
     }
 }
 #[cfg(test)]

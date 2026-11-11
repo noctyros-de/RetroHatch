@@ -166,7 +166,7 @@ impl Emulator {
     }
     pub fn set_keep_screen_awake(&mut self, enabled: bool) {
         if let Backend::Ps(d) = &mut self.backend {
-            d.keep_screen_awake = enabled;
+            d.keep_screen_awake = enabled && self.profile.supports_keep_screen_awake();
         }
     }
     pub fn sleeping(&self) -> bool {

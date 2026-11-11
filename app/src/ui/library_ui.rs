@@ -135,7 +135,15 @@ impl RetroHatchApp {
                     self.library.failed = false;
                     self.library.repair = None;
                     self.library.choice = None;
+                    let imported = !self.library.entries.iter().any(|e| e.key == entry.key);
                     self.library.entries = entries;
+                    if imported {
+                        self.show_status(
+                            format!("Imported {}", entry.key.profile.name()),
+                            None,
+                            Duration::from_secs(4),
+                        );
+                    }
                     self.selected_profile = entry.key.profile;
                     self.release_inputs();
                     let loads = self.controller.snapshot().loads;
@@ -169,8 +177,7 @@ impl RetroHatchApp {
                     self.library.failed = false;
                     self.library.repair = None;
                     self.library.entries = entries;
-                    self.last_message = Some(message);
-                    self.message_until = Instant::now() + Duration::from_secs(4);
+                    self.show_status(message, None, Duration::from_secs(4));
                 }
                 Event::Failed {
                     message,
@@ -275,7 +282,7 @@ impl RetroHatchApp {
             let mut confirm = false;
             let mut cancel = false;
             egui::Window::new(if edit.keep{"Add model association"}else{"Edit model association"}).collapsible(false).resizable(false).default_width(340.).max_width((ctx.input(|i|i.content_rect().width())-32.).max(280.)).max_height((ctx.input(|i|i.content_rect().height())-72.).max(200.)).vscroll(true).show(ctx,|ui|{
-    ui.label(edit.entry.key.profile.name());egui::ComboBox::from_label("Model").selected_text(edit.profile.name()).show_ui(ui,|ui|{for p in DeviceProfile::ALL{if p.rom_bytes()==edit.entry.size{ui.selectable_value(&mut edit.profile,p,p.name());}}});
+    ui.label(edit.entry.key.profile.name());egui::ComboBox::from_label("Model").selected_text(edit.profile.name()).show_ui(ui,|ui|{for p in DeviceProfile::ALL{if p.s1c33_key().map(|key| retrohatch::core::s1c33::machine::source_size_matches(retrohatch::core::s1c33::profile::HardwareProfile::find(key).unwrap(), &edit.entry.key.hash, edit.entry.size)).unwrap_or(p.rom_bytes()==edit.entry.size){ui.selectable_value(&mut edit.profile,p,p.name());}}});
     ui.weak("Model changes apply on the next start. Previous-profile saves stay intact and are not converted. Add an association to keep both models for shared ROM content.");
     ui.horizontal(|ui|{confirm=ui.button("Save association").clicked();cancel=ui.button("Cancel").clicked();});
    });

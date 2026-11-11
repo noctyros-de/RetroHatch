@@ -362,3 +362,114 @@ fn unknown_p1_sized_content_requires_confirmation_and_remembers_p2_without_save_
         .join(format!("{}-{}", DeviceProfile::P1.id(), p.hash));
     assert_ne!(p1_path, p2_path);
 }
+
+#[test]
+fn ambiguous_eight_mib_images_offer_all_supported_compatible_boards() {
+    let p = crate::core::s1c33::profile::HardwareProfile::find("idl").unwrap();
+    let mut bytes = vec![255; p.rom_size as usize];
+    let offset = (p.ttbr_reset - p.rom_base) as usize;
+    bytes[offset..offset + 4].copy_from_slice(&(p.rom_base + 0x1000).to_le_bytes());
+    let prepared = inspect_bytes(bytes, "iD-but-not-evidence.bin".into()).unwrap();
+    assert_eq!(
+        prepared.candidates,
+        vec![
+            DeviceProfile::Ps,
+            DeviceProfile::Idl,
+            DeviceProfile::IdlEnglish,
+            DeviceProfile::IdlPrincess,
+            DeviceProfile::Idl15
+        ]
+    );
+    let root = Temp::new();
+    let mut library = Library::open(&root.0).unwrap();
+    assert!(library.automatic(&prepared).is_none());
+    let entry = library
+        .import(&prepared, assignment(DeviceProfile::Idl))
+        .unwrap();
+    let reopened = Library::open(&root.0).unwrap();
+    assert_eq!(
+        reopened.automatic(&prepared).unwrap().profile,
+        DeviceProfile::Idl
+    );
+    assert_eq!(
+        std::fs::read(reopened.verified_path(&entry.key).unwrap()).unwrap(),
+        prepared.bytes
+    );
+    let unknown_february = "172062124f784082f7aa9c0e44aa40b64d11602336cef1c477d327041925323f";
+    assert!(fingerprints::matches(unknown_february, fingerprints::CATALOG).is_empty());
+}
+#[test]
+fn new_verified_identity_conflicts_prompt_without_removing_older_associations() {
+    let root = Temp::new();
+    let mut lib = Library::open(&root.0).unwrap();
+    let hash = fingerprints::CATALOG
+        .iter()
+        .find(|f| f.profile == DeviceProfile::IdlPrincess)
+        .unwrap()
+        .sha256
+        .to_owned();
+    lib.records.push(Entry {
+        key: Key {
+            hash: hash.clone(),
+            profile: DeviceProfile::Ps,
+        },
+        variant: String::new(),
+        evidence: "Previously user-confirmed model".into(),
+        filename: format!("{hash}.bin"),
+        source_name: String::new(),
+        size: 8388608,
+        imported: 0,
+        listed: true,
+        problem: None,
+    });
+    let p = Prepared {
+        hash,
+        bytes: Vec::new(),
+        source_name: String::new(),
+        candidates: vec![DeviceProfile::Ps, DeviceProfile::IdlPrincess],
+    };
+    assert!(lib.automatic(&p).is_none());
+    assert_eq!(
+        lib.suggestions(&p)
+            .iter()
+            .map(|a| a.profile)
+            .collect::<Vec<_>>(),
+        vec![DeviceProfile::Ps, DeviceProfile::IdlPrincess]
+    );
+    assert_eq!(lib.records.len(), 1);
+}
+#[test]
+fn verified_short_import_metadata_survives_index_restart_without_relaxing_other_images() {
+    for f in fingerprints::CATALOG
+        .iter()
+        .filter(|f| matches!(f.profile, DeviceProfile::Idl | DeviceProfile::IdlEnglish))
+    {
+        let size = match f.sha256 {
+            "3395f83033596c03a9844ce98fcde6f1e3b4cf7a3fe9e2acb12410bc09a7fa05" => 6039638,
+            "59c067987804a6c2a200e0a98b95b332c452c1b8b11daa4fd80cd2cbaff319ff" => 8387584,
+            _ => 8386560,
+        };
+        let hash = f.sha256.to_owned();
+        let mut e = Entry {
+            key: Key {
+                hash: hash.clone(),
+                profile: f.profile,
+            },
+            variant: f.variant.into(),
+            evidence: "Verified".into(),
+            filename: format!("{hash}.bin"),
+            source_name: "Synthetic metadata".into(),
+            size,
+            imported: 1,
+            listed: true,
+            problem: None,
+        };
+        assert_eq!(
+            Library::decode(&Library::encode(&[e.clone()])).unwrap(),
+            vec![e.clone()]
+        );
+        e.key.hash = "00".repeat(32);
+        e.filename = format!("{}.bin", e.key.hash);
+        assert!(Library::decode(&Library::encode(&[e])).is_err());
+    }
+}

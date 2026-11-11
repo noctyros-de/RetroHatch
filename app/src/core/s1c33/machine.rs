@@ -19,8 +19,9 @@ pub struct Machine {
 }
 impl Machine {
     pub fn new(image: &[u8], profile: HardwareProfile) -> Result<Self, String> {
-        validate_image(image, profile)?;
-        let mut memory = Memory::new(profile, image).map_err(|e| e.to_string())?;
+        let image = super::rom::decode(image, profile)?;
+        validate_image(&image, profile)?;
+        let mut memory = Memory::new(profile, &image).map_err(|e| e.to_string())?;
         memory.peripherals = Some(Peripherals::new(profile));
         let mut cpu = Cpu::default();
         cpu.reset(&mut memory, profile.ttbr_reset)
@@ -98,6 +99,7 @@ impl Machine {
     }
 }
 pub fn validate_image(image: &[u8], p: HardwareProfile) -> Result<(), String> {
+    let image = super::rom::decode(image, p)?;
     if image.len() != p.rom_size as usize {
         return Err(format!(
             "{} requires an unpacked {}-byte NOR image",
@@ -110,4 +112,9 @@ pub fn validate_image(image: &[u8], p: HardwareProfile) -> Result<(), String> {
         return Err("Invalid S1C33 reset vector; select the matching hardware profile and an unpacked NOR dump".into());
     }
     Ok(())
+}
+
+/// Validate persisted source length without accepting arbitrary truncated firmware.
+pub fn source_size_matches(p: HardwareProfile, hash: &str, size: usize) -> bool {
+    super::rom::source_size_matches(p, hash, size)
 }

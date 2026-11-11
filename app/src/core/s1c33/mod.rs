@@ -8,6 +8,7 @@ pub mod machine;
 pub mod memory;
 pub mod peripherals;
 pub mod profile;
+mod rom;
 pub mod state;
 #[cfg(test)]
 mod tests;

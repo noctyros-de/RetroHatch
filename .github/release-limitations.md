@@ -1,5 +1,7 @@
 - ROMs and copyrighted firmware are not included; supply appropriately licensed images.
 - TamaOtch and unexposed color-device configurations are not supported. On/Meets validation does not cover every regional edition.
-- Original iD validation covers the Japanese 4-MiB October 2009 image; the unidentified 8-MiB image is not verified as iD. Later iD editions remain unsupported.
+- Original iD validation covers the Japanese 4-MiB October 2009 image; the unidentified 8-MiB image is not verified as iD. Lovely Melody and the listed iD L editions have focused local firmware validation, not exhaustive lifetime/minigame coverage. Special editions do not expose the optional keep-awake override.
 - Bluetooth, infrared and DLC are unavailable. Video recordings currently contain no game audio.
 - Windows builds are unsigned. Review the included THIRD_PARTY_LICENSES.md for outstanding asset/provenance questions; automated checks are not legal clearance.
+- Japanese iD L archive and English short-dump compatibility is restricted to exact tested hashes; missing original trailing bytes are not recovered. Infrared/DLC and upstream save conversion remain unavailable.
+- Plus Color/Hexagontchi validation covers four local images and focused hatching/menu sequences, not every game or full lifetime. The optional keep-awake override is disabled for Plus Color because early revisions have an unverified RAM marker; normal standby/wakeup works.

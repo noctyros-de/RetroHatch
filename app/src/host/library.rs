@@ -72,13 +72,11 @@ pub fn inspect_bytes(bytes: Vec<u8>, source_name: String) -> Result<Prepared, St
     super::pending_devices::ensure_supported(&hash)?;
     let candidates: Vec<_> = DeviceProfile::ALL
         .into_iter()
-        .filter(|p| {
-            p.rom_bytes() == bytes.len() && super::emulator::validate_rom(&bytes, *p).is_ok()
-        })
+        .filter(|p| super::emulator::validate_rom(&bytes, *p).is_ok())
         .collect();
     let p = *candidates
         .first()
-        .ok_or("Unsupported ROM size. Import an unpacked 12,288/16,384-byte classic image or a supported unpacked color NOR image.")?;
+        .ok_or("Unsupported ROM format or size. Import a supported classic image, color NOR image or explicitly verified archive.")?;
     super::emulator::validate_rom(&bytes, p)?;
     Ok(Prepared {
         hash,
@@ -230,7 +228,12 @@ impl Library {
                 return Err("Invalid or duplicate library identity".into());
             }
             let size = f[6].parse::<usize>().map_err(|_| "Invalid ROM length")?;
-            if size != profile.rom_bytes() {
+            let valid_size = profile
+                .s1c33_key()
+                .and_then(crate::core::s1c33::profile::HardwareProfile::find)
+                .map(|p| crate::core::s1c33::machine::source_size_matches(p, &key.hash, size))
+                .unwrap_or(size == profile.rom_bytes());
+            if !valid_size {
                 return Err("Library profile and ROM length disagree".into());
             }
             let variant = decode_text(f[2])?;
@@ -295,13 +298,20 @@ impl Library {
         out
     }
     pub fn suggestions(&self, p: &Prepared) -> Vec<Assignment> {
-        let remembered: Vec<_> = self
+        let mut remembered: Vec<_> = self
             .records
             .iter()
             .filter(|e| e.key.hash == p.hash)
             .map(Entry::assignment)
             .collect();
         if !remembered.is_empty() {
+            // A new verified identity must not silently retain an old guessed model.
+            // Keep both choices and all existing saves when evidence conflicts.
+            for known in fingerprints::matches(&p.hash, fingerprints::CATALOG) {
+                if !remembered.iter().any(|a| a.profile == known.profile) {
+                    remembered.push(known);
+                }
+            }
             remembered
         } else {
             let choices = fingerprints::matches(&p.hash, fingerprints::CATALOG);

@@ -76,3 +76,16 @@ P's appends profile code 7 and uses backend save schema 3. Classic schema 1 and
 ARM schema 2 retain their formats and identities. Coherent machine capture occurs
 on the emulation worker; explicit encoding, hashing and atomic writes occur on
 the ordered save worker. See [S1C33.md](S1C33.md) for verification and limits.
+
+The iD family uses this same S1C33 owner and hardware implementation: iD code 8,
+Lovely Melody 9, iD L 10, English 11, Princess Spacy 12 and 15th Anniversary 13.
+Only verified import adapters normalize source data in memory; identity hashes
+always cover original imported bytes. Normalized mutable NOR is fully stored in
+schema 3. Existing schema and profile numbers are stable. See [ID_FAMILY.md](ID_FAMILY.md).
+
+Plus Color and Hexagontchi reuse their existing S1C33 board data, including a
+20-MHz oscillator, reversed retail/debug-strap polarity, idle GPIO IR and top-boot
+NOR. Codes 14/15 append model identities without altering existing saves. Model
+capabilities gate the optional keep-awake policy; it is disabled for Plus Color
+because early firmware revisions do not use the reference's 0x368 RAM marker.
+Normal power management is always firmware-controlled. See [PLUS_COLOR.md](PLUS_COLOR.md).

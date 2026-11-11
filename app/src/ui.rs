@@ -6,6 +6,7 @@ mod help;
 mod library_ui;
 mod recording;
 mod screenshots;
+mod status;
 use crate::lcd_geometry::{ICON_BITS, ICON_SPANS, LCD_SIZE, PIXELS};
 use eframe::egui;
 use library_ui::LibraryUi;
@@ -64,6 +65,8 @@ pub struct RetroHatchApp {
     last_restore: u64,
     waiting_load: Option<(PathBuf, DeviceProfile, u64)>,
     last_message: Option<String>,
+    message_details: Option<String>,
+    last_save_message: Option<String>,
     message_until: Instant,
     message_serial: u64,
 }
@@ -83,7 +86,7 @@ impl RetroHatchApp {
                     }
                 } else {
                     app.local_error = Some(
-                        "Use --profile p1, p2, genjintch, angel, morino, umino, on, ps or id followed by a local ROM path.".into(),
+                        "Use --profile p1, p2, genjintch, angel, morino, umino, on, ps, id, id-melody, idl, idl-en, idl-princess, idl-15, plus-color or plus-color-hexa followed by a local ROM path.".into(),
                     );
                 }
             } else {
@@ -184,6 +187,8 @@ impl RetroHatchApp {
             last_restore: 0,
             waiting_load: None,
             last_message: None,
+            message_details: None,
+            last_save_message: None,
             message_until: Instant::now(),
             message_serial: 0,
         };
@@ -450,7 +455,7 @@ impl RetroHatchApp {
                     ui.spacing_mut().slider_rail_height=8.0;
                     ui.add(egui::Slider::new(&mut self.settings.volume,0..=100).text("Volume").suffix("%").trailing_fill(true));
                 });
-                ui.add_enabled_ui(s.profile.s1c33_key().is_some(),|ui| {
+                ui.add_enabled_ui(s.profile.supports_keep_screen_awake(),|ui| {
                     ui.checkbox(&mut self.settings.keep_screen_awake,"Keep screen awake")
                       .on_hover_text("S1C33 devices: prevent the firmware display timeout. Disable for normal sleep behavior. If already asleep, press A, B or C once to wake.");
                 });
@@ -475,13 +480,6 @@ impl RetroHatchApp {
                     help::Action::Supported => self.help.supported = true,
                     help::Action::About => self.help.about = true,
                     help::Action::Link(link) => self.open_help_link(link),
-                }
-            }
-            if s.saving || s.loading || self.library.busy() {
-                ui.spinner();
-            } else if Instant::now() < self.message_until && ui.available_width() > 140.0 {
-                if let Some(message) = &self.last_message {
-                    ui.small(message);
                 }
             }
         });
@@ -554,11 +552,7 @@ impl RetroHatchApp {
             }
             self.dirty = Some(Instant::now());
         }
-        if s.save_message != self.last_message || self.message_serial != s.save_count + s.restores {
-            self.message_serial = s.save_count + s.restores;
-            self.last_message = s.save_message.clone();
-            self.message_until = Instant::now() + Duration::from_secs(4);
-        }
+        self.sync_save_notice(&s);
         if self.library.close_after
             && !self.library.busy()
             && (self.waiting_load.is_none() || s.error.is_some())
@@ -648,6 +642,7 @@ impl RetroHatchApp {
             }
         }
         self.menus(ui, &s);
+        self.status_footer(ui, &s);
         let mut pointer = [false; 4];
         let (_, accent, ink) = palette(self.settings.theme);
         egui::CentralPanel::default()
@@ -665,9 +660,9 @@ impl RetroHatchApp {
                     };
                     // 100% retains the responsive normal layout; larger scales can scroll.
                     let reserve = if s.loaded && profile.has_knock() {
-                        192.0
+                        170.0
                     } else {
-                        130.0
+                        108.0
                     };
                     let aspect = if profile.is_color() {
                         1.0
@@ -681,9 +676,9 @@ impl RetroHatchApp {
                     ui.set_min_width((desired_width + 40.).max(ui.available_width()));
                     ui.vertical_centered(|ui| {
                         let reserve = if s.loaded && s.profile.has_knock() {
-                            192.0
+                            170.0
                         } else {
-                            130.0
+                            108.0
                         };
                         let color = (if s.loaded {
                             s.profile
@@ -755,8 +750,6 @@ impl RetroHatchApp {
                                     Some(Instant::now() + Duration::from_millis(50));
                             }
                         }
-                        ui.add_space(8.0);
-                        ui.weak("Left = A    Down = B    Right = C");
                     });
                 });
             });
@@ -794,8 +787,6 @@ impl RetroHatchApp {
                 self.dirty = Some(Instant::now());
             }
         }
-        self.screenshot_notice(&ctx);
-        self.recording_notice(&ctx);
         ctx.request_repaint_after(Duration::from_millis(16));
     }
     fn paint_color_lcd(&mut self, ui: &mut egui::Ui, s: &Snapshot, width: f32) -> egui::Response {
@@ -1099,7 +1090,16 @@ fn paint_profile_lcd(
             use crate::morino_lcd_geometry as g;
             (g::LCD_SIZE, g::PIXELS, g::ICON_BITS, g::ICON_SPANS)
         }
-        DeviceProfile::On | DeviceProfile::Ps | DeviceProfile::Id => {
+        DeviceProfile::On
+        | DeviceProfile::Ps
+        | DeviceProfile::Id
+        | DeviceProfile::IdMelody
+        | DeviceProfile::Idl
+        | DeviceProfile::IdlEnglish
+        | DeviceProfile::IdlPrincess
+        | DeviceProfile::Idl15
+        | DeviceProfile::PlusColor
+        | DeviceProfile::PlusColorHexa => {
             unreachable!("On uses the color framebuffer renderer")
         }
         DeviceProfile::Umino => {
@@ -1871,7 +1871,16 @@ mod tests {
                 DeviceProfile::Angel => crate::angel_lcd_geometry::ICON_BITS,
                 DeviceProfile::Morino => g::ICON_BITS,
                 DeviceProfile::Umino => crate::umino_lcd_geometry::ICON_BITS,
-                DeviceProfile::On | DeviceProfile::Ps | DeviceProfile::Id => {
+                DeviceProfile::On
+                | DeviceProfile::Ps
+                | DeviceProfile::Id
+                | DeviceProfile::IdMelody
+                | DeviceProfile::Idl
+                | DeviceProfile::IdlEnglish
+                | DeviceProfile::IdlPrincess
+                | DeviceProfile::Idl15
+                | DeviceProfile::PlusColor
+                | DeviceProfile::PlusColorHexa => {
                     unreachable!("Classic geometry test")
                 }
             };
@@ -1948,6 +1957,26 @@ mod tests {
     #[test]
     fn unidentified_id_import_uses_existing_color_display_library_and_controls() {
         unidentified_rom_workflow(DeviceProfile::Id);
+    }
+
+    #[test]
+    fn id_family_models_use_the_existing_import_library_and_color_ui() {
+        for profile in [
+            DeviceProfile::IdMelody,
+            DeviceProfile::Idl,
+            DeviceProfile::IdlEnglish,
+            DeviceProfile::IdlPrincess,
+            DeviceProfile::Idl15,
+        ] {
+            unidentified_rom_workflow(profile);
+        }
+    }
+
+    #[test]
+    fn plus_color_and_hexagontchi_reuse_the_compact_library_and_color_ui() {
+        for profile in [DeviceProfile::PlusColor, DeviceProfile::PlusColorHexa] {
+            unidentified_rom_workflow(profile);
+        }
     }
 
     fn unidentified_rom_workflow(profile: DeviceProfile) {

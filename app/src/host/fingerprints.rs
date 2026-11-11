@@ -16,6 +16,56 @@ pub struct Fingerprint<'a> {
 }
 pub const CATALOG: &[Fingerprint<'static>] = &[
     Fingerprint {
+        sha256: "ed97fa667fe7389cbd4fb10e6eaec8927cdab2ddd88ee8fb4e3c1aa145b57128",
+        profile: DeviceProfile::PlusColor,
+        variant: "Japanese",
+    },
+    Fingerprint {
+        sha256: "6e209efc22e23f1f41ee54e7874648b24d255c9a2869d9bd6f22efa252b89e61",
+        profile: DeviceProfile::PlusColor,
+        variant: "Japanese",
+    },
+    Fingerprint {
+        sha256: "4a56271ae1e13e291b34306fb42d84904f89630266ff40ed8e05781d3f753200",
+        profile: DeviceProfile::PlusColor,
+        variant: "Japanese",
+    },
+    Fingerprint {
+        sha256: "5f6ea377bc66ac89ae20f76a1f06fea383fa122a33e4b00a9df20867a79b3bb2",
+        profile: DeviceProfile::PlusColorHexa,
+        variant: "Japanese",
+    },
+    Fingerprint {
+        sha256: "1ffc2595d36e951ef9ff5e00fad75c12a76004d2bd41eb6f692123afebc86bb7",
+        profile: DeviceProfile::IdMelody,
+        variant: "Japanese",
+    },
+    Fingerprint {
+        sha256: "3395f83033596c03a9844ce98fcde6f1e3b4cf7a3fe9e2acb12410bc09a7fa05",
+        profile: DeviceProfile::Idl,
+        variant: "Japanese",
+    },
+    Fingerprint {
+        sha256: "40639648dafd133ed350635819d1bb724ddfde4bc076c81580180a42c17e4caf",
+        profile: DeviceProfile::IdlEnglish,
+        variant: "English",
+    },
+    Fingerprint {
+        sha256: "ffdbac6bf19ef303814c38c4cb6235052ab60b53952de3b4031d693f30589fed",
+        profile: DeviceProfile::IdlPrincess,
+        variant: "Japanese",
+    },
+    Fingerprint {
+        sha256: "1ab67c17de301185f8c0b76f62e2b4d60d0b678a61b88edb5dcfe4cd7ed520b1",
+        profile: DeviceProfile::Idl15,
+        variant: "Japanese",
+    },
+    Fingerprint {
+        sha256: "59c067987804a6c2a200e0a98b95b332c452c1b8b11daa4fd80cd2cbaff319ff",
+        profile: DeviceProfile::Idl,
+        variant: "Japanese",
+    },
+    Fingerprint {
         sha256: "1f8202c77f952524fec841e978b142bcb6c627225b1e761f00058c2be6901d48",
         profile: DeviceProfile::Id,
         variant: "Japanese, October 2009",

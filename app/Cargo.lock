@@ -1504,9 +1504,10 @@ dependencies = [
 
 [[package]]
 name = "retrohatch"
-version = "0.3.0"
+version = "0.5.0"
 dependencies = [
  "eframe",
+ "flate2",
  "tg18-core",
  "windows-sys 0.61.2",
 ]

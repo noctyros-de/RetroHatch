@@ -288,7 +288,15 @@ fn id_library_profile_and_saves_are_distinct_from_ps_and_other_firmware() {
     image[..4].copy_from_slice(&0xc01000u32.to_le_bytes());
     image[0x1000..0x1004].copy_from_slice(&[0x11, 0x60, 0xff, 0x1e]);
     let prepared = inspect_bytes(image.clone(), "misleading-Ps-name.bin".into()).unwrap();
-    assert_eq!(prepared.candidates, [DeviceProfile::Id]);
+    assert_eq!(
+        prepared.candidates,
+        [
+            DeviceProfile::Id,
+            DeviceProfile::IdMelody,
+            DeviceProfile::PlusColor,
+            DeviceProfile::PlusColorHexa
+        ]
+    );
     let mut library = Library::open(&temp.0).unwrap();
     assert!(library.automatic(&prepared).is_none());
     let entry = library
@@ -337,4 +345,96 @@ fn id_library_profile_and_saves_are_distinct_from_ps_and_other_firmware() {
     assert_eq!(machine.memory.peripherals.as_ref().unwrap().buttons, 0);
     assert_eq!(profile_code(DeviceProfile::Ps), 7);
     assert_eq!(profile_code(DeviceProfile::Id), 8);
+}
+
+#[test]
+fn idl_models_share_execution_but_never_save_identity_or_awake_overrides() {
+    let mut image = vec![255; DeviceProfile::Idl.rom_bytes()];
+    image[0x400000..0x400004].copy_from_slice(&0x2401000u32.to_le_bytes());
+    image[0x401000..0x401004].copy_from_slice(&[0x11, 0x60, 0xff, 0x1e]);
+    let jp = Emulator::from_bytes(&image, DeviceProfile::Idl).unwrap();
+    let saved = jp.save_state().unwrap();
+    let mut en = Emulator::from_bytes(&image, DeviceProfile::IdlEnglish).unwrap();
+    assert_ne!(jp.identity(), en.identity());
+    let before = en.save_state().unwrap();
+    assert!(en.restored(&saved).is_err());
+    assert_eq!(en.save_state().unwrap(), before);
+    en.set_keep_screen_awake(true);
+    let Backend::Ps(m) = &en.backend else {
+        unreachable!()
+    };
+    assert!(m.keep_screen_awake);
+    let mut princess = Emulator::from_bytes(&image, DeviceProfile::IdlPrincess).unwrap();
+    princess.set_keep_screen_awake(true);
+    let Backend::Ps(m) = &princess.backend else {
+        unreachable!()
+    };
+    assert!(!m.keep_screen_awake);
+}
+
+#[test]
+fn plus_color_imports_require_evidence_and_isolate_profile_and_revision_saves() {
+    let mut image = vec![255; DeviceProfile::PlusColor.rom_bytes()];
+    image[..4].copy_from_slice(&0xc01000u32.to_le_bytes());
+    image[0x1000..0x1004].copy_from_slice(&[0x11, 0x60, 0xff, 0x1e]);
+    let prepared = inspect_bytes(image.clone(), "P's-or-iD-is-not-evidence.bin".into()).unwrap();
+    assert_eq!(
+        prepared.candidates,
+        vec![
+            DeviceProfile::Id,
+            DeviceProfile::IdMelody,
+            DeviceProfile::PlusColor,
+            DeviceProfile::PlusColorHexa
+        ]
+    );
+    let temp = Temp::new();
+    let mut lib = Library::open(&temp.0).unwrap();
+    assert!(lib.automatic(&prepared).is_none());
+    let entry = lib
+        .import(
+            &prepared,
+            Assignment {
+                profile: DeviceProfile::PlusColor,
+                variant: "Synthetic".into(),
+                evidence: "Explicit confirmation".into(),
+            },
+        )
+        .unwrap();
+    assert_eq!(
+        Library::open(&temp.0)
+            .unwrap()
+            .automatic(&prepared)
+            .unwrap()
+            .profile,
+        DeviceProfile::PlusColor
+    );
+    assert!(lib.verified_path(&entry.key).is_ok());
+    let mut color = Emulator::from_bytes(&image, DeviceProfile::PlusColor).unwrap();
+    let mut hexa = Emulator::from_bytes(&image, DeviceProfile::PlusColorHexa).unwrap();
+    color.set_keep_screen_awake(true);
+    hexa.set_keep_screen_awake(true);
+    let Backend::Ps(ordinary) = &color.backend else {
+        unreachable!()
+    };
+    let Backend::Ps(special) = &hexa.backend else {
+        unreachable!()
+    };
+    assert!(
+        !ordinary.keep_screen_awake,
+        "Early Plus Color marker is unverified"
+    );
+    assert!(
+        special.keep_screen_awake,
+        "Verified Hexagontchi marker at zero is valid"
+    );
+    assert_ne!(color.identity(), hexa.identity());
+    let state = color.save_state().unwrap();
+    let before = hexa.save_state().unwrap();
+    assert!(hexa.restored(&state).is_err());
+    assert_eq!(hexa.save_state().unwrap(), before);
+    image[0x2000] ^= 1;
+    let revision = Emulator::from_bytes(&image, DeviceProfile::PlusColor).unwrap();
+    assert_ne!(color.identity(), revision.identity());
+    assert!(revision.restored(&state).is_err());
+    assert!(Emulator::from_bytes(&image, DeviceProfile::Ps).is_err());
 }

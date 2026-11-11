@@ -70,10 +70,14 @@ pub(super) fn open_link(
 pub(super) fn dialogs(ctx: &egui::Context, state: &mut HelpUi) -> Option<ExternalLink> {
     let mut link = None;
     if state.supported {
-        egui::Window::new("Supported Tamagotchis").open(&mut state.supported)
-            .collapsible(false).resizable(false).default_width(400.0)
+        egui::Window::new("Supported Tamagotchis")
+            .open(&mut state.supported)
+            .collapsible(false)
+            .resizable(false)
+            .default_width(400.0)
             .max_width((ctx.input(|i| i.content_rect().width()) - 32.0).max(240.0))
-            .max_height((ctx.input(|i| i.content_rect().height()) - 64.0).max(200.0)).vscroll(true)
+            .max_height((ctx.input(|i| i.content_rect().height()) - 64.0).max(200.0))
+            .vscroll(true)
             .show(ctx, |ui| {
                 ui.strong("Classic devices");
                 for profile in DeviceProfile::ALL.into_iter().filter(|p| !p.is_color()) {
@@ -82,16 +86,20 @@ pub(super) fn dialogs(ctx: &egui::Context, state: &mut HelpUi) -> Option<Externa
                 if DeviceProfile::ALL.iter().any(|p| p.is_color()) {
                     ui.separator();
                     ui.strong("Color devices");
-                    ui.label(DeviceProfile::Ps.name());
-                    ui.label(DeviceProfile::Id.name());
-                    ui.weak("iD: original Japanese 4-MiB firmware. Unidentified 8-MiB images are not verified as iD. Infrared and DLC are unavailable.");
-                    ui.weak("P's: local firmware boot, controls and saves verified. Infrared and DLC are unavailable.");
-                    ui.separator();
-                    ui.strong("Color devices (limited support)");
-                    for profile in DeviceProfile::ALL.into_iter().filter(|p| *p==DeviceProfile::On) {
+                    for profile in DeviceProfile::ALL
+                        .into_iter()
+                        .filter(|p| p.is_color() && *p != DeviceProfile::On)
+                    {
                         ui.label(profile.name());
                     }
-                    ui.weak("On/Meets is integrated; working use is reported by the project owner. Individual variants are not all independently verified. Bluetooth and infrared are unavailable.");
+                    ui.separator();
+                    ui.strong("Color devices (limited support)");
+                    for profile in DeviceProfile::ALL
+                        .into_iter()
+                        .filter(|p| *p == DeviceProfile::On)
+                    {
+                        ui.label(profile.name());
+                    }
                 }
             });
     }

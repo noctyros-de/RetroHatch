@@ -288,7 +288,7 @@ fn unsupported_coprocessor_operations_are_explicit_instead_of_reference_noops() 
 
 #[test]
 fn hardware_maps_follow_source_including_four_kib_dstram_and_zero_sleep_address() {
-    assert_eq!(PROFILES.len(), 8);
+    assert_eq!(PROFILES.len(), 11);
     for (index, profile) in PROFILES.iter().enumerate() {
         assert_eq!(
             profile.dstram_size, 4096,
@@ -494,6 +494,145 @@ fn original_id_profile_preserves_gpio_rtc_lcd_and_full_state() {
     assert_eq!(machine.cpu.pc, profile.rom_base + 0x1000);
     assert_eq!(machine.memory.flash(), flash);
     assert!(Machine::new(&vec![255; 0x800000], profile).is_err());
-    assert!(crate::core::profile::DeviceProfile::parse("idl").is_none());
-    assert!(crate::core::profile::DeviceProfile::parse("id-melody").is_none());
+    assert_eq!(
+        crate::core::profile::DeviceProfile::parse("idl"),
+        Some(crate::core::profile::DeviceProfile::Idl)
+    );
+    assert_eq!(
+        crate::core::profile::DeviceProfile::parse("id-melody"),
+        Some(crate::core::profile::DeviceProfile::IdMelody)
+    );
+}
+
+#[test]
+fn id_family_profiles_keep_distinct_save_ids_and_shared_board_behavior() {
+    use super::machine::Machine;
+    use crate::core::profile::DeviceProfile;
+    let family = [
+        (DeviceProfile::Id, 8),
+        (DeviceProfile::IdMelody, 9),
+        (DeviceProfile::Idl, 10),
+        (DeviceProfile::IdlEnglish, 11),
+        (DeviceProfile::IdlPrincess, 12),
+        (DeviceProfile::Idl15, 13),
+    ];
+    for (device, code) in family {
+        let profile = HardwareProfile::find(device.s1c33_key().unwrap()).unwrap();
+        assert_eq!(DeviceProfile::parse(device.id()), Some(device));
+        assert_eq!(device.rom_bytes(), profile.rom_size as usize);
+        assert_eq!(
+            (profile.osc3_hz, profile.lcd_cmd_addr, profile.lcd_data_addr),
+            (18432000, 0x600000, 0x600001)
+        );
+        let mut bytes = vec![255; profile.rom_size as usize];
+        let reset = (profile.ttbr_reset - profile.rom_base) as usize;
+        bytes[reset..reset + 4].copy_from_slice(&(profile.rom_base + 0x1000).to_le_bytes());
+        bytes[0x1000..0x1004].copy_from_slice(&[0x11, 0x60, 0xff, 0x1e]);
+        let mut machine = Machine::new(&bytes, profile).unwrap();
+        machine.buttons(1);
+        machine.buttons(0);
+        machine.memory.lcd.write_command(0x11);
+        machine.memory.lcd.write_command(0x29);
+        machine.memory.lcd.gram[0] = 0xf800;
+        for _ in 0..300 {
+            machine.step().unwrap();
+        }
+        let hash = crate::core::state::sha256(&bytes);
+        let state = machine.save_state(hash).unwrap();
+        assert_eq!(state[12], code);
+        let mut restored = Machine::restored(&state, hash).unwrap();
+        assert_eq!(restored.memory.profile, profile);
+        assert_eq!(restored.rgb().len(), 128 * 128 * 3);
+        assert_eq!(restored.save_state(hash).unwrap(), state);
+        for _ in 0..300 {
+            machine.step().unwrap();
+            restored.step().unwrap();
+        }
+        assert_eq!(
+            restored.save_state(hash).unwrap(),
+            machine.save_state(hash).unwrap()
+        );
+        assert!(Machine::restored(&state, [91; 32]).is_err());
+        assert_eq!(device.supports_keep_screen_awake(), profile.has_sleep_flag);
+    }
+}
+
+#[test]
+fn plus_color_boards_preserve_retail_gpio_clock_flash_and_complete_states() {
+    use super::{machine::Machine, peripherals::Peripherals};
+    use crate::core::{profile::DeviceProfile, state::sha256};
+    for (device, code, strap, sleep) in [
+        (DeviceProfile::PlusColor, 14, 0, 0x368),
+        (DeviceProfile::PlusColorHexa, 15, 0x40, 0),
+    ] {
+        let profile = HardwareProfile::find(device.s1c33_key().unwrap()).unwrap();
+        assert_eq!(DeviceProfile::parse(device.id()), Some(device));
+        assert_eq!(profile.osc3_hz, 20_000_000);
+        assert_eq!(device.osc2_hz(), 20_000_000);
+        assert_eq!(
+            (profile.rom_base, profile.ttbr_reset, profile.rom_size),
+            (0xc00000, 0xc00000, 0x400000)
+        );
+        assert!(profile.flash_top_boot && profile.ir_gpio && profile.has_sleep_flag);
+        assert_eq!((profile.ir_gpio_tx_bit, profile.ir_gpio_rx_bit), (3, 5));
+        assert_eq!(profile.sleep_flag, sleep);
+        assert!(!device.has_knock());
+        let mut p = Peripherals::new(profile);
+        assert_eq!(p.read8(0x300380, profile), 7 | 0x20 | strap);
+        p.write8(0x300260, 3, profile);
+        p.write8(0x300270, 7, profile);
+        for (mask, vector) in [(1, 16), (2, 17), (4, 18)] {
+            p.buttons(mask);
+            assert_eq!(p.read8(0x300380, profile), (7 ^ mask) | 0x20 | strap);
+            assert_eq!(p.pending, vector);
+            p.write8(0x300280, mask, profile);
+            p.buttons(0);
+        }
+        p.tick(20_000_000, profile);
+        assert_eq!(p.rtc_seconds, 1);
+        p.write8(0x301b24, 0x96, profile);
+        p.write32(0x301b08, 0x100, profile);
+        assert_eq!(p.mclk, 10_000_000.0);
+        p.tick(10_000_000, profile);
+        assert_eq!(p.rtc_seconds, 2);
+        p.write32(0x301b08, 4, profile);
+        assert_eq!(p.mclk, 32768.0);
+        p.tick(32768, profile);
+        assert_eq!(p.rtc_seconds, 3);
+        let mut image = vec![255; profile.rom_size as usize];
+        image[..4].copy_from_slice(&0xc01000u32.to_le_bytes());
+        image[0x1000..0x1004].copy_from_slice(&[0x11, 0x60, 0xff, 0x1e]);
+        let mut m = Machine::new(&image, profile).unwrap();
+        for value in [0xaa, 0x55, 0xa0] {
+            m.memory.write8(profile.rom_base, value).unwrap();
+        }
+        m.memory.write8(profile.rom_base + 0x3fe010, 0x5a).unwrap();
+        assert_eq!(m.memory.flash()[0x3fe010], 0x5a);
+        // Complete the real NOR busy/status reads before fetching code from NOR.
+        for _ in 0..4 {
+            m.memory.read8(profile.rom_base + 0x3fe010).unwrap();
+        }
+        for _ in 0..100 {
+            m.step().unwrap();
+        }
+        let hash = sha256(&image);
+        let state = m.save_state(hash).unwrap();
+        assert_eq!(state[12], code);
+        let mut restored = Machine::restored(&state, hash).unwrap();
+        assert_eq!(restored.save_state(hash).unwrap(), state);
+        for _ in 0..100 {
+            m.step().unwrap();
+            restored.step().unwrap();
+        }
+        assert_eq!(
+            m.save_state(hash).unwrap(),
+            restored.save_state(hash).unwrap()
+        );
+        assert!(Machine::restored(&state, [1; 32]).is_err());
+        let flash = m.memory.flash().to_vec();
+        m.reset().unwrap();
+        assert_eq!(m.cpu.pc, 0xc01000);
+        assert_eq!(m.memory.flash(), flash);
+        assert_eq!(m.memory.peripherals.as_ref().unwrap().mclk, 20_000_000.0);
+    }
 }

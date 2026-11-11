@@ -111,3 +111,11 @@ cargo test --locked
   firmware is required for Cargo tests. Do not remove cases to reduce file size.
 - Layout/documentation changes alone do not require an application version bump.
 - Do not commit, push, tag or release a workspace migration without authorization.
+
+## Compact device selection and action feedback
+
+Device selection menus show category headings, model names and selection only.
+Keep implementation notes, verification status and technical limitations in
+project documentation. Show technical warnings in the application only when
+directly relevant to the user's current action. Temporary status feedback belongs
+in the fixed footer, never in the menu bar or over the LCD/device controls.

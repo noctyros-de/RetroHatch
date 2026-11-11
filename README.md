@@ -68,7 +68,14 @@ in the [public-project audit](developer/OPEN_SOURCE_AUDIT.md).
 | Tamagotchi Angel (Angelgotchi) | Dedicated LCD, buttons and tap sensor; local firmware/reference validation |
 | Tamagotchi Morino | Dedicated LCD, buttons and sensor; local firmware/reference validation |
 | Tamagotchi Umino (Ocean) | Dedicated LCD, buttons and tap sensor; local firmware/reference validation |
+| Tamagotchi Plus Color | Three distinct local 4-MiB images: boot, hatching, menus, buttons, audio, standby/RTC, real-time pacing and full saves validated |
+| Tamagotchi Plus Color Hexagontchi | Dedicated profile on the shared S1C33 core; local firmware boot, hatching, distinctive LCD/content, buttons, audio and full saves validated |
 | Tamagotchi iD | Original Japanese October 2009 4-MiB firmware: native S1C33, color LCD, input, audio and save/resume validated; unidentified 8-MiB images are not verified as iD |
+| Tamagotchi iD Lovely Melody | Dedicated 4-MiB profile; local firmware boot, heart-themed LCD, inputs, PCM, sleep/wake and full saves validated |
+| Tamagotchi iD L | Japanese firmware: boot, LCD, menus, inputs, PCM and full saves validated; one exact verified archive import is accepted |
+| Tamagotchi iD L English | English firmware: boot, LCD, inputs, PCM and full saves validated; one exact verified short dump is accepted |
+| Tamagotchi iD L Princess Spacy | Dedicated identity on the shared iD-L board; local boot, themed LCD, input, PCM and saves validated |
+| Tamagotchi iD L 15th Anniversary | Dedicated identity on the shared iD-L board; local boot, themed LCD/setup, input, PCM, flash initialization and saves validated |
 | Tamagotchi P's | Native S1C33; local firmware boot, color LCD, buttons, audio and full-state resume/reference validation; infrared/DLC unavailable |
 | Tamagotchi On / Meets | Integrated MIT TG18 ARM backend; working use reported by the project owner. Color LCD, buttons, audio and saves are connected; individual regional editions are not all independently tested. Bluetooth/infrared unavailable |
 
@@ -79,10 +86,13 @@ and board settings are unresolved. Recognized TamaOtch firmware is refused with
 an explanation; another device's display is not substituted. Tamagotchi
 Connection and other MCU families are not available as playable profiles.
 The [native S1C33 backend](developer/S1C33.md) now runs the locally verified
-Tamagotchi P's and original 4-MiB Japanese iD firmware with the shared library,
-128x128 color display, controls, audio, slots and autosave. See the
-[iD validation scope](developer/ID.md). Other S1C33 families (Plus Color, iD Lovely Melody, iD L and 4U)
-remain internal hardware configurations, unavailable as supported profiles.
+Tamagotchi P's, Plus Color/Hexagontchi, original iD, Lovely Melody and the listed iD L editions with the
+shared library, 128x128 color display, controls, audio, slots and autosave. See the
+[iD and iD L validation scope](developer/ID_FAMILY.md) and
+[Plus Color validation scope](developer/PLUS_COLOR.md). 4U remains an internal
+configuration, unavailable as a supported profile. The unidentified
+8-MiB file named as February 2010 iD runs with the iD-L board, but is not
+fingerprinted as any model: import requires explicit compatible model selection.
 Infrared, DLC and upstream `.sav`/`.tamasave` import are not implemented.
 
 On/Meets is available through the same ROM library and interface. Its operating
@@ -135,6 +145,11 @@ supported sensor-equipped profiles expect 16,384 bytes. Size alone does not
 prove that a model is supported. Classic images use unpacked big-endian 12-bit
 words; packed classic dumps are not accepted. P's uses its dedicated 8-MiB
 S1C33 flash-image validation, separate from classic and On/Meets formats.
+Original iD, Lovely Melody and Plus Color/Hexagontchi use distinct 4-MiB profiles; iD L editions use an
+8-MiB NOR map. Only the exact tested Japanese archive/member and English short
+image have a bounded compatibility adapter matching tamaemu's zero-filled
+loader. Other archives or incomplete dumps are rejected. Original imports and
+hash identities are preserved; see [import evidence](developer/ID_FAMILY.md).
 
 On/Meets imports require an exact 8-MiB flash image beginning with `SPII`.
 Nine upstream code fingerprints supply revision labels for known On (EN) and
@@ -219,7 +234,8 @@ Use **Start Emulator Recording (F10)** or **Start LCD Recording** in Screenshots
 F10 or **Stop Recording** finishes the MP4. Windows Media Foundation encodes
 H.264 at 30 FPS on a background thread; no external encoder installation is
 required. **Recording is currently video-only: game audio is not included.**
-The indicator shows elapsed time and a confirmation gives the saved location.
+The fixed footer shows recording time and temporary confirmations. Hover a
+confirmation for the saved path and details.
 See [capture details and limitations](developer/CAPTURE_MEDIA.md).
 
 The README logo is the owner-supplied public copy at `docs/assets/retrohatchlogo.png`.

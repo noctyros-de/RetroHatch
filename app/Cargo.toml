@@ -1,19 +1,20 @@
 [package]
 name = "retrohatch"
-version = "0.3.0"
+version = "0.5.0"
 edition = "2024"
 license = "GPL-3.0-only"
 authors = ["Finn Lülsdorf (Noctyros)"]
 repository = "https://github.com/noctyros-de/RetroHatch"
 readme = "../README.md"
 publish = false
-description = "Native Windows Tamagotchi emulator for classic devices, On/Meets, P's and iD"
+description = "Native Windows Tamagotchi emulator for classic devices, On/Meets, P's, the iD family and Plus Color"
 
 [[bin]]
 name = "RetroHatch"
 path = "src/main.rs"
 
 [dependencies]
+flate2 = "1.1.11"
 tg18-core = { path = "third_party/tg18-core" }
 eframe = { version = "0.37", default-features = false, features = ["default_fonts", "glow"] }
 
