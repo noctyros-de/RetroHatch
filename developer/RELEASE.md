@@ -137,8 +137,10 @@ files in the Windows package.
 Only then does the repository GITHUB_TOKEN (contents: write) create the version
 tag at the verified SHA, create a draft, upload checked files and publish it.
 No personal access token or manual GitHub release configuration is required.
-Every version below 1.0.0, plus explicit suffixed prerelease versions, is marked
-as a prerelease. Notes group actual Git commit subjects since the last reachable
+Every version is published as a normal GitHub release with prerelease: false,
+including versions below 1.0.0 and suffixed versions. This permanent policy does
+not change the application version or move existing tags. Notes group actual
+Git commit subjects since the last reachable
 published release and include .github/release-limitations.md automatically.
 Keep that standing limitations document accurate when functionality changes.
 

@@ -18,12 +18,6 @@ class ReleaseTests(unittest.TestCase):
         self.assertFalse(release.decision('0.2.1','0.2.1','push',None,None,'abc')[0])
         self.assertFalse(release.decision('0.2.1','0.2.0','push',{'draft':False},None,'abc')[0])
 
-    def test_development_versions_are_prereleases(self):
-        self.assertTrue(release.is_prerelease('0.2.1'))
-        self.assertTrue(release.is_prerelease('1.0.0-beta.1'))
-        self.assertFalse(release.is_prerelease('1.0.0'))
-        self.assertFalse(release.is_prerelease('1.0.0+build-local'))
-
     def test_artifact_validation_precedes_any_network_publication(self):
         api=unittest.mock.Mock()
         with patch.object(release,'current',return_value=('0.2.1','verified')), \
@@ -63,7 +57,7 @@ class ReleaseTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError,'HTTP 403'):
                 api.call('releases/tags/v0.2.1',missing=True)
 
-    def test_publication_creates_tag_then_checked_draft_uploads_then_prerelease(self):
+    def test_all_versions_publish_normal_releases_without_changing_existing_files(self):
         class Fake:
             def __init__(self):
                 self.tag=None;self.release=None;self.writes=[]
@@ -76,6 +70,7 @@ class ReleaseTests(unittest.TestCase):
                     self.tag=data['sha'];return {}
                 if path.startswith('releases/tags/'):return self.release
                 if path=='releases' and method=='POST':
+                    if data.get('prerelease') is not False:raise AssertionError('Draft must be a normal release')
                     self.release=dict(data,id=1,upload_url='https://uploads.github.com/asset{?name}',assets=[])
                     return self.release
                 if upload:
@@ -83,27 +78,30 @@ class ReleaseTests(unittest.TestCase):
                     asset={'name':name,'state':'uploaded','size':len(data),'digest':'sha256:'+hashlib.sha256(data).hexdigest()}
                     self.release['assets'].append(asset);return asset
                 if path=='releases/1':
-                    if method=='PATCH':self.release.update(data)
+                    if method=='PATCH':
+                        if data.get('prerelease') is not False:raise AssertionError('Published release must be normal')
+                        self.release.update(data)
                     return self.release
                 raise AssertionError(path)
-        with tempfile.TemporaryDirectory() as temp:
-            root=Path(temp);names=['Windows.zip','source.zip','SHA256SUMS.txt']
-            for name in names:(root/name).write_bytes(b'synthetic verified artifact')
-            (root/'RELEASE_NOTES.md').write_text('Installation',encoding='utf-8')
-            api=Fake()
-            with patch.object(release,'current',return_value=('0.2.1','verified')), \
-                 patch.dict(release.os.environ,{'RELEASE_TAG':'v0.2.1'}), \
-                 patch.object(release,'verify_artifacts',return_value=names), \
-                 patch.object(release,'history_notes',return_value='Actual history'), \
-                 patch('builtins.print'):
-                release.publish(api,root)
-                before=list(api.writes)
-                release.publish(api,root)
-            self.assertEqual(api.writes,before)  # Published versions are immutable/idempotent.
-            self.assertFalse(api.release['draft']);self.assertTrue(api.release['prerelease'])
-            self.assertEqual(api.tag,'verified');self.assertEqual(len(api.release['assets']),3)
-            self.assertEqual(api.writes[0],('git/refs','POST'))
-            self.assertEqual(api.writes[-1],('releases/1','PATCH'))
+        for version in ('0.0.1','0.2.1','0.9.9','1.0.0-beta.1','1.0.0','2.0.0'):
+            with tempfile.TemporaryDirectory() as temp:
+                root=Path(temp);names=['Windows.zip','source.zip','SHA256SUMS.txt']
+                for name in names:(root/name).write_bytes(b'synthetic verified artifact')
+                (root/'RELEASE_NOTES.md').write_text('Installation',encoding='utf-8')
+                api=Fake()
+                with patch.object(release,'current',return_value=(version,'verified')), \
+                     patch.dict(release.os.environ,{'RELEASE_TAG':'v'+version}), \
+                     patch.object(release,'verify_artifacts',return_value=names), \
+                     patch.object(release,'history_notes',return_value='Actual history'), \
+                     patch('builtins.print'):
+                    release.publish(api,root)
+                    before=list(api.writes)
+                    release.publish(api,root)
+                self.assertEqual(api.writes,before)  # Published versions are immutable/idempotent.
+                self.assertFalse(api.release['draft']);self.assertFalse(api.release['prerelease'])
+                self.assertEqual(api.tag,'verified');self.assertEqual(len(api.release['assets']),3)
+                self.assertEqual(api.writes[0],('git/refs','POST'))
+                self.assertEqual(api.writes[-1],('releases/1','PATCH'))
 
     def test_packages_must_match_commit_notices_checksums_and_offline_source(self):
         with tempfile.TemporaryDirectory() as temp:

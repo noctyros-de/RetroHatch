@@ -80,10 +80,6 @@ def tag_commit(api, tag):
     raise ValueError('Tag does not resolve to a commit')
 
 
-def is_prerelease(version):
-    return version.startswith('0.') or '-' in version.split('+', 1)[0]
-
-
 def decision(version, previous, event, release, tagged, sha):
     tag = 'v'+version
     release_names(version)
@@ -208,7 +204,7 @@ def publish(api, folder):
     if release is None:
         release = api.call('releases', {'tag_name':tag, 'target_commitish':sha,
             'name':'RetroHatch '+tag, 'body':body, 'draft':True,
-            'prerelease':is_prerelease(version)}, method='POST')
+            'prerelease':False}, method='POST')
     assets = {a['name']:a for a in release.get('assets', [])}
     for name in names:
         path = folder/name
@@ -224,7 +220,7 @@ def publish(api, folder):
     uploaded_names = {asset['name'] for asset in remote['assets'] if asset['state'] == 'uploaded'}
     if not set(names).issubset(uploaded_names):
         raise ValueError('Remote release is missing verified assets')
-    api.call('releases/'+str(release['id']), {'draft':False, 'prerelease':is_prerelease(version)}, method='PATCH')
+    api.call('releases/'+str(release['id']), {'draft':False, 'prerelease':False}, method='PATCH')
     print('Published '+tag+' with verified Windows ZIP, corresponding source and checksums')
 
 
