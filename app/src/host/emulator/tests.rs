@@ -280,3 +280,61 @@ fn ps_awake_policy_reaches_the_worker_before_and_after_loading() {
     controller.send(Command::KeepScreenAwake(true));
     wait(&controller, |s| !s.sleeping);
 }
+
+#[test]
+fn id_library_profile_and_saves_are_distinct_from_ps_and_other_firmware() {
+    let temp = Temp::new();
+    let mut image = vec![255; DeviceProfile::Id.rom_bytes()];
+    image[..4].copy_from_slice(&0xc01000u32.to_le_bytes());
+    image[0x1000..0x1004].copy_from_slice(&[0x11, 0x60, 0xff, 0x1e]);
+    let prepared = inspect_bytes(image.clone(), "misleading-Ps-name.bin".into()).unwrap();
+    assert_eq!(prepared.candidates, [DeviceProfile::Id]);
+    let mut library = Library::open(&temp.0).unwrap();
+    assert!(library.automatic(&prepared).is_none());
+    let entry = library
+        .import(
+            &prepared,
+            Assignment {
+                profile: DeviceProfile::Id,
+                variant: String::new(),
+                evidence: "Synthetic test; user-confirmed model".into(),
+            },
+        )
+        .unwrap();
+    drop(library);
+    let library = Library::open(&temp.0).unwrap();
+    assert_eq!(
+        library.automatic(&prepared).unwrap().profile,
+        DeviceProfile::Id
+    );
+    assert_eq!(
+        std::fs::read(library.verified_path(&entry.key).unwrap()).unwrap(),
+        image
+    );
+    let mut device = Emulator::from_bytes(&image, DeviceProfile::Id).unwrap();
+    device.advance_to(102_400).unwrap();
+    let saved = device.save_state().unwrap();
+    let restored = device.restored(&saved).unwrap();
+    assert_eq!(restored.time(), device.time());
+    assert_eq!(restored.color_display(), device.color_display());
+    assert!(device.identity().starts_with("tamagotchi-id-"));
+    let mut different = image.clone();
+    different[0x2000] ^= 1;
+    assert!(
+        Emulator::from_bytes(&different, DeviceProfile::Id)
+            .unwrap()
+            .restored(&saved)
+            .is_err()
+    );
+    assert!(Emulator::from_bytes(&image, DeviceProfile::Ps).is_err());
+    device.set_button(Button::A, true);
+    device.set_button(Button::B, true);
+    device.release_inputs();
+    let Backend::Ps(machine) = &device.backend else {
+        panic!("Expected shared S1C33 backend")
+    };
+    assert_eq!(machine.memory.profile.key, "id");
+    assert_eq!(machine.memory.peripherals.as_ref().unwrap().buttons, 0);
+    assert_eq!(profile_code(DeviceProfile::Ps), 7);
+    assert_eq!(profile_code(DeviceProfile::Id), 8);
+}

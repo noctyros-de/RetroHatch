@@ -17,8 +17,10 @@ import tempfile
 import tomllib
 import zipfile
 
+from workspace_paths import target_dir, release_dir
+
 ROOT = Path(__file__).resolve().parents[2]
-ROOT_FILES = {".gitignore", "LICENSE", "README.md", "COPYRIGHT.md",
+ROOT_FILES = {".vscode/settings.json", ".vscode/tasks.json", ".vscode/extensions.json", "AGENTS.md", ".gitignore", "LICENSE", "README.md", "COPYRIGHT.md",
               "THIRD_PARTY_LICENSES.md", "CONTRIBUTING.md", "SECURITY.md", "docs/assets/retrohatchlogo.png"}
 APP_FILES = {"app/build.rs", "app/.gitignore", "app/Cargo.toml", "app/Cargo.lock", "app/THIRD_PARTY_NOTICES.md"}
 PREFIXES = (".github/", "developer/", "LICENSES/", "app/src/", "app/assets/lcd/",
@@ -140,7 +142,7 @@ def package(args):
     expected = (ROOT/"LICENSES/rust-stdlib/TOOLCHAIN.txt").read_text(encoding="utf-8").splitlines()[0]
     if toolchain.splitlines()[0] != expected:
         raise ValueError("Toolchain notices must be re-audited for this Rust version")
-    executable = ROOT/"app/target/release/RetroHatch.exe"
+    executable = target_dir()/"release/RetroHatch.exe"
     imports = validate_executable(executable.read_bytes(), [os.environ.get("USERPROFILE"), ROOT,
                                                           run("rustc", "--print", "sysroot")])
     files = run("git", "ls-files", "-z", "--cached", "--others", "--exclude-standard").split("\0")
@@ -215,7 +217,7 @@ ROMs, firmware, personal libraries, settings and saves are not included.
         binary = stage/"windows"
         shutil.copyfile(executable, binary/"RetroHatch.exe")
         for name in files:
-            if name.startswith("docs/screenshots/") or name in ROOT_FILES-{".gitignore"} or name.startswith(("LICENSES/", "developer/", "app/LICENSES/")) or name in {"app/THIRD_PARTY_NOTICES.md", "app/third_party/tg18-core/LICENSE"}:
+            if name.startswith("docs/screenshots/") or name in ROOT_FILES-{".gitignore", "AGENTS.md", ".vscode/settings.json", ".vscode/tasks.json", ".vscode/extensions.json"} or name.startswith(("LICENSES/", "developer/", "app/LICENSES/")) or name in {"app/THIRD_PARTY_NOTICES.md", "app/third_party/tg18-core/LICENSE"}:
                 destination = binary/name
                 destination.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(source/name, destination)
@@ -241,7 +243,7 @@ ROMs, firmware, personal libraries, settings and saves are not included.
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tag", required=True)
-    parser.add_argument("--output", type=Path, default=ROOT/"dist")
+    parser.add_argument("--output", type=Path, default=release_dir())
     parser.add_argument("--allow-dirty", action="store_true")
     parser.add_argument("--offline", action="store_true")
     package(parser.parse_args())

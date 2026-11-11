@@ -9,11 +9,13 @@ import argparse
 import hashlib
 import math
 from pathlib import Path
+from workspace_paths import references_dir
+REFERENCES = references_dir()
 import re
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE = ROOT / "references/BrickEmuPy-main/assets/TamagotchiP1.svg"
+SOURCE = REFERENCES / "BrickEmuPy-main/assets/TamagotchiP1.svg"
 TARGET = ROOT / "app/src/lcd_geometry.rs"
 LEFT, TOP, WIDTH, HEIGHT = 173.004, 294.179, 352, 329
 

@@ -10,9 +10,11 @@ sys.dont_write_bytecode = True
 import argparse
 import json
 from pathlib import Path
+from workspace_paths import references_dir
+REFERENCES = references_dir()
 from compare_genjintch import ROOT, DATA, PROFILE, generate, compare_rom
 
-ANGEL = json.loads((ROOT / "references/BrickEmuPy-main/assets/TamagotchiAngel.brick").read_text(encoding="utf-8"))
+ANGEL = json.loads((REFERENCES / "BrickEmuPy-main/assets/TamagotchiAngel.brick").read_text(encoding="utf-8"))
 for key in ("core", "clock", "RAM", "peripherals", "buttons"):
     assert ANGEL[key] == PROFILE[key], f"Angel hardware differs: {key}"
 for key in ("port_pullup", "p3_dedicated"):

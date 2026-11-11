@@ -15,6 +15,7 @@ import urllib.request
 import zipfile
 
 from package_release import ROOT, release_names
+from workspace_paths import release_dir
 
 
 def git(*args, check=True):
@@ -227,7 +228,7 @@ def publish(api, folder):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('command', choices=['plan','publish'])
-    parser.add_argument('--dist', type=Path, default=ROOT/'dist')
+    parser.add_argument('--dist', type=Path, default=release_dir())
     args = parser.parse_args()
     api = GitHub(os.environ['GITHUB_REPOSITORY'])
     if args.command == 'plan':

@@ -13,6 +13,7 @@ pub enum DeviceProfile {
     Umino,
     On,
     Ps,
+    Id,
 }
 impl DeviceProfile {
     pub const CLASSIC: [Self; 6] = [
@@ -23,7 +24,7 @@ impl DeviceProfile {
         Self::Morino,
         Self::Umino,
     ];
-    pub const ALL: [Self; 8] = [
+    pub const ALL: [Self; 9] = [
         Self::P1,
         Self::P2,
         Self::Genjintch,
@@ -32,9 +33,17 @@ impl DeviceProfile {
         Self::Umino,
         Self::On,
         Self::Ps,
+        Self::Id,
     ];
     pub const fn is_color(self) -> bool {
-        matches!(self, Self::On | Self::Ps)
+        matches!(self, Self::On | Self::Ps | Self::Id)
+    }
+    pub const fn s1c33_key(self) -> Option<&'static str> {
+        match self {
+            Self::Ps => Some("ps"),
+            Self::Id => Some("id"),
+            _ => None,
+        }
     }
     pub const fn id(self) -> &'static str {
         match self {
@@ -46,6 +55,7 @@ impl DeviceProfile {
             Self::Umino => "tamagotchi-umino",
             Self::On => "tamagotchi-on-meets",
             Self::Ps => "tamagotchi-ps",
+            Self::Id => "tamagotchi-id",
         }
     }
     pub const fn name(self) -> &'static str {
@@ -58,12 +68,14 @@ impl DeviceProfile {
             Self::Umino => "Tamagotchi Umino (Ocean)",
             Self::On => "Tamagotchi On / Meets",
             Self::Ps => "Tamagotchi P's",
+            Self::Id => "Tamagotchi iD",
         }
     }
     pub const fn rom_bytes(self) -> usize {
         match self {
             Self::P1 | Self::P2 => 0x3000,
             Self::On | Self::Ps => 0x80_0000,
+            Self::Id => 0x40_0000,
             Self::Genjintch | Self::Angel | Self::Morino | Self::Umino => 0x4000,
         }
     }
@@ -71,7 +83,7 @@ impl DeviceProfile {
         match self {
             Self::P1 | Self::P2 => 1_600_000,
             Self::On => 96_000_000,
-            Self::Ps => 18_432_000,
+            Self::Ps | Self::Id => 18_432_000,
             Self::Genjintch | Self::Angel | Self::Morino | Self::Umino => 1_060_000,
         }
     }
@@ -90,6 +102,7 @@ impl DeviceProfile {
             "morino" | "tamagotchi-morino" => Some(Self::Morino),
             "umino" | "ocean" | "tamagotchi-umino" | "tamagotchi-ocean" => Some(Self::Umino),
             "ps" | "tamagotchi-ps" => Some(Self::Ps),
+            "id" | "tamagotchi-id" => Some(Self::Id),
             "on" | "meets" | "tg18" | "tamagotchi-on-meets" => Some(Self::On),
             _ => None,
         }

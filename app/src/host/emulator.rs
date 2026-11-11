@@ -20,10 +20,10 @@ use tg18::sound::ToneSynth;
 use tg18::{CPU_HZ, Key, Machine, Outcome};
 
 pub fn validate_rom(bytes: &[u8], profile: DeviceProfile) -> Result<(), String> {
-    if profile == DeviceProfile::Ps {
+    if let Some(key) = profile.s1c33_key() {
         return crate::core::s1c33::machine::validate_image(
             bytes,
-            HardwareProfile::find("ps").unwrap(),
+            HardwareProfile::find(key).unwrap(),
         );
     }
     if profile.is_color() {
@@ -54,11 +54,11 @@ pub struct Emulator {
 impl Emulator {
     pub fn from_bytes(bytes: &[u8], profile: DeviceProfile) -> Result<Self, String> {
         validate_rom(bytes, profile)?;
-        let (backend, metadata) = if profile == DeviceProfile::Ps {
+        let (backend, metadata) = if let Some(key) = profile.s1c33_key() {
             (
                 Backend::Ps(Box::new(S1Machine::new(
                     bytes,
-                    HardwareProfile::find("ps").unwrap(),
+                    HardwareProfile::find(key).unwrap(),
                 )?)),
                 (None, false),
             )
@@ -291,11 +291,16 @@ impl Emulator {
     }
     pub fn restored(&self, data: &[u8]) -> Result<Self, String> {
         if let Backend::Ps(_) = &self.backend {
+            let restored = S1Machine::restored(data, self.hash)?;
+            require(
+                Some(restored.memory.profile.key) == self.profile.s1c33_key(),
+                "Save belongs to a different device profile",
+            )?;
             return Ok(Self {
                 profile: self.profile,
                 hash: self.hash,
                 metadata: self.metadata,
-                backend: Backend::Ps(Box::new(S1Machine::restored(data, self.hash)?)),
+                backend: Backend::Ps(Box::new(restored)),
             });
         }
         if let Backend::Classic(d) = &self.backend {

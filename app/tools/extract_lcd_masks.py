@@ -9,6 +9,8 @@ import sys
 sys.dont_write_bytecode=True
 import argparse,copy,hashlib,math,xml.etree.ElementTree as ET
 from pathlib import Path
+from workspace_paths import references_dir
+REFERENCES = references_dir()
 from PyQt6.QtCore import QByteArray,QRectF
 from PyQt6.QtGui import QImage,QPainter
 from PyQt6.QtSvg import QSvgRenderer
@@ -27,7 +29,7 @@ def generate():
          "pub struct Masks {pub data: &'static [u8],pub icons:[Icon;8]}"]
     files={}
     for key,name,left,top in PROFILES:
-        raw=(ROOT/f'references/BrickEmuPy-main/assets/{name}.svg').read_bytes()
+        raw=(REFERENCES/f'BrickEmuPy-main/assets/{name}.svg').read_bytes()
         root=ET.fromstring(raw);display=next(n for n in root.iter() if n.get('id')=='display')
         assert not any(n.get('transform') for n in display.iter())
         renderer=QSvgRenderer(QByteArray(raw));assert renderer.isValid()

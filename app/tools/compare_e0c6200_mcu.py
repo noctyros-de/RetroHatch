@@ -10,10 +10,12 @@ import argparse
 import ast
 import hashlib
 from pathlib import Path
+from workspace_paths import references_dir
+REFERENCES = references_dir()
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "app/tests/data"
-CPU = ROOT / "references/BrickEmuPy-main/cores/E0C6200.py"
+CPU = REFERENCES / "BrickEmuPy-main/cores/E0C6200.py"
 SOUND = CPU.with_name("E0C6200sound.py")
 
 

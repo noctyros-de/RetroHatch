@@ -1,7 +1,7 @@
 {
   "target": "x86_64-pc-windows-msvc",
   "scope": "Locked default Windows normal/build dependencies; not other targets or toolchains",
-  "cargo_lock_sha256": "c5b58117fe474d090ed31c663145c7291b5bf46478d86dc7b81d581f95dc4ba7",
+  "cargo_lock_sha256": "e340d072a1174d9d746950fd344226d017f8ff60d6055e23527cb949d513e74d",
   "packages": [
     {
       "name": "accesskit",

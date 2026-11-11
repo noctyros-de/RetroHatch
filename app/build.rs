@@ -8,16 +8,23 @@ use std::{
 };
 fn main() {
     println!("cargo:rerun-if-env-changed=RETROHATCH_UNBRANDED");
+    println!("cargo:rerun-if-env-changed=RETROHATCH_RESOURCES_DIR");
+    println!("cargo:rerun-if-env-changed=RETROHATCH_LOCAL_DIR");
     println!("cargo:rerun-if-env-changed=RC");
     println!("cargo:rerun-if-env-changed=CARGO_PKG_VERSION");
     println!("cargo:rerun-if-changed=Cargo.toml");
     let root = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap());
-    let icon = root.join("../resources/retrohatchicon.ico");
+    let resources = env::var_os("RETROHATCH_RESOURCES_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| {
+            env::var_os("RETROHATCH_LOCAL_DIR")
+                .map(PathBuf::from)
+                .unwrap_or_else(|| root.join("../../local"))
+                .join("resources")
+        });
+    let icon = resources.join("retrohatchicon.ico");
     // Watch the directory too: adding/removing an optional icon must invalidate the build.
-    println!(
-        "cargo:rerun-if-changed={}",
-        root.join("../resources").display()
-    );
+    println!("cargo:rerun-if-changed={}", resources.display());
     println!("cargo:rerun-if-changed={}", icon.display());
     let out = PathBuf::from(env::var_os("OUT_DIR").unwrap());
     let mut png = Vec::new();

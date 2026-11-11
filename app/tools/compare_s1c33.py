@@ -2,14 +2,16 @@
 # SPDX-FileCopyrightText: 2026 Noctyros
 """Build unchanged tamaemu C CPU/memory/LCD as an optional synthetic oracle.
 
-No firmware is read or executed. Output and object files stay under app/target.
+No firmware is read or executed. Output and object files stay in Cargo's configured target directory.
 Use --check to verify the committed expectations; references are never modified.
 """
 import argparse,hashlib,os
 from pathlib import Path
+from workspace_paths import references_dir, target_dir
+REFERENCES = references_dir()
 import subprocess,json
 ROOT=Path(__file__).resolve().parents[2]
-UPSTREAM=ROOT/"references/tamaemu"
+UPSTREAM=REFERENCES/"tamaemu"
 DATA=ROOT/"app/tests/data/s1c33_reference.txt"
 
 def cases():
@@ -107,7 +109,7 @@ def cases():
 
 
 def build():
-    target=ROOT/'app/target/s1c33-reference';target.mkdir(parents=True,exist_ok=True)
+    target=target_dir()/'s1c33-reference';target.mkdir(parents=True,exist_ok=True)
     sources=[ROOT/'app/tools/s1c33_reference.c']+[UPSTREAM/'src'/f for f in ['cpu.c','mem.c','lcd.c','device.c']]
     exe=target/'s1c33_reference.exe'
     if os.name!='nt':

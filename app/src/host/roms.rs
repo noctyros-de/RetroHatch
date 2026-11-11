@@ -7,15 +7,21 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 
 pub fn default_folder() -> PathBuf {
+    if let Some(path) = std::env::var_os("RETROHATCH_ROM_DIR") {
+        return path.into();
+    }
+    if let Some(path) = std::env::var_os("RETROHATCH_LOCAL_DIR") {
+        return PathBuf::from(path).join("roms");
+    }
     if let Ok(cwd) = std::env::current_dir() {
         if cwd.join("app/Cargo.toml").is_file() {
-            return cwd.join("roms");
+            return cwd.parent().unwrap_or(&cwd).join("local/roms");
         }
         if cwd.join("Cargo.toml").is_file()
             && cwd.file_name().is_some_and(|n| n == "app")
             && let Some(parent) = cwd.parent()
         {
-            return parent.join("roms");
+            return parent.parent().unwrap_or(parent).join("local/roms");
         }
     }
     std::env::current_exe()

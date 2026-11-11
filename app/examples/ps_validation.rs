@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // SPDX-FileCopyrightText: 2026 Noctyros
-//! Opt-in local P's firmware, wall-clock and save/reopen validation; writes only a private validation folder.
+//! Opt-in local S1C33 firmware, wall-clock and save/reopen validation; writes only a private validation folder.
 use retrohatch::{
     core::{device::Button, mcu::MASTER_HZ, profile::DeviceProfile, state::sha256},
     host::{
@@ -36,6 +36,15 @@ fn wait(c: &Controller, condition: impl Fn(&Snapshot) -> bool) -> Result<Snapsho
     }
 }
 fn main() -> Result<(), String> {
+    let args: Vec<_> = env::args().collect();
+    let profile = args
+        .windows(2)
+        .find(|v| v[0] == "--profile")
+        .and_then(|v| DeviceProfile::parse(&v[1]))
+        .unwrap_or(DeviceProfile::Ps);
+    if profile.s1c33_key().is_none() {
+        return Err("Select a supported S1C33 profile".into());
+    }
     let path = PathBuf::from(
         env::args()
             .nth(1)
@@ -46,25 +55,27 @@ fn main() -> Result<(), String> {
         .and_then(|v| v.parse().ok())
         .unwrap_or(60.0);
     let prepared = inspect(&path)?;
-    if !prepared.candidates.contains(&DeviceProfile::Ps) {
-        return Err("Not a validated S1C33 P's image".into());
+    if !prepared.candidates.contains(&profile) {
+        return Err("Firmware is incompatible with the selected S1C33 profile".into());
     }
     let original_hash = sha256(&fs::read(&path).map_err(|e| e.to_string())?);
     let root = env::temp_dir().join(format!(
-        "retrohatch-ps-validation-{}",
+        "retrohatch-{}-validation-{}",
+        profile.id(),
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_nanos()
     ));
     fs::create_dir_all(&root).map_err(|e| e.to_string())?;
+    println!("Private validation root: {}", root.display());
     let mut library = Library::open(&root)?;
     let entry = library.import(
         &prepared,
         Assignment {
-            profile: DeviceProfile::Ps,
+            profile,
             variant: String::new(),
-            evidence: "User-provided P's firmware; local validation".into(),
+            evidence: "User-provided S1C33 firmware; local validation".into(),
         },
     )?;
     drop(library);
@@ -75,7 +86,7 @@ fn main() -> Result<(), String> {
         ..SavePolicy::default()
     };
     let c = Controller::with_storage(true, root.clone(), policy.clone());
-    c.send(Command::LoadProfile(internal.clone(), DeviceProfile::Ps));
+    c.send(Command::LoadProfile(internal.clone(), profile));
     wait(&c, |s| s.loaded && !s.loading && s.ticks > 0)?;
     let start = Instant::now();
     let initial = c.snapshot().ticks;
@@ -131,7 +142,7 @@ fn main() -> Result<(), String> {
     wait(&c, |s| s.exit_ready)?;
     drop(c);
     let again = Controller::with_storage(false, root, policy);
-    again.send(Command::LoadProfile(internal, DeviceProfile::Ps));
+    again.send(Command::LoadProfile(internal, profile));
     let resumed = wait(&again, |s| s.restores > 0 && !s.loading)?;
     if resumed.ticks < paused.ticks {
         return Err("Restart lost emulated progress".into());

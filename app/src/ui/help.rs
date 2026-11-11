@@ -83,6 +83,8 @@ pub(super) fn dialogs(ctx: &egui::Context, state: &mut HelpUi) -> Option<Externa
                     ui.separator();
                     ui.strong("Color devices");
                     ui.label(DeviceProfile::Ps.name());
+                    ui.label(DeviceProfile::Id.name());
+                    ui.weak("iD: original Japanese 4-MiB firmware. Unidentified 8-MiB images are not verified as iD. Infrared and DLC are unavailable.");
                     ui.weak("P's: local firmware boot, controls and saves verified. Infrared and DLC are unavailable.");
                     ui.separator();
                     ui.strong("Color devices (limited support)");

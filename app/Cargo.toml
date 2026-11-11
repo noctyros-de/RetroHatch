@@ -1,13 +1,13 @@
 [package]
 name = "retrohatch"
-version = "0.2.1"
+version = "0.3.0"
 edition = "2024"
 license = "GPL-3.0-only"
 authors = ["Finn Lülsdorf (Noctyros)"]
 repository = "https://github.com/noctyros-de/RetroHatch"
 readme = "../README.md"
 publish = false
-description = "Native Windows Tamagotchi P1, P2, Genjintch, Angel, Morino and Umino emulator with a deterministic Rust core"
+description = "Native Windows Tamagotchi emulator for classic devices, On/Meets, P's and iD"
 
 [[bin]]
 name = "RetroHatch"

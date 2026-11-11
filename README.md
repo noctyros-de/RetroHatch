@@ -68,6 +68,7 @@ in the [public-project audit](developer/OPEN_SOURCE_AUDIT.md).
 | Tamagotchi Angel (Angelgotchi) | Dedicated LCD, buttons and tap sensor; local firmware/reference validation |
 | Tamagotchi Morino | Dedicated LCD, buttons and sensor; local firmware/reference validation |
 | Tamagotchi Umino (Ocean) | Dedicated LCD, buttons and tap sensor; local firmware/reference validation |
+| Tamagotchi iD | Original Japanese October 2009 4-MiB firmware: native S1C33, color LCD, input, audio and save/resume validated; unidentified 8-MiB images are not verified as iD |
 | Tamagotchi P's | Native S1C33; local firmware boot, color LCD, buttons, audio and full-state resume/reference validation; infrared/DLC unavailable |
 | Tamagotchi On / Meets | Integrated MIT TG18 ARM backend; working use reported by the project owner. Color LCD, buttons, audio and saves are connected; individual regional editions are not all independently tested. Bluetooth/infrared unavailable |
 
@@ -78,8 +79,9 @@ and board settings are unresolved. Recognized TamaOtch firmware is refused with
 an explanation; another device's display is not substituted. Tamagotchi
 Connection and other MCU families are not available as playable profiles.
 The [native S1C33 backend](developer/S1C33.md) now runs the locally verified
-Tamagotchi P's firmware with the shared library, 128x128 color display, controls,
-audio, slots and autosave. Other S1C33 families (Plus Color, iD, iD L and 4U)
+Tamagotchi P's and original 4-MiB Japanese iD firmware with the shared library,
+128x128 color display, controls, audio, slots and autosave. See the
+[iD validation scope](developer/ID.md). Other S1C33 families (Plus Color, iD Lovely Melody, iD L and 4U)
 remain internal hardware configurations, unavailable as supported profiles.
 Infrared, DLC and upstream `.sav`/`.tamasave` import are not implemented.
 
@@ -221,10 +223,12 @@ The indicator shows elapsed time and a confirmation gives the saved location.
 See [capture details and limitations](developer/CAPTURE_MEDIA.md).
 
 The README logo is the owner-supplied public copy at `docs/assets/retrohatchlogo.png`.
-Private originals stay in ignored `resources/`. To brand a local Windows build,
-place `retrohatchicon.ico` there and build normally. The build embeds that ICO in
+Private originals stay outside the repository in `../local/resources/`. To brand
+a local Windows build, place `retrohatchicon.ico` there or set
+`RETROHATCH_RESOURCES_DIR` to its directory, then build normally. The build embeds that ICO in
 the EXE and uses its PNG frame for title-bar/taskbar/window icons. The supplied
 ICO currently contains a 256×256 frame, scaled by Windows. Clean public checkouts
-without `resources/` build with standard Windows/eframe fallback icons. Set
+without private resources build with standard Windows/eframe fallback icons. Set
 `$env:RETROHATCH_UNBRANDED='1'` before Cargo to explicitly select that fallback.
-See [branding and capture implementation](developer/BRANDING_SCREENSHOTS.md).
+See [branding and capture implementation](developer/BRANDING_SCREENSHOTS.md)
+and [optional development workspace setup](developer/WORKSPACE.md).

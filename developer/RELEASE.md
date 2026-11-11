@@ -118,6 +118,17 @@ changing the toolchain or build location. Remapping addresses a privacy issue,
 not the outstanding asset/licensing release gates. See the
 [rustc path-remapping documentation](https://doc.rust-lang.org/rustc/command-line-arguments.html#--remap-path-prefix-remap-source-names-in-output).
 
+## Workspace and local output
+
+Open the source repository at project/, not its parent workspace. Optional
+private checkouts, branding, firmware, build caches and distribution drafts live
+in sibling local/. See [workspace setup](WORKSPACE.md). Public clones and Actions
+retain the same app/ source layout and require none of that private material.
+The packager discovers the configured Cargo target directory; its local default
+output is ../local/releases when present. CI explicitly uses dist/. Public
+AGENTS.md and safe .vscode settings are included in matching source packages;
+ignored machine-specific .cargo/config.toml is never copied.
+
 ## Automatic Windows releases
 
 Push the reviewed application version and synchronized Cargo.lock/license

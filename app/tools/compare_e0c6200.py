@@ -11,9 +11,11 @@ import argparse
 import ast
 import hashlib
 from pathlib import Path
+from workspace_paths import references_dir
+REFERENCES = references_dir()
 
 APP = Path(__file__).resolve().parents[1]
-SOURCE = APP.parent / "references/BrickEmuPy-main/cores/E0C6200.py"
+SOURCE = REFERENCES / "BrickEmuPy-main/cores/E0C6200.py"
 DATA = APP / "tests/data"
 
 

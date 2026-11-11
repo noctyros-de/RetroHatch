@@ -22,7 +22,7 @@ class PackagingTests(unittest.TestCase):
                 release_names(version)
 
     def test_required_source_and_notices_are_allowed(self):
-        for name in ("LICENSE", "README.md", "app/build.rs", "docs/assets/retrohatchlogo.png", "app/Cargo.lock", "app/src/main.rs",
+        for name in ("AGENTS.md", ".vscode/settings.json", "developer/WORKSPACE.md", "app/tools/workspace_paths.py", "LICENSE", "README.md", "app/build.rs", "docs/assets/retrohatchlogo.png", "app/Cargo.lock", "app/src/main.rs",
                      "app/assets/lcd/angel.alpha", "app/tests/data/e0c6200_reference.txt",
                      "LICENSES/CARGO_NOTICES.txt", ".github/workflows/windows-release.yml",
                      "app/third_party/tg18-core/LICENSE", "app/third_party/tg18-core/src/cpu.rs",
@@ -43,7 +43,7 @@ class PackagingTests(unittest.TestCase):
 
     def test_private_files_and_path_traversal_are_rejected(self):
         for name in ("roms/game.bin", "resources/retrohatchicon.ico", "resources/retrohatchlogo.png", "docs/assets/private.png", "screenshots/full/capture.png", "references/license.txt", "docs/private.md",
-                     "AGENTS.md", ".git/config", "saves/slot.rhstate", ".env",
+                     ".vscode/private.json", "local/roms/game.bin", "local/test-data/private.md", ".cargo/config.toml", ".git/config", "saves/slot.rhstate", ".env",
                      "app/target/release/RetroHatch.exe", "app/tools/secret.key",
                      "app/assets/lcd/firmware.rom", "app/src/../../private.md",
                      "/app/src/main.rs", "C:/private.md", "app\\src\\main.rs"):

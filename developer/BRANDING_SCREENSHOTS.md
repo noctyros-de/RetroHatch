@@ -4,10 +4,11 @@
 
 ## Asset handling and builds
 
-`resources/` remains ignored and contains the unmodified owner-supplied PNG/ICO.
+The optional sibling `../local/resources/` contains the unmodified owner-supplied
+PNG/ICO, outside Git. RETROHATCH_RESOURCES_DIR can select another private directory.
 Only the byte-identical PNG copy at `docs/assets/retrohatchlogo.png` is public.
-The branding exception allows precisely that logo; other private docs/assets
-remain ignored. The separately approved docs/screenshots/ gallery is public. Release source/package allowlists include the logo and build.rs,
+Private research moved outside the repository; public docs/assets and the
+separately approved docs/screenshots/ gallery remain public. Release source/package allowlists include the logo and build.rs,
 and continue rejecting private resources and screenshots. No new artwork is made.
 
 `app/build.rs` optionally compiles the ICO as Windows resource group 101 with
@@ -17,7 +18,7 @@ original PNG payload is also embedded for eframe IconData. Windows/eframe then
 set small and large window icons for the caption, taskbar and Alt+Tab.
 No new Cargo package or image encoder dependency is introduced.
 
-When resources/ is absent, or RETROHATCH_UNBRANDED=1, the script emits an empty
+When private resources are absent, or RETROHATCH_UNBRANDED=1, the script emits an empty
 optional icon. The normal Windows/eframe icons remain. Windows builds always
 embed Cargo-derived VERSIONINFO and require Windows SDK rc.exe, even without
 private artwork. The compiler is discovered from RC/PATH/the installed SDK;
@@ -55,7 +56,7 @@ Generated captures remain ignored/private and may contain firmware artwork.
 ## Validation
 
 - Original asset hashes are preserved; the public PNG is byte-identical.
-- Git tracks the public branding logo copy, not resources/. The owner-managed
+- Git tracks the public branding logo copy, not ../local/resources/. The owner-managed
   gallery has its own narrow exception; captures are never automatically added.
 - Windows loads EXE resource 101 at 16/32/48/128/256 pixels with correct bitmap
   dimensions. Small and large native window icons are both installed.

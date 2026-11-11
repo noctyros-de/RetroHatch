@@ -9,6 +9,8 @@ import sys
 sys.dont_write_bytecode=True
 import argparse,re,subprocess,tempfile,xml.etree.ElementTree as ET
 from pathlib import Path
+from workspace_paths import references_dir, target_dir
+REFERENCES = references_dir()
 from PyQt6.QtCore import QByteArray,QRectF
 from PyQt6.QtGui import QImage,QPainter
 from PyQt6.QtSvg import QSvgRenderer
@@ -24,9 +26,9 @@ def reference(node,left,top,scale,box):
     return [v for row in range(h) for v in b[row*stride:row*stride+w]]
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--probe',type=Path,default=ROOT/'app/target/release/examples/lcd_probe.exe');args=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--probe',type=Path,default=target_dir()/'release/examples/lcd_probe.exe');args=p.parse_args()
     for key,name,left,top in PROFILES:
-        root=ET.fromstring((ROOT/f'references/BrickEmuPy-main/assets/{name}.svg').read_bytes());display=next(n for n in root.iter()if n.get('id')=='display');nodes=[n for n in display if not n.get('id','').startswith('col_')]
+        root=ET.fromstring((REFERENCES/f'BrickEmuPy-main/assets/{name}.svg').read_bytes());display=next(n for n in root.iter()if n.get('id')=='display');nodes=[n for n in display if not n.get('id','').startswith('col_')]
         oldname={'p1':'lcd_geometry','genjintch':'genjintch_lcd_geometry','angel':'angel_lcd_geometry','morino':'morino_lcd_geometry','umino':'umino_lcd_geometry'}[key]
         text=(ROOT/f'app/src/{oldname}.rs').read_text().split('pub const ICON_SPANS')[1]
         spans=[[tuple(map(int,t)) for t in re.findall(r'\((\d+),\s*(\d+),\s*(\d+)\)',part)] for part in re.findall(r'&\[(.*?)\]',text,re.S) if re.search(r'\(\d+,',part)]

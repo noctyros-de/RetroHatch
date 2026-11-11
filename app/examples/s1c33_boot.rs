@@ -16,21 +16,39 @@ fn main() -> Result<(), String> {
     )
     .map_err(|e| e.to_string())?;
     let end = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(10.0);
-    let mut m = Machine::new(&image, HardwareProfile::find("ps").unwrap())?;
+    let hardware = args
+        .windows(2)
+        .find(|v| v[0] == "--hardware")
+        .map(|v| v[1].as_str())
+        .unwrap_or("ps");
+    let profile = HardwareProfile::find(hardware).ok_or("Unknown hardware profile")?;
+    let mut m = if let Some(path) = args.windows(2).find(|v| v[0] == "--resume").map(|v| &v[1]) {
+        Machine::restored(
+            &fs::read(path).map_err(|e| e.to_string())?,
+            retrohatch::core::state::sha256(&image),
+        )?
+    } else {
+        Machine::new(&image, profile)?
+    };
+    if m.memory.profile != profile {
+        return Err("Checkpoint uses a different hardware profile".into());
+    }
     m.keep_screen_awake = args.iter().any(|v| v == "--keep-screen-awake");
     let wall = Instant::now();
-    let mut next = 1.0;
-    let mut edges: Vec<(u64, u8)> = args
+    let elapsed_time = args.iter().any(|v| v == "--emulated-time");
+    let mut next = if elapsed_time {
+        m.seconds().floor() + 1.0
+    } else {
+        (m.cpu.cycles / 18_432_000) as f64 + 1.0
+    };
+    let mut edges: Vec<(f64, u8)> = args
         .get(4)
         .filter(|v| !v.is_empty() && !v.starts_with("--"))
         .map(|v| {
             v.split(',')
                 .map(|edge| {
                     let (t, mask) = edge.split_once(':').expect("time:button-mask");
-                    (
-                        (t.parse::<f64>().unwrap() * 18432000.0) as u64,
-                        mask.parse().unwrap(),
-                    )
+                    (t.parse::<f64>().unwrap(), mask.parse().unwrap())
                 })
                 .collect()
         })
@@ -38,14 +56,17 @@ fn main() -> Result<(), String> {
     edges.reverse();
     let mut pcm = Vec::<i16>::new();
 
-    let elapsed_time = args.iter().any(|v| v == "--emulated-time");
     while if elapsed_time {
         m.seconds() < end
     } else {
         m.cpu.cycles < (end * 18432000.0) as u64
     } {
         if let Some(&(at, mask)) = edges.last() {
-            if m.cpu.cycles >= at {
+            if if elapsed_time {
+                m.seconds() >= at
+            } else {
+                m.cpu.cycles >= (at * 18_432_000.0) as u64
+            } {
                 m.buttons(mask);
                 edges.pop();
             }
@@ -124,6 +145,9 @@ fn main() -> Result<(), String> {
     let checkpoint_display = m.rgb();
     let hash = retrohatch::core::state::sha256(&image);
     let saved = m.save_state(hash)?;
+    if let Some(path) = args.windows(2).find(|v| v[0] == "--state").map(|v| &v[1]) {
+        fs::write(path, &saved).map_err(|e| e.to_string())?;
+    }
     let mut restored = Machine::restored(&saved, hash)?;
     restored.keep_screen_awake = m.keep_screen_awake;
     if saved != restored.save_state(hash)? {

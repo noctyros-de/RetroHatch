@@ -9,10 +9,12 @@ sys.dont_write_bytecode = True
 import argparse
 import json
 from pathlib import Path
+from workspace_paths import references_dir
+REFERENCES = references_dir()
 from compare_e0c6200_mcu import DATA, generate
 from compare_genjintch import ROOT, compare_rom
 
-ASSETS = ROOT / "references/BrickEmuPy-main/assets"
+ASSETS = REFERENCES / "BrickEmuPy-main/assets"
 P1 = json.loads((ASSETS / "TamagotchiP1.brick").read_text(encoding="utf-8"))
 P2 = json.loads((ASSETS / "TamagotchiP2.brick").read_text(encoding="utf-8"))
 for p in (P1, P2):

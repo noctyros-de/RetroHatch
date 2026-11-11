@@ -83,7 +83,7 @@ impl RetroHatchApp {
                     }
                 } else {
                     app.local_error = Some(
-                        "Use --profile p1, p2, genjintch, angel, morino, umino, on or ps followed by a local ROM path.".into(),
+                        "Use --profile p1, p2, genjintch, angel, morino, umino, on, ps or id followed by a local ROM path.".into(),
                     );
                 }
             } else {
@@ -146,6 +146,7 @@ impl RetroHatchApp {
         let folder = settings
             .rom_folder
             .clone()
+            .filter(|folder| folder.is_dir())
             .unwrap_or_else(roms::default_folder)
             .to_string_lossy()
             .into_owned();
@@ -449,9 +450,9 @@ impl RetroHatchApp {
                     ui.spacing_mut().slider_rail_height=8.0;
                     ui.add(egui::Slider::new(&mut self.settings.volume,0..=100).text("Volume").suffix("%").trailing_fill(true));
                 });
-                ui.add_enabled_ui(s.profile==DeviceProfile::Ps,|ui| {
+                ui.add_enabled_ui(s.profile.s1c33_key().is_some(),|ui| {
                     ui.checkbox(&mut self.settings.keep_screen_awake,"Keep screen awake")
-                      .on_hover_text("P's only: prevent the firmware display timeout. Disable for normal sleep behavior. If already asleep, press A, B or C once to wake.");
+                      .on_hover_text("S1C33 devices: prevent the firmware display timeout. Disable for normal sleep behavior. If already asleep, press A, B or C once to wake.");
                 });
                 ui.menu_button("Autosave Interval", |ui| {
                     for n in AUTOSAVES {
@@ -1098,7 +1099,7 @@ fn paint_profile_lcd(
             use crate::morino_lcd_geometry as g;
             (g::LCD_SIZE, g::PIXELS, g::ICON_BITS, g::ICON_SPANS)
         }
-        DeviceProfile::On | DeviceProfile::Ps => {
+        DeviceProfile::On | DeviceProfile::Ps | DeviceProfile::Id => {
             unreachable!("On uses the color framebuffer renderer")
         }
         DeviceProfile::Umino => {
@@ -1870,7 +1871,9 @@ mod tests {
                 DeviceProfile::Angel => crate::angel_lcd_geometry::ICON_BITS,
                 DeviceProfile::Morino => g::ICON_BITS,
                 DeviceProfile::Umino => crate::umino_lcd_geometry::ICON_BITS,
-                DeviceProfile::On | DeviceProfile::Ps => unreachable!("Classic geometry test"),
+                DeviceProfile::On | DeviceProfile::Ps | DeviceProfile::Id => {
+                    unreachable!("Classic geometry test")
+                }
             };
             for (icon, &(ram, bit)) in source.icons.iter().zip(expected) {
                 assert_eq!((icon.ram, icon.bit), (ram, bit));
@@ -1940,6 +1943,11 @@ mod tests {
     #[test]
     fn unidentified_ps_import_uses_existing_color_display_library_and_controls() {
         unidentified_rom_workflow(DeviceProfile::Ps);
+    }
+
+    #[test]
+    fn unidentified_id_import_uses_existing_color_display_library_and_controls() {
+        unidentified_rom_workflow(DeviceProfile::Id);
     }
 
     fn unidentified_rom_workflow(profile: DeviceProfile) {
@@ -2015,9 +2023,11 @@ mod tests {
         ));
         std::fs::create_dir_all(&folder).unwrap();
         let path = folder.join("misleading-p1-filename.bin");
-        let bytes: Vec<u8> = if profile == DeviceProfile::Ps {
+        let bytes: Vec<u8> = if let Some(key) = profile.s1c33_key() {
+            let hardware = retrohatch::core::s1c33::profile::HardwareProfile::find(key).unwrap();
             let mut bytes = vec![255; profile.rom_bytes()];
-            bytes[0x400000..0x400004].copy_from_slice(&0x02001000u32.to_le_bytes());
+            let reset = (hardware.ttbr_reset - hardware.rom_base) as usize;
+            bytes[reset..reset + 4].copy_from_slice(&(hardware.rom_base + 0x1000).to_le_bytes());
             bytes[0x1000..0x1002].copy_from_slice(&0x0080u16.to_le_bytes());
             bytes
         } else if profile.is_color() {

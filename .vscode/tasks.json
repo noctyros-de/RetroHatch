@@ -1,0 +1,51 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Check",
+      "type": "process",
+      "command": "cargo",
+      "args": [
+        "check",
+        "--locked"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/app"
+      },
+      "problemMatcher": [
+        "$rustc"
+      ]
+    },
+    {
+      "label": "Test",
+      "type": "process",
+      "command": "cargo",
+      "args": [
+        "test",
+        "--locked"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/app"
+      },
+      "problemMatcher": [
+        "$rustc"
+      ]
+    },
+    {
+      "label": "Build release",
+      "type": "process",
+      "command": "cargo",
+      "args": [
+        "build",
+        "--release",
+        "--locked"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/app"
+      },
+      "problemMatcher": [
+        "$rustc"
+      ]
+    }
+  ]
+}

@@ -13,12 +13,14 @@ from fractions import Fraction
 import hashlib
 import json
 from pathlib import Path
+from workspace_paths import references_dir
+REFERENCES = references_dir()
 from compare_e0c6200_mcu import load_reference, scenarios, sparse, CPU, SOUND
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "app/tests/data"
 MASTER_HZ = 102400000
-PROFILE = json.loads((ROOT / "references/BrickEmuPy-main/assets/TamagotchiGenjintch.brick").read_text(encoding="utf-8"))
+PROFILE = json.loads((REFERENCES / "BrickEmuPy-main/assets/TamagotchiGenjintch.brick").read_text(encoding="utf-8"))
 assert PROFILE["core"] == "E0C6200" and PROFILE["RAM"] == 768
 assert PROFILE["mask_options"]["port_pullup"] == {"K0": 15, "K1": 15}
 assert PROFILE["mask_options"]["p3_dedicated"] == 0

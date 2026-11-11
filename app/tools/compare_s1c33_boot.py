@@ -2,19 +2,21 @@
 # SPDX-FileCopyrightText: 2026 Noctyros
 """Opt-in, local firmware diagnostics against unchanged tamaemu sources; never distributes firmware."""
 from pathlib import Path
+from workspace_paths import references_dir, target_dir
+REFERENCES = references_dir()
 import argparse,os,subprocess,re,array,math
 ROOT=Path(__file__).resolve().parents[2]
 def main():
- parser=argparse.ArgumentParser();parser.add_argument('rom',type=Path);parser.add_argument('--cycles',type=int,default=184320000);parser.add_argument("--buttons",default="");parser.add_argument("--native-log",type=Path);parser.add_argument("--native-pcm",type=Path);args=parser.parse_args()
- target=ROOT/'app/target/s1c33-boot-reference';target.mkdir(exist_ok=True,parents=True)
+ parser=argparse.ArgumentParser();parser.add_argument("--hardware",choices=["ps","id","idl"],default="ps");parser.add_argument('rom',type=Path);parser.add_argument('--cycles',type=int,default=184320000);parser.add_argument("--buttons",default="");parser.add_argument("--native-log",type=Path);parser.add_argument("--native-pcm",type=Path);args=parser.parse_args()
+ target=target_dir()/('s1c33-boot-reference-'+args.hardware);target.mkdir(exist_ok=True,parents=True)
  vswhere=Path(os.environ.get('ProgramFiles(x86)','C:/Program Files (x86)'))/'Microsoft Visual Studio/Installer/vswhere.exe'
  vs=subprocess.check_output([str(vswhere),'-latest','-products','*','-requires','Microsoft.VisualStudio.Component.VC.Tools.x86.x64','-property','installationPath'],text=True).strip()
- sources=[ROOT/'app/tools/s1c33_boot_reference.c']+[ROOT/'references/tamaemu/src'/name for name in ['cpu.c','mem.c','lcd.c','device.c','periph.c','link.c','pn512.c','nfcpeer.c']]
- command=['cl','/nologo','/std:c11','/O2','/MT','/D_CRT_SECURE_NO_WARNINGS','/I'+str(ROOT/'references/tamaemu/src'),*map(str,sources),'/Fe:'+str(target/'reference.exe'),'/link','ws2_32.lib']
+ sources=[ROOT/'app/tools/s1c33_boot_reference.c']+[REFERENCES/'tamaemu/src'/name for name in ['cpu.c','mem.c','lcd.c','device.c','periph.c','link.c','pn512.c','nfcpeer.c']]
+ command=['cl','/nologo','/std:c11','/O2','/MT','/D_CRT_SECURE_NO_WARNINGS','/I'+str(REFERENCES/'tamaemu/src'),*map(str,sources),'/Fe:'+str(target/'reference.exe'),'/link','ws2_32.lib']
  script=target/'build.cmd';script.write_text('@echo off\ncall "'+str(Path(vs)/'Common7/Tools/VsDevCmd.bat')+'" -no_logo -arch=x64 -host_arch=x64\nif errorlevel 1 exit /b %errorlevel%\n'+subprocess.list2cmdline(command)+'\n')
  subprocess.run(['cmd','/d','/c',str(script)],cwd=target,check=True)
  with (target/'diagnostics.log').open('w')as log:
-  output=subprocess.check_output([str(target/'reference.exe'),str(args.rom.resolve()),str(args.cycles),str(target/'display.ppm'),args.buttons],stderr=log,text=True)
+  output=subprocess.check_output([str(target/'reference.exe'),str(args.rom.resolve()),str(args.cycles),str(target/'display.ppm'),args.buttons,args.hardware],stderr=log,text=True)
  print(output,end='')
  if args.native_log:
   frames={};last=None
@@ -31,7 +33,7 @@ def main():
  if args.native_pcm:
   actual=array.array('h');actual.frombytes(args.native_pcm.read_bytes());expected=array.array('h');phase=0.0;fraction=0.0;previous=0;on=False;frequency=0.0
   events=[(int(cycle),float(freq),bool(int(active)))for cycle,freq,active in (line.split()for line in (target/'display.ppm.tones').read_text().splitlines())]
-  events.append((args.cycles,0.0,False))
+  # The C runner records its actual final instruction boundary as the last event.
   for cycle,new_frequency,new_on in events:
    count=(cycle-previous)*44100.0/18432000.0+fraction;n=int(count);fraction=count-n
    for _ in range(n):
@@ -40,7 +42,7 @@ def main():
      phase=(phase+frequency/44100.0)%1.0;sample=4500 if phase<0.5 else -4500
     expected.append(sample)
    previous=cycle;frequency=new_frequency;on=new_on
-  assert actual==expected, f"Real-firmware PCM differs from the C event oracle: {sum(a!=b for a,b in zip(actual,expected))} mismatches"
+  assert actual==expected, f"Real-firmware PCM differs from C: {len(actual)} vs {len(expected)} samples; {sum(a!=b for a,b in zip(actual,expected))} mismatches"
   print(f"Verified {len(actual)} real-firmware PCM samples against C tone events: exact match, no filtering.")
 if __name__=='__main__':main()
 

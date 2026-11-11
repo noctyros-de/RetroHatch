@@ -10,10 +10,12 @@ sys.dont_write_bytecode = True
 import argparse
 import json
 from pathlib import Path
+from workspace_paths import references_dir
+REFERENCES = references_dir()
 from compare_genjintch import ROOT, DATA, PROFILE, generate, compare_rom
 import compare_genjintch as shared
 
-UMINO = json.loads((ROOT / "references/BrickEmuPy-main/assets/TamagotchiUmino.brick").read_text(encoding="utf-8"))
+UMINO = json.loads((REFERENCES / "BrickEmuPy-main/assets/TamagotchiUmino.brick").read_text(encoding="utf-8"))
 for key in ("core", "clock", "RAM", "peripherals", "buttons"):
     assert UMINO[key] == PROFILE[key], f"Umino hardware differs: {key}"
 for key in ("port_pullup", "p3_dedicated"):

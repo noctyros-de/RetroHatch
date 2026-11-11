@@ -86,6 +86,7 @@ pub fn profile_code(p: DeviceProfile) -> u8 {
         DeviceProfile::P2 => 5,
         DeviceProfile::On => 6,
         DeviceProfile::Ps => 7,
+        DeviceProfile::Id => 8,
     }
 }
 pub fn fingerprint(words: &[u16]) -> [u8; 32] {

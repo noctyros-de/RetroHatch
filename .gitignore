@@ -1,76 +1,48 @@
-# Reference projects
-/references/
-
-# Internal documentation; only the approved public README logo is excepted
-/docs/*
-!/docs/assets/
-/docs/assets/*
-!/docs/assets/retrohatchlogo.png
-/AGENTS.md
-
-# Build files
+# Reproducible Cargo output and local distribution drafts
+/target/
 /app/target/
-*.exe
+/dist/
+/release-staging/
+/.cargo/config.toml
 
-# ROMs and save states
+# Optional local data must stay outside the repository; guard accidental copies.
+/local/
 /roms/
 /saves/
+/resources/
+/references/
 /app/roms/
 /app/saves/
-# RetroHatch user state and settings
+**/rom-library/
+*.rhl
+*.rhl.bak
 *.rhstate
 *.rhstate.bak
-settings.rhc
 *.rhstate.*.tmp
+settings.rhc
 settings.rhc.bak
 .settings.rhc.*.tmp
 .settings.rhc.bak.*.tmp
 
-# Private ROM libraries, including developer data-root overrides
-**/rom-library/
-*.rhl
-*.rhl.bak
-
-
-# Publication preparation: retain private documentation and local material above.
-# Public developer documentation belongs in /developer/, not /docs/.
-/dist/
-/release-staging/
-/.codex/
-/.agents/
-/.aws/
-/.ssh/
-.env
-.env.*
-!.env.example
+# Generated binaries, diagnostics and user media
+*.exe
+*.pdb
+*.dll
+*.lib
 *.rom
 *.bin
 *.dump
 *.dmp
-*.pdb
-*.dll
-*.lib
 *.log
 *.csv
 *.trace
 *.wav
 *.zip
 *.7z
-*.pem
-*.key
-__pycache__/
-*.py[cod]
-
-# Local branding originals and user-generated captures
-/resources/
-**/screenshots/
-
-# User-generated media (including Pictures-style local validation roots)
+*.mp4
 **/Screenshots/
 **/Recordings/
-*.mp4
-
-# Owner-selected public gallery only; generated captures/videos remain ignored.
+**/screenshots/
 !/docs/screenshots/
 /docs/screenshots/*
 !/docs/screenshots/README.md
@@ -79,3 +51,20 @@ __pycache__/
 !/docs/screenshots/*.jpeg
 !/docs/screenshots/*.webp
 !/docs/screenshots/*.gif
+
+# Secrets, private agent settings, caches and editor state
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+__pycache__/
+*.py[cod]
+/.codex/
+/.agents/
+/.aws/
+/.ssh/
+/.vs/
+/.idea/
+*.code-workspace
+/.vscode/*.local.json

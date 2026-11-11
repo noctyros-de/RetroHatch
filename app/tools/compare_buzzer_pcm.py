@@ -5,12 +5,14 @@ import sys
 sys.dont_write_bytecode=True
 import ast,math,subprocess
 from pathlib import Path
+from workspace_paths import references_dir, target_dir
+REFERENCES = references_dir()
 ROOT=Path(__file__).resolve().parents[2]
-tree=ast.parse((ROOT/'references/BrickEmuPy-main/audio_engine.py').read_text())
+tree=ast.parse((REFERENCES/'BrickEmuPy-main/audio_engine.py').read_text())
 node=next(n for n in tree.body if isinstance(n,ast.ClassDef)and n.name=='Channel')
 scope={'math':math};exec(compile(ast.Module(body=[node],type_ignores=[]),'original Channel','exec'),scope)
 channel=scope['Channel'](44100);count=nonzero=clipped=0;maximum=0
-exe=ROOT/'app/target/release/examples/buzzer_pcm.exe'
+exe=target_dir()/'release/examples/buzzer_pcm.exe'
 for line in subprocess.check_output([str(exe)],text=True).splitlines():
     f,level,pcm=line.split('|');values=list(map(int,pcm.split(',')));level=int(level)
     if level==0:channel._phase=0;expected=[0]*len(values)

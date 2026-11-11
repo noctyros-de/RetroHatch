@@ -52,10 +52,12 @@ checkout using `RETROHATCH_DATA_DIR` so ordinary settings/saves stay untouched.
 - `developer/`: public, sanitized technical documentation.
 - `LICENSES/`, `THIRD_PARTY_LICENSES.md`: dependency inventory and full notices.
 
-Local `references/`, `resources/`, ROMs, saves, internal research and AGENTS.md
-remain excluded. Public docs exceptions are the approved logo in `docs/assets/`
-and the manually managed `docs/screenshots/` gallery. Do not unignore all docs.
-Place technical guides in `developer/`, without personal paths.
+Private references, branding originals, ROMs, builds and research belong in the
+optional sibling `../local/`, outside the Git repository. Public AGENTS.md and
+VS Code settings are safe project instructions; machine-specific Cargo settings
+remain ignored. See [workspace setup](developer/WORKSPACE.md). Public `docs/`
+contains the approved logo and owner-managed gallery; place technical guides
+in `developer/`, without personal paths or private data.
 
 The README Screenshots/Gameplay Videos sections and selected gallery files are
 owner-managed. Preserve their entries, order and captions. Do not add captures,
@@ -86,7 +88,7 @@ See [gallery instructions](docs/screenshots/README.md).
 ## Optional Python/reference checks
 
 Existing `app/tools/compare_*.py --check` and `extract_*.py --check` use an
-independently obtained local BrickEmuPy checkout at `references/BrickEmuPy-main`.
+independently obtained local BrickEmuPy checkout at `../local/references/BrickEmuPy-main` (or set RETROHATCH_REFERENCES_DIR).
 The base dependency is Python's standard library; the exact SVG mask/quality
 checks additionally use PyQt6, and PCM/LCD probes use locally built release
 examples (`cargo build --release --locked --examples`). P2 reuses the checked P1

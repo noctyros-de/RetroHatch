@@ -436,3 +436,64 @@ fn optional_awake_policy_preserves_gram_and_only_overrides_the_reference_sleep_f
     awake.keep_screen_awake = false;
     assert_eq!(awake.rgb(), normal.rgb());
 }
+
+#[test]
+fn original_id_profile_preserves_gpio_rtc_lcd_and_full_state() {
+    use super::{machine::Machine, peripherals::Peripherals};
+    let profile = HardwareProfile::find("id").unwrap();
+    assert_eq!(
+        (profile.rom_base, profile.rom_size, profile.ttbr_reset),
+        (0xc00000, 0x400000, 0xc00000)
+    );
+    assert_eq!(
+        (profile.osc3_hz, profile.sleep_flag, profile.ir_ctx_ptr),
+        (18_432_000, 0xefc, 0x842bc)
+    );
+    let mut bytes = vec![255; profile.rom_size as usize];
+    bytes[..4].copy_from_slice(&(profile.rom_base + 0x1000).to_le_bytes());
+    bytes[0x1000..0x1004].copy_from_slice(&[0x11, 0x60, 0xff, 0x1e]);
+    let mut machine = Machine::new(&bytes, profile).unwrap();
+    let mut peripherals = Peripherals::new(profile);
+    peripherals.write8(0x300260, 3, profile);
+    peripherals.write8(0x300270, 7, profile);
+    for (mask, vector) in [(1, 16), (2, 17), (4, 18)] {
+        peripherals.buttons(mask);
+        assert_eq!(peripherals.read8(0x300380, profile) & 7, 7 ^ mask);
+        assert_eq!(peripherals.pending, vector);
+        peripherals.write8(0x300280, mask, profile);
+        peripherals.buttons(0);
+        assert_eq!(peripherals.read8(0x300380, profile) & 7, 7);
+    }
+    peripherals.tick(18_432_000, profile);
+    assert_eq!(peripherals.rtc_seconds, 1);
+    machine.memory.peripherals = Some(peripherals);
+    machine.memory.lcd.write_command(0x11);
+    machine.memory.lcd.write_command(0x29);
+    machine.memory.lcd.gram[0] = 0xf800;
+    for _ in 0..300 {
+        machine.step().unwrap();
+    }
+    let hash = crate::core::state::sha256(&bytes);
+    let saved = machine.save_state(hash).unwrap();
+    assert_eq!(saved[12], 8); // Existing P's states retain code 7.
+    let mut restored = Machine::restored(&saved, hash).unwrap();
+    assert_eq!(restored.memory.profile, profile);
+    assert_eq!(restored.rgb(), machine.rgb());
+    assert_eq!(restored.save_state(hash).unwrap(), saved);
+    for _ in 0..300 {
+        machine.step().unwrap();
+        restored.step().unwrap();
+    }
+    assert_eq!(
+        restored.save_state(hash).unwrap(),
+        machine.save_state(hash).unwrap()
+    );
+    let flash = machine.memory.flash().to_vec();
+    machine.reset().unwrap();
+    assert_eq!(machine.memory.profile, profile);
+    assert_eq!(machine.cpu.pc, profile.rom_base + 0x1000);
+    assert_eq!(machine.memory.flash(), flash);
+    assert!(Machine::new(&vec![255; 0x800000], profile).is_err());
+    assert!(crate::core::profile::DeviceProfile::parse("idl").is_none());
+    assert!(crate::core::profile::DeviceProfile::parse("id-melody").is_none());
+}

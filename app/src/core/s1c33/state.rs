@@ -146,7 +146,11 @@ impl Machine {
         out.bytes(MAGIC);
         out.u16(1);
         out.u16(3);
-        out.u8(7);
+        out.u8(match self.memory.profile.key {
+            "ps" => 7,
+            "id" => 8,
+            _ => return Err("Save support is unavailable for this S1C33 hardware profile".into()),
+        });
         out.bytes(&hash);
         out.u32(e.0.len() as u32);
         out.bytes(&e.0);
@@ -166,15 +170,19 @@ impl Machine {
         )?;
         let mut r = Decoder::new(body);
         require(
-            &r.array::<8>()? == MAGIC && r.u16()? == 1 && r.u16()? == 3 && r.u8()? == 7,
+            &r.array::<8>()? == MAGIC && r.u16()? == 1 && r.u16()? == 3,
             "Unsupported S1C33 save format or profile",
         )?;
+        let profile = match r.u8()? {
+            7 => HardwareProfile::find("ps").unwrap(),
+            8 => HardwareProfile::find("id").unwrap(),
+            _ => return Err("Unsupported S1C33 save profile".into()),
+        };
         require(r.array::<32>()? == hash, "Save belongs to a different ROM")?;
         require(
             r.u32()? as usize == body.len() - r.at,
             "Invalid S1C33 payload length",
         )?;
-        let profile = HardwareProfile::find("ps").unwrap();
         let mut cpu = super::cpu::Cpu::default();
         for v in &mut cpu.r {
             *v = r.u32()?;

@@ -12,11 +12,13 @@ import argparse
 import hashlib
 import math
 from pathlib import Path
+from workspace_paths import references_dir
+REFERENCES = references_dir()
 import xml.etree.ElementTree as ET
 from extract_p1_lcd import contours
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE = ROOT / "references/BrickEmuPy-main/assets/TamagotchiAngel.svg"
+SOURCE = REFERENCES / "BrickEmuPy-main/assets/TamagotchiAngel.svg"
 TARGET = ROOT / "app/src/angel_lcd_geometry.rs"
 LEFT, TOP, WIDTH, HEIGHT = 171.945, 294.178, 352, 329
 
