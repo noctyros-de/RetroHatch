@@ -86,7 +86,7 @@ impl RetroHatchApp {
                     }
                 } else {
                     app.local_error = Some(
-                        "Use --profile p1, p2, genjintch, angel, morino, umino, on, ps, id, id-melody, idl, idl-en, idl-princess, idl-15, plus-color, plus-color-hexa, 4u or 4u-en followed by a local ROM path.".into(),
+                        "Use --profile v3-eu, p1, p2, genjintch, angel, morino, umino, on, ps, id, id-melody, idl, idl-en, idl-princess, idl-15, plus-color, plus-color-hexa, 4u or 4u-en followed by a local ROM path.".into(),
                     );
                 }
             } else {
@@ -688,8 +688,9 @@ impl RetroHatchApp {
                     } else {
                         108.0
                     };
-                    let aspect = if profile.is_color() {
-                        1.0
+                    let aspect = if profile.uses_framebuffer() {
+                        let [w, h] = profile.framebuffer_size();
+                        h as f32 / w as f32
                     } else {
                         if profile == DeviceProfile::Yasashii {
                             175.0 / 351.0
@@ -715,9 +716,10 @@ impl RetroHatchApp {
                         } else {
                             self.selected_profile
                         })
-                        .is_color();
+                        .uses_framebuffer();
                         let aspect = if color {
-                            1.0
+                            let [w, h] = profile.framebuffer_size();
+                            h as f32 / w as f32
                         } else if profile == DeviceProfile::Yasashii {
                             175.0 / 351.0
                         } else {
@@ -731,7 +733,7 @@ impl RetroHatchApp {
                         } else {
                             self.selected_profile
                         };
-                        let lcd = if profile.is_color() {
+                        let lcd = if profile.uses_framebuffer() {
                             self.paint_color_lcd(ui, &s, width)
                         } else {
                             paint_profile_lcd(ui, &s.display, width, !s.loaded, profile)
@@ -884,12 +886,14 @@ impl RetroHatchApp {
         ctx.request_repaint_after(Duration::from_millis(16));
     }
     fn paint_color_lcd(&mut self, ui: &mut egui::Ui, s: &Snapshot, width: f32) -> egui::Response {
+        let [w, h] = s.profile.framebuffer_size();
+        let height = width * h as f32 / w as f32;
         let ppp = ui.ctx().pixels_per_point();
         let width = (width * ppp).round().max(1.0) / ppp;
         if let Some(pixels) = &s.color_display {
             if self.color_pixels.as_deref() != Some(pixels.as_ref()) || self.color_texture.is_none()
             {
-                let image = egui::ColorImage::from_rgb([128, 128], pixels);
+                let image = egui::ColorImage::from_rgb(s.profile.framebuffer_size(), pixels);
                 if let Some(texture) = &mut self.color_texture {
                     texture.set(image, egui::TextureOptions::NEAREST);
                 } else {
@@ -902,11 +906,11 @@ impl RetroHatchApp {
                 self.color_pixels = Some(pixels.clone());
             }
             let texture = self.color_texture.as_ref().unwrap();
-            ui.add(egui::Image::new((texture.id(), egui::vec2(width, width))))
+            ui.add(egui::Image::new((texture.id(), egui::vec2(width, height))))
         } else {
             // No generated game artwork: this is an empty, unpowered color LCD.
             let (rect, response) =
-                ui.allocate_exact_size(egui::vec2(width, width), egui::Sense::hover());
+                ui.allocate_exact_size(egui::vec2(width, height), egui::Sense::hover());
             ui.painter().rect_filled(rect, 0.0, egui::Color32::BLACK);
             response
         }
@@ -1070,8 +1074,9 @@ fn request_display_size(ctx: &egui::Context, profile: DeviceProfile, percent: u1
     let size = egui::vec2(
         (width + 80.).max(460.).min((screen.x - 80.).max(350.)),
         (width
-            * if profile.is_color() {
-                1.
+            * if profile.uses_framebuffer() {
+                let [w, h] = profile.framebuffer_size();
+                h as f32 / w as f32
             } else if profile == DeviceProfile::Yasashii {
                 175. / 351.
             } else {
@@ -1147,7 +1152,12 @@ fn diagnostics(ctx: &egui::Context, s: &Snapshot, open: &mut bool) {
             "Speed {:.2}% | Average {:.2}% | Lag {:.2} ms",
             p.speed_percent, p.average_speed_percent, p.lag_ms
         ));
-        if s.profile.is_color() {
+        if s.profile == DeviceProfile::ConnectionV3Eu {
+            ui.monospace(format!(
+                "SPLB32: 4 MHz | {} instructions | {} interrupts",
+                s.instructions, s.interrupts
+            ));
+        } else if s.profile.is_color() {
             ui.monospace(format!(
                 "{} CPU instruction/skip ticks | {} interrupts",
                 s.instructions, s.interrupts
@@ -1209,7 +1219,8 @@ fn paint_profile_lcd(
             use crate::morino_lcd_geometry as g;
             (g::LCD_SIZE, g::PIXELS, g::ICON_BITS, g::ICON_SPANS)
         }
-        DeviceProfile::On
+        DeviceProfile::ConnectionV3Eu
+        | DeviceProfile::On
         | DeviceProfile::MeetsFairy
         | DeviceProfile::MeetsMagical
         | DeviceProfile::MeetsFantasy
@@ -2155,7 +2166,8 @@ mod tests {
                 DeviceProfile::Morino => g::ICON_BITS,
                 DeviceProfile::Umino => crate::umino_lcd_geometry::ICON_BITS,
                 DeviceProfile::Yasashii => unreachable!("No LCD icons"),
-                DeviceProfile::On
+                DeviceProfile::ConnectionV3Eu
+                | DeviceProfile::On
                 | DeviceProfile::MeetsFairy
                 | DeviceProfile::MeetsMagical
                 | DeviceProfile::MeetsFantasy
@@ -2239,6 +2251,11 @@ mod tests {
     fn unidentified_p1_sized_rom_can_select_p2_and_start_from_the_persistent_library() {
         unidentified_rom_workflow(DeviceProfile::P2);
     }
+    #[test]
+    fn v3_import_uses_the_existing_ui_and_non_square_framebuffer() {
+        unidentified_rom_workflow(DeviceProfile::ConnectionV3Eu);
+    }
+
     #[test]
     fn unidentified_on_import_color_display_and_one_click_library_start_use_the_existing_ui() {
         unidentified_rom_workflow(DeviceProfile::On);
@@ -2367,6 +2384,11 @@ mod tests {
             bytes[reset..reset + 4].copy_from_slice(&(hardware.rom_base + 0x1000).to_le_bytes());
             bytes[0x1000..0x1002].copy_from_slice(&0x0080u16.to_le_bytes());
             bytes
+        } else if profile == DeviceProfile::ConnectionV3Eu {
+            let mut bytes = vec![0xea; 524288];
+            bytes[0x4800..0x4803].copy_from_slice(&[0x4c, 0, 0xc8]);
+            bytes[0x7ffc..0x7ffe].copy_from_slice(&[0, 0xc8]);
+            bytes
         } else if profile.is_color() {
             let mut bytes = vec![0; profile.rom_bytes()];
             bytes[..4].copy_from_slice(b"SPII");
@@ -2444,7 +2466,7 @@ mod tests {
         let pos = center(&out, "Manage ROMs...");
         let out = click(&ctx, &mut app, pos);
         assert!(app.library.manage);
-        let out = if profile.is_color() {
+        let out = if profile.uses_framebuffer() {
             // Allow the newly opened management window to finish its automatic layout.
             for _ in 0..3 {
                 frame(&ctx, &mut app, vec![]);

@@ -12,7 +12,8 @@ pub fn masks(p: DeviceProfile) -> &'static Masks {
         DeviceProfile::Morino => &crate::lcd_masks::MORINO,
         DeviceProfile::Umino => &crate::lcd_masks::UMINO,
         DeviceProfile::Yasashii => unreachable!("Yasashii has no fixed LCD icons"),
-        DeviceProfile::On
+        DeviceProfile::ConnectionV3Eu
+        | DeviceProfile::On
         | DeviceProfile::MeetsFairy
         | DeviceProfile::MeetsMagical
         | DeviceProfile::MeetsFantasy
@@ -110,7 +111,8 @@ pub fn paint(
             DeviceProfile::Morino => 3,
             DeviceProfile::Umino => 4,
             DeviceProfile::Yasashii => unreachable!("Yasashii has no fixed LCD icons"),
-            DeviceProfile::On
+            DeviceProfile::ConnectionV3Eu
+            | DeviceProfile::On
             | DeviceProfile::MeetsFairy
             | DeviceProfile::MeetsMagical
             | DeviceProfile::MeetsFantasy

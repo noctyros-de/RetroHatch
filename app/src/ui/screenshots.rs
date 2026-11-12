@@ -98,10 +98,13 @@ impl RetroHatchApp {
                 let profile = s.profile;
                 let ctx = ctx.clone();
                 std::thread::spawn(move || {
-                    let image = if profile.is_color() {
+                    let image = if profile.uses_framebuffer() {
                         color
                             .ok_or("The native color framebuffer is unavailable".into())
-                            .and_then(|rgb| Image::new(128, 128, rgb.as_ref().clone()))
+                            .and_then(|rgb| {
+                                let [w, h] = profile.framebuffer_size();
+                                Image::new(w, h, rgb.as_ref().clone())
+                            })
                     } else {
                         crate::lcd_render::native_lcd(profile, &display)
                     };

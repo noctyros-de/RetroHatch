@@ -104,3 +104,14 @@ Codes 16/17 use schema 4, adding the PN512 register/UART state; old devices stil
 write/read their original schemas. Disconnected RF supplies no virtual peer,
 connectivity or DLC. See [4UPLUS.md](4UPLUS.md). Exact zero-time/zero-sample audio
 fast paths and inlining remove CPU overhead without changing clocks or samples.
+
+
+The experimental [Connection V3 backend](CONNECTION_V3.md) is independent of
+E0C6200, S1C33 and TG18. Its SPLB32 worker uses the common monotonic pacer, input,
+Windows audio and save coordinator. Display dimensions are profile metadata,
+allowing its non-square 352x363 LCD presentation through the shared framebuffer
+UI/capture paths. Full state schema 6/profile 26 includes the 1-KiB I2C EEPROM;
+schema 7 stores nonvolatile bytes independently. Existing schemas stay unchanged.
+Public fixed symbols use original GPL replacement SVGs and checked-in coverage;
+private exact-symbol packs remain optional and are never bundled. This backend has focused offline setup/hatching/care and save-continuation
+validation; IR communication remains unavailable.

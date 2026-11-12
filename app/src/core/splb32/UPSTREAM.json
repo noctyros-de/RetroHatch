@@ -1,0 +1,25 @@
+{
+  "upstream": "https://github.com/azya52/BrickEmuPy",
+  "author": "azya52",
+  "declared_license": "CC0-1.0",
+  "revision": "Local reference archive; no Git commit identifier available",
+  "scope": "Direct Rust translation of SPLB32 CPU/MCU, sound control and HT24LC08; factual LCD matrix mapping and EU profile values. No fixed icon paths, shell, firmware or Tama-Go code embedded. IR source reviewed only; no communication implementation.",
+  "source_sha256": {
+    "LICENSE": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+    "README.md": "4312b488bdfde20212a8d7c43505d42aeb48f23f264c7f358eef607960f7ff20",
+    "cores/SPLB32.py": "d48ba40684b01011bba72576bb51c72a8b98c82fe641238fa6a6331d98323109",
+    "cores/SPLB32sound.py": "dd7120feb80a3488896ac0f5e9ed2fefeffe28d408850259b5c46f84ee7caf25",
+    "cores/rom.py": "c552d6fb9fd28b0ae0e362e9795616a97e04ea6e7da374f054137e2db23d390a",
+    "peripherals/HT24LC08.py": "367fac251d52a939e0eb026b045086bd96ff7daa927ca0f83d46e685da4ee81e",
+    "peripherals/CON_V3_IR.py": "cd4897dc2b1d5d51b920c6756142e6fabbe557e1032454b6b73299926aea5cd9",
+    "interconnect.py": "1708ca5e6d7a5e2282eb13c857f796d246c026ae5e9778d23087cfaca843a38d",
+    "assets/Tamagotchi_v3_eu.brick": "9ffff91173c064451ddcb5f10055469e6af8cdb43537e903f10031f79e0b9c21",
+    "assets/Tamagotchi_v3_us.brick": "de8694244196021e7d914ae9d6b2c61c4c6636005b633417df0ba65b698f488e",
+    "assets/Tamagotchi_v3.svg": "cf1b8520c337694d2210ac225b9950afaec98c1fd15344bbcb2da9c973120cc1"
+  },
+  "research_only": {
+    "Paramix Studio": "https://github.com/mameise/Paramix-Studio/tree/675b904ab1c8a9086b977a82cbc47cd0c319187f/v3",
+    "scope": "Architecture/provenance comparison only; no C CPU, generated handlers or PNG/fallback icons incorporated. GPLv3-or-later source notice retained in private research."
+  },
+  "behavioral_difference": "SFR 0x0C exposes the low byte of the internal timebase counter on the eight-bit bus; corroborated by the explicit Paramix v3cpu.c:193 comment. Independently implemented mask, no Paramix C copied."
+}

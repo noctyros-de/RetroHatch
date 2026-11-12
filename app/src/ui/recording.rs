@@ -211,11 +211,14 @@ impl RetroHatchApp {
                     return;
                 }
                 let image =
-                    if s.profile.is_color() {
+                    if s.profile.uses_framebuffer() {
                         s.color_display
                             .as_ref()
                             .ok_or("Native color display unavailable".into())
-                            .and_then(|rgb| Image::new(128, 128, rgb.as_ref().clone()))
+                            .and_then(|rgb| {
+                                let [w, h] = s.profile.framebuffer_size();
+                                Image::new(w, h, rgb.as_ref().clone())
+                            })
                     } else {
                         if !self.recording.lcd.as_ref().is_some_and(|(p, bits, _)| {
                             *p == s.profile && *bits == s.display.nibbles

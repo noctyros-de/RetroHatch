@@ -81,9 +81,15 @@ pub(super) fn dialogs(ctx: &egui::Context, state: &mut HelpUi) -> Option<Externa
             .vscroll(true)
             .show(ctx, |ui| {
                 ui.strong("Classic devices");
-                for profile in DeviceProfile::ALL.into_iter().filter(|p| !p.is_color()) {
+                for profile in DeviceProfile::ALL
+                    .into_iter()
+                    .filter(|p| !p.uses_framebuffer())
+                {
                     ui.label(profile.name());
                 }
+                ui.separator();
+                ui.strong("Connection devices (experimental)");
+                ui.label(DeviceProfile::ConnectionV3Eu.name());
                 if DeviceProfile::ALL.iter().any(|p| p.is_color()) {
                     ui.separator();
                     ui.strong("Color devices");

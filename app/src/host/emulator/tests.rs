@@ -532,3 +532,102 @@ fn meets_profiles_keep_distinct_saves_and_restore_serialized_timer_history() {
         );
     }
 }
+
+fn v3_image() -> Vec<u8> {
+    let mut r = vec![0xea; 524288];
+    r[0x4800..0x480c]
+        .copy_from_slice(&[0xa9, 1, 0x85, 0x24, 0xa9, 255, 0x8d, 0, 0x3e, 0x4c, 9, 0xc8]);
+    r[0x7ffc..0x7ffe].copy_from_slice(&[0, 0xc8]);
+    r
+}
+#[test]
+fn v3_library_three_slots_export_import_and_worker_restart_preserve_state() {
+    let tmp = Temp::new();
+    let bytes = v3_image();
+    let prepared = inspect_bytes(bytes.clone(), "P1-misleading-name.bin".into()).unwrap();
+    assert_eq!(prepared.candidates, [DeviceProfile::ConnectionV3Eu]);
+    let mut library = Library::open(&tmp.0).unwrap();
+    let entry = library
+        .import(
+            &prepared,
+            Assignment {
+                profile: DeviceProfile::ConnectionV3Eu,
+                variant: String::new(),
+                evidence: "Synthetic test confirmation".into(),
+            },
+        )
+        .unwrap();
+    let path = library.verified_path(&entry.key).unwrap();
+    let policy = SavePolicy::default();
+    let c = Controller::with_storage(false, tmp.0.clone(), policy.clone());
+    c.send(Command::LoadVerified(
+        path.clone(),
+        DeviceProfile::ConnectionV3Eu,
+        sha256(&bytes),
+    ));
+    wait(&c, |s| s.loaded && !s.loading && s.ticks > 0);
+    c.send(Command::Pause);
+    let paused = wait(&c, |s| !s.running);
+    assert_eq!(paused.color_display.as_ref().unwrap().len(), 352 * 363 * 3);
+    for n in 1..=3 {
+        c.send(Command::Save(SaveTarget::Slot(n)));
+        wait(&c, |s| s.slots[n as usize - 1]);
+        c.send(Command::LoadSave(SaveTarget::Slot(n)));
+        wait(&c, |s| s.restores >= u64::from(n));
+        assert_eq!(c.snapshot().ticks, paused.ticks);
+    }
+    let path_export = tmp.0.join("export.rhstate");
+    let count = c.snapshot().save_count;
+    c.send(Command::Export(path_export.clone()));
+    wait(&c, |s| s.save_count > count);
+    let count = c.snapshot().restores;
+    c.send(Command::Import(path_export));
+    wait(&c, |s| s.restores > count);
+    assert_eq!(c.snapshot().ticks, paused.ticks);
+    c.send(Command::PrepareExit);
+    wait(&c, |s| s.exit_ready);
+    drop(c);
+    let again = Controller::with_storage(false, tmp.0.clone(), policy);
+    again.send(Command::LoadProfile(path, DeviceProfile::ConnectionV3Eu));
+    let resumed = wait(&again, |s| s.restores > 0 && !s.loading);
+    assert!(resumed.ticks >= paused.ticks);
+    assert!(resumed.error.is_none());
+    drop(again);
+    assert_eq!(
+        std::fs::read(library.verified_path(&entry.key).unwrap()).unwrap(),
+        bytes
+    );
+}
+#[test]
+fn v3_eeprom_has_separate_atomic_firmware_bound_storage() {
+    let tmp = Temp::new();
+    let bytes = v3_image();
+    let mut d = Emulator::from_bytes(&bytes, DeviceProfile::ConnectionV3Eu).unwrap();
+    if let Backend::ConnectionV3(v) = &mut d.backend {
+        v.machine.ee.data[523] = 0xa7;
+    }
+    let policy = SavePolicy {
+        save_on_exit: false,
+        autosave_minutes: 0,
+        ..SavePolicy::default()
+    };
+    let mut saves = crate::host::saves::Saves::new(tmp.0.clone(), policy);
+    saves.automatic_due(&d, true).unwrap();
+    saves.finish();
+    let path = saves.directory(&d).join("eeprom.rhstate");
+    assert!(path.exists());
+    assert!(!saves.directory(&d).join("autosave.rhstate").exists());
+    let mut fresh = Emulator::from_bytes(&bytes, DeviceProfile::ConnectionV3Eu).unwrap();
+    fresh.load_nonvolatile(&tmp.0).unwrap();
+    assert_eq!(fresh.nonvolatile_image(), d.nonvolatile_image());
+    assert_eq!(fresh.time(), 0);
+    if let Backend::ConnectionV3(v) = &fresh.backend {
+        assert_eq!(v.machine.ee.data[523], 0xa7);
+    }
+    let mut corrupt = std::fs::read(&path).unwrap();
+    corrupt[55] ^= 1;
+    std::fs::write(&path, corrupt).unwrap();
+    let before = fresh.nonvolatile_image();
+    assert!(fresh.load_nonvolatile(&tmp.0).is_err());
+    assert_eq!(fresh.nonvolatile_image(), before);
+}

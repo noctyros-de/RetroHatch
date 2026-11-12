@@ -27,6 +27,9 @@ PREFIXES = (".github/", "developer/", "LICENSES/", "app/src/", "app/assets/lcd/"
             "app/examples/", "app/tests/", "app/tools/", "app/LICENSES/", "app/third_party/")
 SUFFIXES = {".rs", ".toml", ".lock", ".md", ".txt", ".py", ".ps1", ".json",
             ".html", ".alpha", ".yml", ".yaml", ".c"}
+V3_ASSETS = {"app/assets/connection-v3/"+name for name in (
+    "README.md", "icons.alpha", "health.svg", "food.svg", "clean.svg", "games.svg",
+    "connection.svg", "discipline.svg", "medicine.svg", "lights.svg", "friends.svg", "attention.svg")}
 GALLERY = PurePosixPath("docs/screenshots")
 GALLERY_IMAGES = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 SYSTEM_DLLS = {"kernel32.dll", "kernelbase.dll", "user32.dll", "dwmapi.dll",
@@ -43,7 +46,7 @@ def source_allowed(name):
         return False
     if path.parent == GALLERY and (path.name == "README.md" or path.suffix.lower() in GALLERY_IMAGES):
         return True
-    if name in ROOT_FILES or name in APP_FILES:
+    if name in ROOT_FILES or name in APP_FILES or name in V3_ASSETS:
         return True
     return name.startswith(PREFIXES) and (path.suffix.lower() in SUFFIXES or path.name == "LICENSE")
 
@@ -153,6 +156,7 @@ def package(args):
     required = {"app/src/main.rs", "app/Cargo.toml", "app/Cargo.lock", "LICENSE", "README.md",
                 "COPYRIGHT.md", "THIRD_PARTY_LICENSES.md", "LICENSES/CARGO_PACKAGES.json",
                 "app/LICENSES/BrickEmuPy-CC0-1.0.txt", ".github/workflows/windows-release.yml"}
+    required |= V3_ASSETS
     if not required.issubset(files):
         raise ValueError(f"Missing required publication files: {sorted(required-set(files))}")
     output = args.output.resolve()

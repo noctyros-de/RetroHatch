@@ -31,6 +31,15 @@ class PackagingTests(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertTrue(source_allowed(name))
 
+    def test_v3_coverage_and_all_preferred_svg_sources_are_packaged(self):
+        from package_release import V3_ASSETS
+        self.assertEqual(len(V3_ASSETS), 12)
+        for name in V3_ASSETS:
+            self.assertTrue(source_allowed(name), name)
+        for name in ("app/assets/connection-v3/private.rhlcd", "app/assets/connection-v3/private.svg",
+                     "app/assets/connection-v3/firmware.bin", "app/assets/connection-v3/saves/slot.rhstate"):
+            self.assertFalse(source_allowed(name), name)
+
     def test_only_selected_top_level_gallery_images_and_guide_are_public(self):
         for name in ("docs/screenshots/README.md", "docs/screenshots/angel.png",
                      "docs/screenshots/ps.jpg", "docs/screenshots/on.webp", "docs/screenshots/p1.gif"):

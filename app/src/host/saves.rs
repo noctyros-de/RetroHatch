@@ -54,6 +54,7 @@ enum Task {
         prepared: Emulator,
         generation: u64,
     },
+    Nonvolatile,
     Exit,
 }
 pub struct Saves {
@@ -64,6 +65,8 @@ pub struct Saves {
     next: Instant,
     generation: u64,
     resume_blocked: bool,
+    nv_next: Instant,
+    nv_last: Option<(String, Vec<u8>)>,
 }
 impl Saves {
     pub fn new(root: PathBuf, policy: SavePolicy) -> Self {
@@ -75,6 +78,8 @@ impl Saves {
             next: Instant::now(),
             generation: 0,
             resume_blocked: false,
+            nv_next: Instant::now(),
+            nv_last: None,
         }
     }
     pub fn directory(&self, d: &Emulator) -> PathBuf {
@@ -106,10 +111,25 @@ impl Saves {
     pub fn busy(&self) -> bool {
         !self.tasks.is_empty()
     }
+    fn persist_nonvolatile(&mut self, d: &Emulator) -> Result<(), String> {
+        if let Some(bytes) = d.nonvolatile_image() {
+            let next = (d.identity(), bytes.clone());
+            if self.nv_last.as_ref() != Some(&next) {
+                let id = self
+                    .writer
+                    .write(self.directory(d).join("eeprom.rhstate"), bytes)?;
+                self.tasks.insert(id, Task::Nonvolatile);
+                self.nv_last = Some(next);
+            }
+        }
+        self.nv_next = Instant::now() + Duration::from_secs(1);
+        Ok(())
+    }
     pub fn save(&mut self, d: &Emulator, target: SaveTarget) -> Result<(), String> {
         if self.resume_blocked {
             return Err("Saved progress was not restored. Resume or Reset explicitly before saving a fresh device.".into());
         }
+        self.persist_nonvolatile(d)?;
         let data = d.capture_save()?;
         let path = self.directory(d).join(target.filename()?);
         let id = self.writer.write_capture(path, data)?;
@@ -169,6 +189,11 @@ impl Saves {
         if self.policy.save_on_exit && self.resume_blocked {
             return Err("Saved progress was not restored. Import a valid save, or explicitly Resume/Reset to start fresh. The existing autosave has been kept.".into());
         }
+        if let Some(d) = d {
+            if !self.resume_blocked {
+                self.persist_nonvolatile(d)?;
+            }
+        }
         let id = if self.policy.save_on_exit {
             if let Some(d) = d {
                 self.writer.write_capture(
@@ -185,6 +210,9 @@ impl Saves {
         Ok(())
     }
     pub fn automatic_due(&mut self, d: &Emulator, running: bool) -> Result<(), String> {
+        if !self.resume_blocked && Instant::now() >= self.nv_next {
+            self.persist_nonvolatile(d)?;
+        }
         if running && self.policy.autosave_minutes != 0 && Instant::now() >= self.next {
             self.save(d, SaveTarget::Autosave)?;
         }
@@ -207,6 +235,9 @@ impl Saves {
                 continue;
             }
             if let Err(e) = &done.result {
+                if matches!(task, Task::Nonvolatile) {
+                    self.nv_last = None;
+                }
                 state.save_error = Some(e.clone());
                 if matches!(
                     task,
@@ -222,6 +253,7 @@ impl Saves {
                 continue;
             }
             match task {
+                Task::Nonvolatile => {}
                 Task::Write {
                     identity,
                     target,

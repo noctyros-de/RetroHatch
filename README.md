@@ -63,6 +63,7 @@ in the [public-project audit](developer/OPEN_SOURCE_AUDIT.md).
 | Device | Implementation and validation scope |
 | --- | --- |
 | Tamagotchi P1 | Japanese user-provided firmware boot, input and gameplay; shared complete saves |
+| Tamagotchi Connection V3 (EU hardware) | Native SPLB32; local setup, hatching, care, audio, EEPROM and save/resume validated; ten original replacement symbols; IR unavailable |
 | Tamagotchi P2 | Boot, hatching, buttons/LCD/audio, reference comparison, timing and complete saves |
 | Tamagotchi Genjintch | Dedicated LCD, buttons and tap sensor; local firmware/reference validation |
 | Tamagotchi Angel (Angelgotchi) | Dedicated LCD, buttons and tap sensor; local firmware/reference validation |
@@ -95,8 +96,12 @@ and 1-6 or Q/W/E/A/S/D operate the six care keys. See
 [device validation](developer/YASASHII_AND_TAMAOTCH.md). TamaOtch is
 a recognized **unsupported research target**: its exact LCD mapping, geometry
 and board settings are unresolved. Recognized TamaOtch firmware is refused with
-an explanation; another device's display is not substituted. Tamagotchi
-Connection and other MCU families are not available as playable profiles.
+an explanation; another device's display is not substituted. Connection V3 now
+has an **experimental** native SPLB32 profile: real ROM boot, matrix display,
+inputs, audio, valid setup, hatching, basic care and state continuation are tested.
+All ten symbols now have original, editable GPL replacement drawings; authentic
+Bandai-style silhouettes are not distributed by this integration. Validation covers focused offline gameplay, not every minigame or complete lifetime. See [Connection V3 status](developer/CONNECTION_V3.md).
+Other Connection generations are unavailable.
 The [native S1C33 backend](developer/S1C33.md) now runs the locally verified
 Tamagotchi P's, Plus Color/Hexagontchi, 4U+, original iD, Lovely Melody and the listed iD L editions with the
 shared library, 128x128 color display, controls, audio, slots and autosave. See the

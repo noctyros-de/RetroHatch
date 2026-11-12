@@ -103,6 +103,8 @@ pub fn profile_code(p: DeviceProfile) -> u8 {
         DeviceProfile::MeetsPastel => 22,
         DeviceProfile::MeetsSanrio => 23,
         DeviceProfile::MeetsSweets => 24,
+        // Code 25 is reserved for the isolated, paused Tama-Go experiment.
+        DeviceProfile::ConnectionV3Eu => 26,
     }
 }
 pub fn fingerprint(words: &[u16]) -> [u8; 32] {

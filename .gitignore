@@ -68,3 +68,6 @@ __pycache__/
 /.idea/
 *.code-workspace
 /.vscode/*.local.json
+
+# Optional private LCD coverage and nonvolatile images
+*.rhlcd

@@ -154,6 +154,7 @@ fn about_metadata_profile_list_and_links_render_from_the_current_implementation(
     let mut allowed = vec![
         "Supported Tamagotchis",
         "Classic devices",
+        "Connection devices (experimental)",
         "Color devices",
         "Color devices (limited support)",
     ];

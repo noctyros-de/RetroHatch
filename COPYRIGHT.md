@@ -18,6 +18,8 @@ third-party rights, CC0 provenance, separate font conditions or mandatory notice
 | Handwritten Rust port, integration, host/UI, tests and developer tools | GPL-3.0-only for original RetroHatch contributions, with upstream provenance retained |
 | BrickEmuPy CPU/MCU behavior and derived technical mapping | Upstream CC0-1.0 declaration; see the unchanged full license and attribution |
 | Generated LCD geometry/spans and alpha masks | Upstream-derived data with unresolved independent icon provenance; no exclusive Noctyros authorship claim or fabricated GPL grant |
+| SPLB32/Connection V3 CPU, MCU, sound and HT24LC08 | Direct CC0 BrickEmuPy translation by Noctyros; no exclusive authorship claim over upstream behavior; fixed icons excluded from this integration |
+| Connection V3 replacement SVG symbols and coverage | Original RetroHatch functional drawings, Copyright (C) 2026 Noctyros, GPL-3.0-only; editable sources included, no upstream silhouettes copied |
 | TG18 ARM library in `app/third_party/tg18-core/` | MIT; Copyright (c) 2026 oreo-fox; separately marked MIT integration additions by Noctyros |
 | S1C33 CPU/memory/LCD/peripheral port | Derived from maragotchi/tamaemu (declared GPLv3); GPL-3.0-only Rust translation by Noctyros; unresolved upstream README/provenance issues are documented separately |
 | Cargo libraries and embedded fonts | Their own licenses/notices; see the generated Windows inventory and full notices |

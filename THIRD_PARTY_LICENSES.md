@@ -23,6 +23,13 @@ See [current audit findings](developer/OPEN_SOURCE_AUDIT.md).
   generated geometry/alpha masks; synthetic reference expectations generated
   with the original handlers. The Rust implementation's original contributions
   are distinguished from that upstream material in COPYRIGHT.md/source headers.
+- Connection V3 additionally translates SPLB32 CPU/MCU/timer/audio behavior and
+  HT24LC08 I2C EEPROM directly from the same CC0 source. Exact source hashes and
+  scope are in `app/src/core/splb32/UPSTREAM.json`. Public V3 LCD data includes technical matrix wiring and ten original GPL-3.0-only
+  RetroHatch replacement SVGs/coverage. Original upstream fixed-symbol coverage
+  remains optional private user data, never incorporated artwork. Paramix Studio was researched,
+  but no Paramix C/custom icon or Tama-Go/T7 implementation was copied into this
+  integration. See [Connection V3 scope](developer/CONNECTION_V3.md).
 - CC0 does not impose an attribution condition like MIT, but this project
   preserves the source declaration and acknowledgement. CC0 does not grant
   trademark rights, and its upstream application cannot resolve third-party

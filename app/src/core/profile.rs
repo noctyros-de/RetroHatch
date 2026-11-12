@@ -7,6 +7,7 @@ pub enum DeviceProfile {
     #[default]
     P1,
     P2,
+    ConnectionV3Eu,
     Genjintch,
     Angel,
     Morino,
@@ -41,9 +42,10 @@ impl DeviceProfile {
         Self::Umino,
         Self::Yasashii,
     ];
-    pub const ALL: [Self; 25] = [
+    pub const ALL: [Self; 26] = [
         Self::P1,
         Self::P2,
+        Self::ConnectionV3Eu,
         Self::Genjintch,
         Self::Angel,
         Self::Morino,
@@ -90,6 +92,16 @@ impl DeviceProfile {
     pub const fn is_tg18(self) -> bool {
         matches!(self, Self::On) || self.is_meets()
     }
+    pub const fn uses_framebuffer(self) -> bool {
+        self.is_color() || matches!(self, Self::ConnectionV3Eu)
+    }
+    pub const fn framebuffer_size(self) -> [usize; 2] {
+        if matches!(self, Self::ConnectionV3Eu) {
+            [352, 363]
+        } else {
+            [128, 128]
+        }
+    }
     pub const fn is_color(self) -> bool {
         self.s1c33_key().is_some() || self.is_tg18()
     }
@@ -114,6 +126,7 @@ impl DeviceProfile {
         match self {
             Self::P1 => "tamagotchi-p1",
             Self::P2 => "tamagotchi-p2",
+            Self::ConnectionV3Eu => "tamagotchi-connection-v3-eu",
             Self::Genjintch => "tamagotchi-genjintch",
             Self::Angel => "tamagotchi-angel",
             Self::Morino => "tamagotchi-morino",
@@ -143,6 +156,7 @@ impl DeviceProfile {
         match self {
             Self::P1 => "Tamagotchi P1",
             Self::P2 => "Tamagotchi P2",
+            Self::ConnectionV3Eu => "Tamagotchi Connection V3",
             Self::Genjintch => "Tamagotchi Genjintch",
             Self::Angel => "Tamagotchi Angel (Angelgotchi)",
             Self::Morino => "Tamagotchi Morino",
@@ -171,6 +185,7 @@ impl DeviceProfile {
     pub const fn rom_bytes(self) -> usize {
         match self {
             Self::P1 | Self::P2 => 0x3000,
+            Self::ConnectionV3Eu => 524288,
             Self::On
             | Self::MeetsFairy
             | Self::MeetsMagical
@@ -192,6 +207,7 @@ impl DeviceProfile {
     pub const fn osc2_hz(self) -> u32 {
         match self {
             Self::P1 | Self::P2 => 1_600_000,
+            Self::ConnectionV3Eu => 4_000_000,
             Self::On
             | Self::MeetsFairy
             | Self::MeetsMagical
@@ -233,6 +249,9 @@ impl DeviceProfile {
         match value {
             "p1" | "tamagotchi-p1" => Some(Self::P1),
             "p2" | "tamagotchi-p2" => Some(Self::P2),
+            "v3-eu" | "connection-v3-eu" | "tamagotchi-connection-v3-eu" => {
+                Some(Self::ConnectionV3Eu)
+            }
             "genjintch" | "tamagotchi-genjintch" => Some(Self::Genjintch),
             "angel" | "angelgotchi" | "tamagotchi-angel" => Some(Self::Angel),
             "morino" | "tamagotchi-morino" => Some(Self::Morino),

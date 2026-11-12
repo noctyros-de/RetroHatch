@@ -378,6 +378,12 @@ fn run(
                         });
                     match prepared {
                         Ok(mut p1) => {
+                            if let Some(store) = &saves {
+                                if let Err(e) = p1.load_nonvolatile(&store.root) {
+                                    state.error = Some(e);
+                                    continue;
+                                }
+                            }
                             let (crc, known) = p1.classic_rom_metadata();
                             if let Some(store) = &mut saves
                                 && store.policy.save_on_exit
@@ -405,7 +411,7 @@ fn run(
                             state.profile = profile;
                             state.loads += 1;
                             state.exit_ready = false;
-                            state.save_error = None;
+                            state.save_error = device.as_ref().and_then(Emulator::display_warning);
                             state.slots = [false; 3];
                             if let Some(store) = &mut saves {
                                 running = false;
