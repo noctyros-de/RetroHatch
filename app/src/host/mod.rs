@@ -24,3 +24,4 @@ pub mod screenshots;
 pub mod recording;
 
 pub mod connection_v3_lcd;
+pub mod figures;

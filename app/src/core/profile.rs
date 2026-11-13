@@ -8,6 +8,7 @@ pub enum DeviceProfile {
     P1,
     P2,
     ConnectionV3Eu,
+    TamaGo,
     Genjintch,
     Angel,
     Morino,
@@ -42,10 +43,11 @@ impl DeviceProfile {
         Self::Umino,
         Self::Yasashii,
     ];
-    pub const ALL: [Self; 26] = [
+    pub const ALL: [Self; 27] = [
         Self::P1,
         Self::P2,
         Self::ConnectionV3Eu,
+        Self::TamaGo,
         Self::Genjintch,
         Self::Angel,
         Self::Morino,
@@ -93,11 +95,13 @@ impl DeviceProfile {
         matches!(self, Self::On) || self.is_meets()
     }
     pub const fn uses_framebuffer(self) -> bool {
-        self.is_color() || matches!(self, Self::ConnectionV3Eu)
+        self.is_color() || matches!(self, Self::ConnectionV3Eu | Self::TamaGo)
     }
     pub const fn framebuffer_size(self) -> [usize; 2] {
         if matches!(self, Self::ConnectionV3Eu) {
             [352, 363]
+        } else if matches!(self, Self::TamaGo) {
+            [48, 31]
         } else {
             [128, 128]
         }
@@ -127,6 +131,7 @@ impl DeviceProfile {
             Self::P1 => "tamagotchi-p1",
             Self::P2 => "tamagotchi-p2",
             Self::ConnectionV3Eu => "tamagotchi-connection-v3-eu",
+            Self::TamaGo => "tamagotchi-tama-go",
             Self::Genjintch => "tamagotchi-genjintch",
             Self::Angel => "tamagotchi-angel",
             Self::Morino => "tamagotchi-morino",
@@ -157,6 +162,7 @@ impl DeviceProfile {
             Self::P1 => "Tamagotchi P1",
             Self::P2 => "Tamagotchi P2",
             Self::ConnectionV3Eu => "Tamagotchi Connection V3",
+            Self::TamaGo => "Tamagotchi Tama-Go",
             Self::Genjintch => "Tamagotchi Genjintch",
             Self::Angel => "Tamagotchi Angel (Angelgotchi)",
             Self::Morino => "Tamagotchi Morino",
@@ -186,6 +192,7 @@ impl DeviceProfile {
         match self {
             Self::P1 | Self::P2 => 0x3000,
             Self::ConnectionV3Eu => 524288,
+            Self::TamaGo => 655360,
             Self::On
             | Self::MeetsFairy
             | Self::MeetsMagical
@@ -208,6 +215,7 @@ impl DeviceProfile {
         match self {
             Self::P1 | Self::P2 => 1_600_000,
             Self::ConnectionV3Eu => 4_000_000,
+            Self::TamaGo => 4_000_000,
             Self::On
             | Self::MeetsFairy
             | Self::MeetsMagical
@@ -252,6 +260,7 @@ impl DeviceProfile {
             "v3-eu" | "connection-v3-eu" | "tamagotchi-connection-v3-eu" => {
                 Some(Self::ConnectionV3Eu)
             }
+            "tamago" | "tama-go" | "tamagotchi-tama-go" => Some(Self::TamaGo),
             "genjintch" | "tamagotchi-genjintch" => Some(Self::Genjintch),
             "angel" | "angelgotchi" | "tamagotchi-angel" => Some(Self::Angel),
             "morino" | "tamagotchi-morino" => Some(Self::Morino),

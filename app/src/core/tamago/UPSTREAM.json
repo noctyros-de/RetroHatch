@@ -1,0 +1,19 @@
+{
+  "upstream": "https://github.com/mameise/Paramix-Studio",
+  "revision": "675b904ab1c8a9086b977a82cbc47cd0c319187f",
+  "license": "GPL-3.0 root LICENSE; original asterick BSD notice scope unresolved",
+  "author_credit": "mameise; upstream credits asterick/tamago",
+  "scope": "Rust port/adaptation of CPU, memory/I/O, EEPROM, cycle scheduling, timer/DAC and SPI figure behavior; host adapter port. No artwork, firmware, Paradise frontend, IR bridge or JIT copied.",
+  "source_sha256": {
+    "t7/src/core/t7_cpu.c": "8f24f9e26fbfb4bca80d12eb15754e0aea273a2ae343a690aef327fea4501d74",
+    "t7/src/core/t7.c": "8157609de8febf01017a70e291ad592543c49bfbf1ab1cecce2224226db83cca",
+    "t7/src/core/t7_memory.c": "ed748f5f196b906b2362d24b6cef429b94d827f3fd02703569a97bf93a3d081c",
+    "t7/src/core/t7_eeprom.c": "b3db1e0884a3023c3ccc8d2e41cba4330926f5207f17e8e4059a994aaddab7a3",
+    "t7/src/core/t7_sound.c": "4c5f0dda68a6f89b9cfc2d002130f63587299504c235b84e3980c71a2c9a006c",
+    "t7/src/core/t7.h": "8cabcc1fe5763488fc9432c2ff99b8abc4ceb6342a62c9d3dd15d188b469b7cd",
+    "t7/src/core/t7_internal.h": "dec8811d8a44d412d0382b008b974204e886dd7058127391c5f2873591c50bbe",
+    "t7/src/app/t7app.c": "1a6bfe24c3ed6c140af9062ae612d80e783270a37e4570997a4b678da4d81bac",
+    "t7/host/hcompat.c": "4b724aa33e69e2910ab858de475c43153e710b44a8dc4ab34c32052bda5e6a93",
+    "LICENSE": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"
+  }
+}

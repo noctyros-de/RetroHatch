@@ -22,6 +22,7 @@ third-party rights, CC0 provenance, separate font conditions or mandatory notice
 | Connection V3 replacement SVG symbols and coverage | Original RetroHatch functional drawings, Copyright (C) 2026 Noctyros, GPL-3.0-only; editable sources included, no upstream silhouettes copied |
 | TG18 ARM library in `app/third_party/tg18-core/` | MIT; Copyright (c) 2026 oreo-fox; separately marked MIT integration additions by Noctyros |
 | S1C33 CPU/memory/LCD/peripheral port | Derived from maragotchi/tamaemu (declared GPLv3); GPL-3.0-only Rust translation by Noctyros; unresolved upstream README/provenance issues are documented separately |
+| Tama-Go CPU/bus/peripherals and figure behavior | Rust port/adaptation of asterick/tamago via mameise's T7Emu/Paramix Studio; upstream BSD designation remains unspecified; original RetroHatch additions GPL-3.0-only; see central notices |
 | Cargo libraries and embedded fonts | Their own licenses/notices; see the generated Windows inventory and full notices |
 | Rust standard-library components | Toolchain attribution and applicable component licenses retained separately |
 | ROMs, firmware, private saves and reference checkouts | Excluded from the public source distribution; no rights granted by this project |
@@ -35,4 +36,4 @@ license declarations, not from editing that text.
 Preserve copyright/license notices when contributing. Do not add a project-wide
 notice to borrowed files that implies ownership of their underlying material.
 Public availability is not proof of third-party rights. Track unresolved
-provenance in THIRD_PARTY_LICENSES.md and developer/OPEN_SOURCE_AUDIT.md.
+provenance in THIRD_PARTY_NOTICES.md and developer/OPEN_SOURCE_AUDIT.md.

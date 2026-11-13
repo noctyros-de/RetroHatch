@@ -137,7 +137,7 @@ def verify_artifacts(folder, version, sha):
     for name, digest in expected.items():
         if checksum(folder/name) != digest:
             raise ValueError('Distribution checksum mismatch: '+name)
-    required = {'LICENSE', 'COPYRIGHT.md', 'THIRD_PARTY_LICENSES.md', 'SOURCE.md', 'BUILD_INFO.json',
+    required = {'LICENSE', 'COPYRIGHT.md', 'THIRD_PARTY_LICENSES.md', 'THIRD_PARTY_NOTICES.md', 'LICENSES/Paramix-Studio-GPL-3.0.txt', 'LICENSES/Paramix-Studio-T7Emu-NOTICE.txt', 'SOURCE.md', 'BUILD_INFO.json',
                 'LICENSES/CARGO_PACKAGES.json', 'LICENSES/CARGO_NOTICES.txt',
                 'app/LICENSES/BrickEmuPy-CC0-1.0.txt', 'app/LICENSES/TamaEmu-GPL-3.0.txt',
                 'app/third_party/tg18-core/LICENSE'}

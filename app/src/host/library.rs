@@ -68,6 +68,9 @@ fn maximum() -> usize {
         .unwrap()
 }
 pub fn inspect_bytes(bytes: Vec<u8>, source_name: String) -> Result<Prepared, String> {
+    if crate::core::tamago::figure::Figure::decode(&bytes).is_ok() {
+        return Err("This is a Tama-Go accessory, not standalone firmware. Start Tama-Go and use Emulation > Tama-Go Figure > Import Figure.".into());
+    }
     let hash = hex(&sha256(&bytes));
     super::pending_devices::ensure_supported(&hash)?;
     let candidates = fingerprints::tg18_candidates(&bytes, &hash).unwrap_or_else(|| {

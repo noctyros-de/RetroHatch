@@ -22,7 +22,7 @@ class PackagingTests(unittest.TestCase):
                 release_names(version)
 
     def test_required_source_and_notices_are_allowed(self):
-        for name in ("AGENTS.md", ".vscode/settings.json", "developer/WORKSPACE.md", "app/tools/workspace_paths.py", "LICENSE", "README.md", "app/build.rs", "docs/assets/retrohatchlogo.png", "app/Cargo.lock", "app/src/main.rs",
+        for name in ("AGENTS.md", ".vscode/settings.json", "developer/WORKSPACE.md", "app/tools/workspace_paths.py", "LICENSE", "README.md", "THIRD_PARTY_NOTICES.md", "LICENSES/Paramix-Studio-GPL-3.0.txt", "LICENSES/Paramix-Studio-T7Emu-NOTICE.txt", "app/build.rs", "docs/assets/retrohatchlogo.png", "app/Cargo.lock", "app/src/main.rs",
                      "app/assets/lcd/angel.alpha", "app/tests/data/e0c6200_reference.txt",
                      "LICENSES/CARGO_NOTICES.txt", ".github/workflows/windows-release.yml",
                      "app/third_party/tg18-core/LICENSE", "app/third_party/tg18-core/src/cpu.rs",

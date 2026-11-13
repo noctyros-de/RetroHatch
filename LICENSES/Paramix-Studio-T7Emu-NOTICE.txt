@@ -1,0 +1,22 @@
+Source: https://github.com/mameise/Paramix-Studio/blob/675b904ab1c8a9086b977a82cbc47cd0c319187f/NOTICE.md
+Applicable project introduction and T7Emu section, unchanged below.
+
+# Notice: authors and licenses
+
+Paramix Studio by mameise is licensed under the GNU General Public License,
+version 3 or (at your option) any later version. The full text is in
+[LICENSE](LICENSE).
+
+Parts of this repository are based on the work of other people. Their
+copyright and licenses stay in force; the files keep their original notices.
+
+## T7Emu (`t7/`)
+
+- The 6502 core in `t7/src/core` is a C port of the JavaScript emulator
+  **tamago** by asterick, https://github.com/asterick/tamago, which its
+  package declares under the BSD license. The port comes from the T7Emu app by
+  mameise. The note in the source files stays.
+- Changes for this project: a fast run loop (`t7_run.inc`), a build without C
+  library, the Paradise host (`t7/src/app`) with screen, settings menu, clock
+  and save. The 20x20 icons were drawn by mameise for the T7Emu ESP32 version.
+- No ROM of the Tama-Go or of a figure is in this repository.

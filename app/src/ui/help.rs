@@ -90,6 +90,9 @@ pub(super) fn dialogs(ctx: &egui::Context, state: &mut HelpUi) -> Option<Externa
                 ui.separator();
                 ui.strong("Connection devices (experimental)");
                 ui.label(DeviceProfile::ConnectionV3Eu.name());
+                ui.separator();
+                ui.strong("Grayscale devices (experimental)");
+                ui.label(DeviceProfile::TamaGo.name());
                 if DeviceProfile::ALL.iter().any(|p| p.is_color()) {
                     ui.separator();
                     ui.strong("Color devices");
@@ -130,7 +133,7 @@ pub(super) fn dialogs(ctx: &egui::Context, state: &mut HelpUi) -> Option<Externa
                 ui.label("Source Code");
                 if ui.link(ExternalLink::Source.url()).clicked() { link = Some(ExternalLink::Source); }
                 ui.separator();
-                ui.weak("Third-party components retain their own licenses. See THIRD_PARTY_LICENSES.md and the bundled license notices.");
+                ui.weak("Third-party components retain their own licenses. See THIRD_PARTY_NOTICES.md and the bundled license notices.");
                 ui.weak("Unofficial fan project; not affiliated with or endorsed by Bandai.");
             });
     }

@@ -23,6 +23,9 @@ pub fn validate_rom(bytes: &[u8], profile: DeviceProfile) -> Result<(), String> 
     if profile == DeviceProfile::ConnectionV3Eu {
         return crate::core::splb32::validate(bytes);
     }
+    if profile == DeviceProfile::TamaGo {
+        return crate::core::tamago::validate(bytes);
+    }
     if profile.is_meets() {
         require(
             tg18::is_image(bytes),
@@ -65,6 +68,7 @@ enum Backend {
     On(Box<OnDevice>),
     Ps(Box<S1Machine>),
     ConnectionV3(Box<V3Device>),
+    TamaGo(Box<crate::core::tamago::Machine>),
 }
 struct V3Device {
     machine: crate::core::splb32::Machine,
@@ -97,6 +101,11 @@ impl Emulator {
                 })),
                 (None, false),
             )
+        } else if profile == DeviceProfile::TamaGo {
+            (
+                Backend::TamaGo(Box::new(crate::core::tamago::Machine::new(bytes)?)),
+                (None, false),
+            )
         } else if let Some(key) = profile.s1c33_key() {
             (
                 Backend::Ps(Box::new(S1Machine::new(
@@ -124,6 +133,38 @@ impl Emulator {
             metadata,
             backend,
         })
+    }
+    pub fn set_figure(
+        &mut self,
+        figure: Option<Arc<crate::core::tamago::figure::Figure>>,
+    ) -> Result<(), String> {
+        if let Backend::TamaGo(d) = &mut self.backend {
+            d.set_figure(figure);
+            Ok(())
+        } else {
+            Err("Figures require a running Tama-Go".into())
+        }
+    }
+    pub fn tamago_icons(&self) -> [u8; 10] {
+        if let Backend::TamaGo(d) = &self.backend {
+            d.icons()
+        } else {
+            [0; 10]
+        }
+    }
+    pub fn figure_hash(&self) -> Option<[u8; 32]> {
+        if let Backend::TamaGo(d) = &self.backend {
+            d.figure.as_ref().map(|f| f.hash)
+        } else {
+            None
+        }
+    }
+    pub fn figure_name(&self) -> Option<String> {
+        if let Backend::TamaGo(d) = &self.backend {
+            d.figure.as_ref().map(|f| f.name.clone())
+        } else {
+            None
+        }
     }
     /// A separate battery-backed EEPROM image, without CPU/timers/frame state.
     pub fn nonvolatile_image(&self) -> Option<Vec<u8>> {
@@ -201,6 +242,9 @@ impl Emulator {
         match &self.backend {
             Backend::Classic(d) => d.time(),
             Backend::ConnectionV3(d) => (d.machine.cycles / 4_000_000. * MASTER_HZ as f64) as u64,
+            Backend::TamaGo(d) => {
+                (d.cycles as u128 * MASTER_HZ as u128 / crate::core::tamago::HZ as u128) as u64
+            }
             Backend::Ps(d) => (d.seconds() * MASTER_HZ as f64) as u64,
             Backend::On(d) => {
                 (u128::from(d.machine.executed) * u128::from(MASTER_HZ) / CPU_HZ as u128) as u64
@@ -213,6 +257,9 @@ impl Emulator {
             Backend::ConnectionV3(d) => d
                 .machine
                 .advance_cycles(tick as f64 / MASTER_HZ as f64 * 4_000_000.),
+            Backend::TamaGo(d) => d.advance_cycles(
+                (tick as u128 * crate::core::tamago::HZ as u128).div_ceil(MASTER_HZ as u128) as u64,
+            ),
             Backend::Ps(d) => d.advance_to(tick as f64 / MASTER_HZ as f64),
             Backend::On(d) => d.advance_to(
                 (u128::from(tick) * CPU_HZ as u128)
@@ -224,7 +271,7 @@ impl Emulator {
     pub fn classic_cpu_state(&self) -> Option<&CpuState> {
         match &self.backend {
             Backend::Classic(d) => Some(d.cpu_state()),
-            Backend::On(_) | Backend::Ps(_) | Backend::ConnectionV3(_) => None,
+            Backend::On(_) | Backend::Ps(_) | Backend::ConnectionV3(_) | Backend::TamaGo(_) => None,
         }
     }
     pub fn arm_pc(&self) -> Option<u32> {
@@ -233,6 +280,7 @@ impl Emulator {
             // Legacy snapshot field also carries the S1C33 full-width program counter.
             Backend::Ps(d) => Some(d.cpu.pc),
             Backend::ConnectionV3(d) => Some(d.machine.physical_pc() as u32),
+            Backend::TamaGo(d) => Some(d.cpu.pc as u32),
             _ => None,
         }
     }
@@ -250,6 +298,7 @@ impl Emulator {
             Backend::On(d) => d.machine.executed,
             Backend::Ps(d) => d.instructions,
             Backend::ConnectionV3(d) => d.machine.instructions,
+            Backend::TamaGo(d) => d.instructions,
         }
     }
     pub fn interrupts(&self) -> u64 {
@@ -258,18 +307,23 @@ impl Emulator {
             Backend::On(d) => d.machine.irqs,
             Backend::Ps(d) => d.interrupts,
             Backend::ConnectionV3(d) => d.machine.interrupts,
+            Backend::TamaGo(d) => d.interrupts,
         }
     }
     pub fn counters(&self) -> CycleCounters {
         match &self.backend {
             Backend::Classic(d) => d.mcu.counters,
-            Backend::On(_) | Backend::Ps(_) | Backend::ConnectionV3(_) => CycleCounters::default(),
+            Backend::On(_) | Backend::Ps(_) | Backend::ConnectionV3(_) | Backend::TamaGo(_) => {
+                CycleCounters::default()
+            }
         }
     }
     pub fn core_profile(&self) -> CoreProfile {
         match &self.backend {
             Backend::Classic(d) => d.mcu.profile,
-            Backend::On(_) | Backend::Ps(_) | Backend::ConnectionV3(_) => CoreProfile::default(),
+            Backend::On(_) | Backend::Ps(_) | Backend::ConnectionV3(_) | Backend::TamaGo(_) => {
+                CoreProfile::default()
+            }
         }
     }
     pub fn set_profiling(&mut self, value: bool) {
@@ -294,7 +348,7 @@ impl Emulator {
     pub fn display(&self) -> DisplaySnapshot {
         match &self.backend {
             Backend::Classic(d) => d.display(),
-            Backend::On(_) | Backend::Ps(_) | Backend::ConnectionV3(_) => {
+            Backend::On(_) | Backend::Ps(_) | Backend::ConnectionV3(_) | Backend::TamaGo(_) => {
                 DisplaySnapshot::default()
             }
         }
@@ -303,6 +357,7 @@ impl Emulator {
         match &self.backend {
             Backend::Ps(d) => Some(Arc::new(d.rgb())),
             Backend::ConnectionV3(d) => Some(Arc::new(d.lcd.render(&d.machine.display()))),
+            Backend::TamaGo(d) => Some(Arc::new(d.rgb())),
             Backend::On(d) => Some(Arc::new(if self.sleeping() {
                 vec![0; 128 * 128 * 3]
             } else {
@@ -325,6 +380,16 @@ impl Emulator {
                 d.machine
                     .buttons(if pressed { old | bit } else { old & !bit });
             }
+            Backend::TamaGo(d) => {
+                let bit = match button {
+                    Button::A => 1,
+                    Button::B => 2,
+                    Button::C => 4,
+                    _ => 0,
+                };
+                let old = d.button_mask();
+                d.buttons(if pressed { old | bit } else { old & !bit });
+            }
             Backend::On(d) => d.set_button(button, pressed),
             Backend::Ps(d) => {
                 let bit = match button {
@@ -342,6 +407,7 @@ impl Emulator {
         match &mut self.backend {
             Backend::Classic(d) => d.release_inputs(),
             Backend::ConnectionV3(d) => d.machine.buttons(0),
+            Backend::TamaGo(d) => d.buttons(0),
             Backend::Ps(d) => d.buttons(0),
             Backend::On(d) => {
                 d.machine.sys.live_keys = [false; 3];
@@ -354,6 +420,7 @@ impl Emulator {
         match &mut self.backend {
             Backend::Classic(d) => d.reset(),
             Backend::ConnectionV3(d) => d.machine.reset(),
+            Backend::TamaGo(d) => d.reset(),
             Backend::Ps(d) => {
                 d.reset().expect("Previously validated S1C33 firmware");
             }
@@ -369,6 +436,7 @@ impl Emulator {
         match &mut self.backend {
             Backend::Classic(d) => d.drain_audio(),
             Backend::ConnectionV3(d) => d.machine.drain_audio(),
+            Backend::TamaGo(d) => d.drain_audio(),
             Backend::On(d) => std::mem::take(&mut d.pcm),
             Backend::Ps(d) => d.drain_audio(),
         }
@@ -381,6 +449,10 @@ impl Emulator {
         if let Backend::ConnectionV3(d) = &self.backend {
             let machine = d.machine.clone();
             return Ok(Box::new(move || machine.save_state()));
+        }
+        if let Backend::TamaGo(d) = &self.backend {
+            let snapshot = d.clone();
+            return Ok(Box::new(move || Ok(snapshot.save_state())));
         }
         if let Backend::Ps(d) = &self.backend {
             let snapshot = d.as_ref().clone();
@@ -424,6 +496,14 @@ impl Emulator {
         }))
     }
     pub fn restored(&self, data: &[u8]) -> Result<Self, String> {
+        if let Backend::TamaGo(d) = &self.backend {
+            return Ok(Self {
+                profile: self.profile,
+                hash: self.hash,
+                metadata: self.metadata,
+                backend: Backend::TamaGo(Box::new(d.restored(data)?)),
+            });
+        }
         if let Backend::ConnectionV3(d) = &self.backend {
             return Ok(Self {
                 profile: self.profile,

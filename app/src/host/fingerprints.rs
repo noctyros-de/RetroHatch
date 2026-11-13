@@ -21,6 +21,11 @@ pub const CATALOG: &[Fingerprint<'static>] = &[
         variant: "Shared EU/US firmware; European hardware configuration",
     },
     Fingerprint {
+        sha256: "197d9aa7c5f0bea21b2f6f8d1ce53de5fee09cfba708731b5380c68dee255444",
+        profile: DeviceProfile::TamaGo,
+        variant: "",
+    },
+    Fingerprint {
         sha256: "d4639d3ecf464762c7911dccae6404ee3737c9bea71bd9fc43b20a6ad1e53b8a",
         profile: DeviceProfile::MeetsFairy,
         variant: "Japanese",
@@ -163,7 +168,7 @@ pub fn matches(hash: &str, catalog: &[Fingerprint<'_>]) -> Vec<Assignment> {
         .map(|f| Assignment {
             profile: f.profile,
             variant: f.variant.into(),
-            evidence: if f.profile==DeviceProfile::ConnectionV3Eu{"Verified local SPLB32 execution; EU hardware strap selected, not a region-unique ROM hash"}else if f.profile.is_tg18() {
+            evidence: if f.profile==DeviceProfile::ConnectionV3Eu{"Verified local SPLB32 execution; EU hardware strap selected, not a region-unique ROM hash"} else if f.profile == DeviceProfile::TamaGo {"Verified SHA-256 (local Tama-Go firmware boot)"} else if f.profile.is_tg18() {
                 "Verified full SHA-256; local TG18 firmware validation and upstream code identity"
             } else if f.profile.s1c33_key().is_some() {
                 "Verified SHA-256 (local tamaemu firmware boot comparison)"

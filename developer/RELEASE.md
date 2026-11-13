@@ -17,7 +17,7 @@ questions; an existing public release is not evidence of complete clearance.
 - Resolve rights to every derived LCD symbol, or replace affected material with
   verified original/permitted assets through a separate functional change. Keep
   the preferred editable source and its exact license available with the result.
-- Review [THIRD_PARTY_LICENSES.md](../THIRD_PARTY_LICENSES.md), every mandatory
+- Review [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md), every mandatory
   compound font/data license and the complete Cargo/toolchain notices. Fonts
   keep their own licenses; do not label them exclusively GPL-3.0-only.
 - Inspect the exact intended Git index, branch/tag history and other refs.
@@ -71,7 +71,7 @@ until the gates above are resolved. A future Windows binary package must carry:
 RetroHatch.exe
 LICENSE                         complete, unmodified GPL version 3
 COPYRIGHT.md
-THIRD_PARTY_LICENSES.md
+THIRD_PARTY_NOTICES.md
 LICENSES/                       complete Cargo, font and runtime notices
 app/LICENSES/BrickEmuPy-CC0-1.0.txt
 README.md

@@ -30,6 +30,7 @@ pub enum Command {
     Reset,
     Button(Button, bool),
     ReleaseInputs,
+    Figure(Option<PathBuf>),
     Audio(bool),
     KeepScreenAwake(bool),
     Profiling(bool),
@@ -53,6 +54,9 @@ struct Envelope {
 pub struct Snapshot {
     pub display: DisplaySnapshot,
     pub color_display: Option<Arc<Vec<u8>>>,
+    pub figure_hash: Option<[u8; 32]>,
+    pub figure_name: Option<String>,
+    pub tamago_icons: [u8; 10],
     pub arm_pc: Option<u32>,
     pub sleeping: bool,
     pub state: CpuState,
@@ -90,6 +94,9 @@ impl Default for Snapshot {
         Self {
             display: DisplaySnapshot::default(),
             color_display: None,
+            figure_hash: None,
+            figure_name: None,
+            tamago_icons: [0; 10],
             arm_pc: None,
             sleeping: false,
             state: CpuState::default(),
@@ -193,6 +200,9 @@ fn publish(
     if let Some(p1) = device {
         state.display = p1.display();
         state.color_display = p1.color_display();
+        state.figure_hash = p1.figure_hash();
+        state.figure_name = p1.figure_name();
+        state.tamago_icons = p1.tamago_icons();
         state.arm_pc = p1.arm_pc();
         state.sleeping = p1.sleeping();
         state.state = p1.classic_cpu_state().cloned().unwrap_or_default();
@@ -578,6 +588,23 @@ fn run(
                     keep_screen_awake = value;
                     if let Some(d) = &mut device {
                         d.set_keep_screen_awake(value);
+                    }
+                }
+                Command::Figure(path) => {
+                    if state.loading || exit_requested {
+                        state.save_error=Some("Please wait for saved progress to finish loading before changing figures.".into());
+                        continue;
+                    }
+                    if let Some(d) = &mut device {
+                        let result = path
+                            .as_deref()
+                            .map(super::figures::load)
+                            .transpose()
+                            .and_then(|f| d.set_figure(f));
+                        match result {
+                            Ok(()) => state.save_message = Some("Figure changed".into()),
+                            Err(e) => state.error = Some(e),
+                        }
                     }
                 }
                 Command::Profiling(value) => {
@@ -1112,6 +1139,78 @@ mod save_tests {
         drop(c);
         assert_eq!(std::fs::read(auto).unwrap(), saved);
         assert_eq!(root.parent(), Some(std::env::temp_dir().as_path()));
+        std::fs::remove_dir_all(root).unwrap();
+    }
+}
+
+#[cfg(test)]
+mod tamago_tests {
+    use super::*;
+    fn wait(c: &Controller, p: impl Fn(&Snapshot) -> bool) -> Snapshot {
+        let end = Instant::now() + Duration::from_secs(10);
+        loop {
+            let s = c.snapshot();
+            if p(&s) {
+                return s;
+            }
+            assert!(
+                Instant::now() < end,
+                "Worker timeout: {:?} {:?}",
+                s.error,
+                s.save_error
+            );
+            thread::sleep(Duration::from_millis(10));
+        }
+    }
+    #[test]
+    fn tamago_worker_preserves_figures_in_three_slots_export_and_restart() {
+        let root =
+            std::env::temp_dir().join(format!("retrohatch-tamago-worker-{}", std::process::id()));
+        std::fs::create_dir_all(&root).unwrap();
+        let path = root.join("source.bin");
+        let mut rom = vec![0xea; 655360];
+        rom[0..3].copy_from_slice(&[0x4c, 0, 0xc0]);
+        rom[0x3ffc..0x3ffe].copy_from_slice(&0xc000u16.to_le_bytes());
+        std::fs::write(&path, &rom).unwrap();
+        let mut f = vec![0; 524288];
+        f[1..3].copy_from_slice(&[170, 85]);
+        f[17..21].copy_from_slice(&[170, 85, 3, 14]);
+        let original = root.join("figure.bin");
+        std::fs::write(&original, f).unwrap();
+        let figure = super::super::figures::import(&root, &original).unwrap();
+        let c = Controller::with_storage(false, root.clone(), SavePolicy::default());
+        c.send(Command::LoadProfile(path.clone(), DeviceProfile::TamaGo));
+        wait(&c, |s| s.loaded);
+        c.send(Command::Figure(Some(figure)));
+        wait(&c, |s| s.figure_name.as_deref() == Some("Makiko"));
+        c.send(Command::Pause);
+        let paused = wait(&c, |s| !s.running);
+        for n in 1..=3 {
+            c.send(Command::Save(SaveTarget::Slot(n)));
+            wait(&c, |s| s.save_count >= n as u64);
+        }
+        let exported = root.join("export.rhstate");
+        c.send(Command::Export(exported.clone()));
+        wait(&c, |s| s.save_count >= 4);
+        c.send(Command::Figure(None));
+        wait(&c, |s| s.figure_name.is_none());
+        c.send(Command::LoadSave(SaveTarget::Slot(2)));
+        let restored = wait(&c, |s| s.restores > 0);
+        assert_eq!(restored.ticks, paused.ticks);
+        assert_eq!(restored.figure_name.as_deref(), Some("Makiko"));
+        c.send(Command::Import(exported));
+        wait(&c, |s| s.restores > 1);
+        c.send(Command::PrepareExit);
+        wait(&c, |s| s.exit_ready);
+        drop(c);
+        let again = Controller::with_storage(false, root.clone(), SavePolicy::default());
+        again.send(Command::LoadProfile(path, DeviceProfile::TamaGo));
+        let resumed = wait(&again, |s| s.loaded && s.restores > 0);
+        assert!(resumed.ticks >= paused.ticks);
+        assert_eq!(resumed.figure_name.as_deref(), Some("Makiko"));
+        again.send(Command::PrepareExit);
+        wait(&again, |s| s.exit_ready);
+        drop(again);
         std::fs::remove_dir_all(root).unwrap();
     }
 }

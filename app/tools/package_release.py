@@ -21,7 +21,7 @@ from workspace_paths import target_dir, release_dir
 
 ROOT = Path(__file__).resolve().parents[2]
 ROOT_FILES = {".vscode/settings.json", ".vscode/tasks.json", ".vscode/extensions.json", "AGENTS.md", ".gitignore", "LICENSE", "README.md", "COPYRIGHT.md",
-              "THIRD_PARTY_LICENSES.md", "CONTRIBUTING.md", "SECURITY.md", "docs/assets/retrohatchlogo.png"}
+              "THIRD_PARTY_LICENSES.md", "THIRD_PARTY_NOTICES.md", "CONTRIBUTING.md", "SECURITY.md", "docs/assets/retrohatchlogo.png"}
 APP_FILES = {"app/build.rs", "app/.gitignore", "app/Cargo.toml", "app/Cargo.lock", "app/THIRD_PARTY_NOTICES.md"}
 PREFIXES = (".github/", "developer/", "LICENSES/", "app/src/", "app/assets/lcd/",
             "app/examples/", "app/tests/", "app/tools/", "app/LICENSES/", "app/third_party/")
@@ -154,7 +154,7 @@ def package(args):
     if rejected:
         raise ValueError(f"Files outside the publication allowlist: {rejected}")
     required = {"app/src/main.rs", "app/Cargo.toml", "app/Cargo.lock", "LICENSE", "README.md",
-                "COPYRIGHT.md", "THIRD_PARTY_LICENSES.md", "LICENSES/CARGO_PACKAGES.json",
+                "COPYRIGHT.md", "THIRD_PARTY_LICENSES.md", "THIRD_PARTY_NOTICES.md", "LICENSES/CARGO_PACKAGES.json",
                 "app/LICENSES/BrickEmuPy-CC0-1.0.txt", ".github/workflows/windows-release.yml"}
     required |= V3_ASSETS
     if not required.issubset(files):

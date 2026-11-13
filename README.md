@@ -17,8 +17,7 @@ contributions, without decorative device shells.
 **Project status:** RetroHatch is a public open-source project maintained by
 Finn Lülsdorf (**Noctyros**) at [noctyros-de/RetroHatch](https://github.com/noctyros-de/RetroHatch).
 This README describes current source; downloadable builds may lag behind it.
-See [third-party notices](THIRD_PARTY_LICENSES.md) for component licenses and
-specific provenance questions, separate from the project's public status.
+See [third-party notices](THIRD_PARTY_NOTICES.md) for component credits and licenses.
 
 <!-- BEGIN USER-MANAGED SCREENSHOT GALLERY: preserve entries, order and captions -->
 ## Screenshots
@@ -54,16 +53,13 @@ included; import firmware that you have the appropriate rights to use after
 starting the application. Settings, imported ROMs and saves are stored in your
 Windows user-data directory, outside the extracted application folder.
 
-Public source availability, development builds and published releases are
-separate. Current download/packaging evidence and follow-up items are recorded
-in the [public-project audit](developer/OPEN_SOURCE_AUDIT.md).
-
 ## Supported devices
 
 | Device | Implementation and validation scope |
 | --- | --- |
 | Tamagotchi P1 | Japanese user-provided firmware boot, input and gameplay; shared complete saves |
 | Tamagotchi Connection V3 (EU hardware) | Native SPLB32; local setup, hatching, care, audio, EEPROM and save/resume validated; ten original replacement symbols; IR unavailable |
+| Tamagotchi Tama-Go (Experimental) | Native Generalplus/6502, 48?31 grayscale LCD, audio, full saves and virtual figure slot; focused gameplay and figure tests, with limits below |
 | Tamagotchi P2 | Boot, hatching, buttons/LCD/audio, reference comparison, timing and complete saves |
 | Tamagotchi Genjintch | Dedicated LCD, buttons and tap sensor; local firmware/reference validation |
 | Tamagotchi Angel (Angelgotchi) | Dedicated LCD, buttons and tap sensor; local firmware/reference validation |
@@ -117,6 +113,18 @@ On/Meets is available through the same ROM library and interface. Its operating
 status combines implemented/tested host integration with the project owner's
 reported working use. This documentation audit did not repeat a firmware boot
 or verify every On/Meets variant. See [TG18 integration](developer/TG18.md).
+
+### Experimental Tama-Go
+
+Tama-Go runs through the existing interface with a native Generalplus/6502
+backend, 48?31 four-level matrix, A/B/C, audio, slots and autosave.
+**Emulation > Tama-Go Figure** imports accessories, selects stored figures and
+removes the current figure without resetting progress. Twelve regular figures
+and two full captures have firmware SPI/content tests. The debug image is an
+accessory; its diagnostic mode is not verified. Fixed-symbol states use host
+text labels, not original LCD silhouettes. Complete minigame/shop coverage,
+long-term progression, IR and TamaTown connectivity remain unavailable or
+unverified. See [Tama-Go validation](developer/TAMAGO.md).
 
 ## Build from source
 
@@ -215,14 +223,16 @@ with reproducible tests and hardware/provenance evidence. Issues and pull
 requests are welcome in the public repository; the maintainer reviews changes
 and controls merges. Preserve the owner-managed media gallery.
 
-## License and acknowledgements
+## License and credits
 
-Original RetroHatch contributions are Copyright (C) 2026 Finn Lülsdorf / Noctyros and licensed
-under **GNU GPL-3.0-only**, not an automatic grant of later GPL versions. See
-[LICENSE](LICENSE), [COPYRIGHT.md](COPYRIGHT.md),
-[THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) and [LICENSES](LICENSES/).
-Third-party code, fonts and other data retain their own notices and terms.
-The GNU license text is not a clearance of unresolved artwork rights.
+Original RetroHatch contributions are Copyright (C) 2026 Finn L?lsdorf / Noctyros
+and licensed under **GPL-3.0-only**. See [LICENSE](LICENSE) and
+[COPYRIGHT.md](COPYRIGHT.md).
+
+Thanks to **azya52** (BrickEmuPy), **oreo-fox** (TG18-Emu), **maragotchi**
+(tamaemu), **Bryon Vandiver / asterick** (tamago), and **mameise**
+(T7Emu / Paramix Studio). Component scope, original notices and license texts
+are collected in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 RetroHatch is an unofficial fan project. It is not affiliated with, endorsed
 by, or sponsored by Bandai. Tamagotchi and related names belong to their

@@ -107,7 +107,7 @@ class ReleaseTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp);version='0.2.1';sha='verified';exe=b'synthetic executable'
             windows,source=release.release_names(version)
-            required={'LICENSE','COPYRIGHT.md','THIRD_PARTY_LICENSES.md','SOURCE.md','LICENSES/CARGO_PACKAGES.json',
+            required={'LICENSE','COPYRIGHT.md','THIRD_PARTY_LICENSES.md', 'THIRD_PARTY_NOTICES.md', 'LICENSES/Paramix-Studio-GPL-3.0.txt', 'LICENSES/Paramix-Studio-T7Emu-NOTICE.txt','SOURCE.md','LICENSES/CARGO_PACKAGES.json',
                       'LICENSES/CARGO_NOTICES.txt','app/LICENSES/BrickEmuPy-CC0-1.0.txt',
                       'app/LICENSES/TamaEmu-GPL-3.0.txt','app/third_party/tg18-core/LICENSE'}
             info=json.dumps({'revision':sha,'version':version,'local_draft':False,'executable_sha256':hashlib.sha256(exe).hexdigest()})

@@ -31,6 +31,7 @@ use std::{
 enum PickerKind {
     Rom,
     Repair,
+    Figure,
     Export,
     Import,
 }
@@ -41,6 +42,7 @@ pub struct RetroHatchApp {
     recording: recording::RecordingUi,
     media_dir: Option<PathBuf>,
     library: LibraryUi,
+    figure_entries: Option<Vec<(PathBuf, String)>>,
     settings: Settings,
     data_dir: Option<PathBuf>,
     dirty: Option<Instant>,
@@ -158,6 +160,7 @@ impl RetroHatchApp {
             captures: screenshots::Captures::default(),
             recording: recording::RecordingUi::default(),
             media_dir,
+            figure_entries: None,
             library: LibraryUi::default(),
             selected_profile: settings.last_profile,
             settings,
@@ -269,18 +272,33 @@ impl RetroHatchApp {
             return;
         }
         self.release_inputs();
-        let folder = if matches!(kind, PickerKind::Rom | PickerKind::Repair) {
+        let folder = if matches!(
+            kind,
+            PickerKind::Rom | PickerKind::Repair | PickerKind::Figure
+        ) {
             PathBuf::from(&self.folder)
         } else {
             self.data_dir
                 .clone()
                 .unwrap_or_else(|| PathBuf::from(&self.folder))
         };
+        let user_root = self.data_dir.clone();
         let (tx, rx) = mpsc::channel();
         let ctx = ctx.clone();
         std::thread::spawn(move || {
             let result = match kind {
                 PickerKind::Rom | PickerKind::Repair => platform::pick_rom(&folder),
+                PickerKind::Figure => platform::pick_rom(&folder).and_then(|path| {
+                    path.map(|p| {
+                        retrohatch::host::figures::import(
+                            user_root
+                                .as_deref()
+                                .ok_or("User data storage is unavailable")?,
+                            &p,
+                        )
+                    })
+                    .transpose()
+                }),
                 PickerKind::Export => platform::pick_save(&folder, true),
                 PickerKind::Import => platform::pick_save(&folder, false),
             };
@@ -400,6 +418,14 @@ impl RetroHatchApp {
             self.library_menu(ui, s);
             self.capture_menu(ui, s);
             ui.menu_button("Emulation", |ui| {
+                if s.loaded && s.profile==DeviceProfile::TamaGo {
+                    ui.menu_button("Tama-Go Figure",|ui|{
+                        if self.figure_entries.is_none(){if let Some(root)=&self.data_dir{match retrohatch::host::figures::list(root){Ok(v)=>self.figure_entries=Some(v),Err(e)=>{self.local_error=Some(e);self.figure_entries=Some(Vec::new());}}}}
+                        if ui.selectable_label(s.figure_name.is_none(),"No Figure").clicked(){self.release_inputs();self.controller.send(Command::Figure(None));ui.close();}
+                        for (path,name) in self.figure_entries.clone().unwrap_or_default(){if ui.selectable_label(s.figure_hash.is_some_and(|h|path.file_stem().and_then(|s|s.to_str())==Some(&retrohatch::core::state::hex(&h))),&name).clicked(){self.release_inputs();self.controller.send(Command::Figure(Some(path)));ui.close();}}
+                        ui.separator();if ui.add_enabled(self.picker.is_none(),egui::Button::new("Import Figure...")).clicked(){self.picker(PickerKind::Figure,&ctx);ui.close();}
+                    });ui.separator();
+                }
                 if ui
                     .add_enabled(
                         s.loaded && !s.loading && !self.exit_pending,
@@ -513,6 +539,10 @@ impl RetroHatchApp {
                 Ok(Some(path)) => match kind {
                     PickerKind::Rom => self.pending_rom = Some(path),
                     PickerKind::Repair => self.library_repair(path),
+                    PickerKind::Figure => {
+                        self.figure_entries = None;
+                        self.controller.send(Command::Figure(Some(path)));
+                    }
                     PickerKind::Export => self.controller.send(Command::Export(path)),
                     PickerKind::Import => self.controller.send(Command::Import(path)),
                 },
@@ -683,6 +713,8 @@ impl RetroHatchApp {
                     // 100% retains the responsive normal layout; larger scales can scroll.
                     let reserve = if profile == DeviceProfile::Yasashii {
                         238.0
+                    } else if profile == DeviceProfile::TamaGo {
+                        150.0
                     } else if s.loaded && profile.has_knock() {
                         170.0
                     } else {
@@ -706,6 +738,8 @@ impl RetroHatchApp {
                     ui.vertical_centered(|ui| {
                         let reserve = if profile == DeviceProfile::Yasashii {
                             238.0
+                        } else if profile == DeviceProfile::TamaGo {
+                            150.0
                         } else if s.loaded && s.profile.has_knock() {
                             170.0
                         } else {
@@ -744,6 +778,34 @@ impl RetroHatchApp {
                             if lcd.clicked() {
                                 self.click_until[3] =
                                     Some(Instant::now() + Duration::from_millis(50));
+                            }
+                        }
+                        if s.loaded && profile == DeviceProfile::TamaGo {
+                            ui.add_space(4.0);
+                            for row in 0..2 {
+                                ui.horizontal(|ui| {
+                                    for i in row * 5..row * 5 + 5 {
+                                        let name = [
+                                            "Status",
+                                            "Food",
+                                            "Clean",
+                                            "Games",
+                                            "Figure",
+                                            "Discipline",
+                                            "Care",
+                                            "Connect",
+                                            "Memory",
+                                            "Call",
+                                        ][i];
+                                        let level = s.tamago_icons[i];
+                                        ui.colored_label(
+                                            egui::Color32::from_gray(
+                                                [155, 115, 75, 30][level as usize],
+                                            ),
+                                            name,
+                                        );
+                                    }
+                                });
                             }
                         }
                         ui.add_space(20.0);
@@ -1093,7 +1155,12 @@ fn request_display_size(ctx: &egui::Context, profile: DeviceProfile, percent: u1
     ctx.send_viewport_cmd(egui::ViewportCommand::InnerSize(size));
 }
 fn display_width(profile: DeviceProfile, percent: u16) -> f32 {
-    (if profile.is_color() { 384.0 } else { 352.0 }) * f32::from(percent) / 100.0
+    (if profile.is_color() || profile == DeviceProfile::TamaGo {
+        384.0
+    } else {
+        352.0
+    }) * f32::from(percent)
+        / 100.0
 }
 fn round_button(
     ui: &mut egui::Ui,
@@ -1157,12 +1224,17 @@ fn diagnostics(ctx: &egui::Context, s: &Snapshot, open: &mut bool) {
                 "SPLB32: 4 MHz | {} instructions | {} interrupts",
                 s.instructions, s.interrupts
             ));
+        } else if s.profile == DeviceProfile::TamaGo {
+            ui.monospace(format!(
+                "GPLB52320A: 4 MHz | {} instructions | {} interrupts",
+                s.instructions, s.interrupts
+            ));
         } else if s.profile.is_color() {
             ui.monospace(format!(
                 "{} CPU instruction/skip ticks | {} interrupts",
                 s.instructions, s.interrupts
             ));
-            ui.label("TG18 ARM926: 96 MHz nominal instruction-time model; RTC 32768 Hz");
+            ui.label("Color MCU timing follows its device profile");
             if s.sleeping {
                 ui.label("Display sleeping; press A, B or C to wake");
             }
@@ -1220,6 +1292,7 @@ fn paint_profile_lcd(
             (g::LCD_SIZE, g::PIXELS, g::ICON_BITS, g::ICON_SPANS)
         }
         DeviceProfile::ConnectionV3Eu
+        | DeviceProfile::TamaGo
         | DeviceProfile::On
         | DeviceProfile::MeetsFairy
         | DeviceProfile::MeetsMagical
@@ -2167,6 +2240,7 @@ mod tests {
                 DeviceProfile::Umino => crate::umino_lcd_geometry::ICON_BITS,
                 DeviceProfile::Yasashii => unreachable!("No LCD icons"),
                 DeviceProfile::ConnectionV3Eu
+                | DeviceProfile::TamaGo
                 | DeviceProfile::On
                 | DeviceProfile::MeetsFairy
                 | DeviceProfile::MeetsMagical
@@ -2304,6 +2378,10 @@ mod tests {
             unidentified_rom_workflow(p);
         }
     }
+    #[test]
+    fn tamago_import_uses_its_own_framebuffer_library_and_buttons() {
+        unidentified_rom_workflow(DeviceProfile::TamaGo);
+    }
     fn unidentified_rom_workflow(profile: DeviceProfile) {
         fn find(shape: &egui::epaint::Shape, label: &str) -> Option<egui::Pos2> {
             match shape {
@@ -2389,6 +2467,11 @@ mod tests {
             bytes[0x4800..0x4803].copy_from_slice(&[0x4c, 0, 0xc8]);
             bytes[0x7ffc..0x7ffe].copy_from_slice(&[0, 0xc8]);
             bytes
+        } else if profile == DeviceProfile::TamaGo {
+            let mut bytes = vec![0xea; profile.rom_bytes()];
+            bytes[..3].copy_from_slice(&[0x4c, 0, 0xc0]);
+            bytes[0x3ffc..0x3ffe].copy_from_slice(&0xc000u16.to_le_bytes());
+            bytes
         } else if profile.is_color() {
             let mut bytes = vec![0; profile.rom_bytes()];
             bytes[..4].copy_from_slice(b"SPII");
@@ -2405,7 +2488,7 @@ mod tests {
         app.start_library(folder.clone());
         app.pending_rom = Some(path.clone());
         let deadline =
-            Instant::now() + Duration::from_secs(if profile.is_color() { 20 } else { 3 });
+            Instant::now() + Duration::from_secs(if profile.uses_framebuffer() { 20 } else { 3 });
         while !app.library.blocked() {
             frame(&ctx, &mut app, vec![]);
             assert!(Instant::now() < deadline);
@@ -2421,7 +2504,7 @@ mod tests {
         let pos = center(&out, "Import and Start");
         click(&ctx, &mut app, pos);
         let deadline =
-            Instant::now() + Duration::from_secs(if profile.is_color() { 20 } else { 3 });
+            Instant::now() + Duration::from_secs(if profile.uses_framebuffer() { 20 } else { 3 });
         loop {
             frame(&ctx, &mut app, vec![]);
             let snapshot = app.controller.snapshot();
@@ -2437,6 +2520,18 @@ mod tests {
             );
             std::thread::sleep(Duration::from_millis(5));
         }
+        if profile == DeviceProfile::TamaGo {
+            let out = frame(&ctx, &mut app, vec![]);
+            let pos = center(&out, "Emulation");
+            let out = click(&ctx, &mut app, pos);
+            let pos = center(&out, "Tama-Go Figure");
+            let out = click(&ctx, &mut app, pos);
+            let _ = center(&out, "No Figure");
+            let _ = center(&out, "Import Figure...");
+            let pos = center(&out, "No Figure");
+            click(&ctx, &mut app, pos);
+            assert!(app.controller.snapshot().figure_name.is_none());
+        }
         assert_eq!(app.library.entries.len(), 1);
         assert!(path.exists(), "Import moved the source ROM");
         std::fs::remove_file(&path).unwrap(); // Only the test-owned original copy.
@@ -2448,7 +2543,7 @@ mod tests {
         let pos = center(&out, entry_label);
         click(&ctx, &mut app, pos);
         let deadline =
-            Instant::now() + Duration::from_secs(if profile.is_color() { 20 } else { 3 });
+            Instant::now() + Duration::from_secs(if profile.uses_framebuffer() { 20 } else { 3 });
         while app.controller.snapshot().loads <= before {
             frame(&ctx, &mut app, vec![]);
             assert!(Instant::now() < deadline);
@@ -2507,7 +2602,7 @@ mod tests {
         let pos = center(&out, "Remove entry");
         click(&ctx, &mut app, pos);
         let deadline =
-            Instant::now() + Duration::from_secs(if profile.is_color() { 20 } else { 3 });
+            Instant::now() + Duration::from_secs(if profile.uses_framebuffer() { 20 } else { 3 });
         while !app.library.entries.is_empty() {
             frame(&ctx, &mut app, vec![]);
             assert!(Instant::now() < deadline);

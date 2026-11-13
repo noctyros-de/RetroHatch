@@ -132,7 +132,7 @@ fn about_metadata_profile_list_and_links_render_from_the_current_implementation(
     assert!(
         texts(&out)
             .iter()
-            .any(|(text, _)| text.contains("THIRD_PARTY_LICENSES.md"))
+            .any(|(text, _)| text.contains("THIRD_PARTY_NOTICES.md"))
     );
     for expected in [ExternalLink::Website, ExternalLink::Source] {
         let (out, _) = frame(vec![], &mut state);
@@ -157,6 +157,7 @@ fn about_metadata_profile_list_and_links_render_from_the_current_implementation(
         "Connection devices (experimental)",
         "Color devices",
         "Color devices (limited support)",
+        "Grayscale devices (experimental)",
     ];
     allowed.extend(DeviceProfile::ALL.into_iter().map(DeviceProfile::name));
     for (text, _) in texts(&out) {

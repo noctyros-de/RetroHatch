@@ -14,3 +14,4 @@ pub mod state;
 pub mod s1c33;
 
 pub mod splb32;
+pub mod tamago;
