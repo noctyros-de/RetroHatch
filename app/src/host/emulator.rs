@@ -332,8 +332,26 @@ impl Emulator {
         }
     }
     pub fn set_keep_screen_awake(&mut self, enabled: bool) {
-        if let Backend::Ps(d) = &mut self.backend {
-            d.keep_screen_awake = enabled && self.profile.supports_keep_screen_awake();
+        match &mut self.backend {
+            Backend::Ps(d) => {
+                d.keep_screen_awake = enabled && self.profile.supports_keep_screen_awake();
+            }
+            Backend::On(d) => {
+                let enabling = enabled && !d.machine.never_sleep;
+                d.machine.never_sleep = enabled;
+                if enabling {
+                    // Deep-sleep wake is a cold boot of current flash with the RTC retained.
+                    // Do it once on enabling; never inject button events or freeze the LCD.
+                    if d.machine.sys.powered_off {
+                        d.machine.restart();
+                    }
+                    d.machine.alarm_wake = false;
+                    if let Some(address) = d.machine.idle_counter {
+                        d.machine.sys.poke(address, &[0]);
+                    }
+                }
+            }
+            _ => {}
         }
     }
     pub fn sleeping(&self) -> bool {

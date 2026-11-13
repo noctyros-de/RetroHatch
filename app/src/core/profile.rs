@@ -238,6 +238,9 @@ impl DeviceProfile {
         }
     }
     pub fn supports_keep_screen_awake(self) -> bool {
+        if self.is_tg18() {
+            return true;
+        }
         // The reference 0x368 marker matches November v040, but not both earlier
         // verified dumps. Never clear an unverified byte in those firmware revisions.
         if self == Self::PlusColor {

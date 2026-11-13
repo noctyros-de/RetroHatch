@@ -181,6 +181,10 @@ impl Snapshot {
         w.u32(s.sound.events.len() as u32);
         for &(at, frequency, duty) in &s.sound.events { w.f64(at).f64(frequency).f64(duty); }
         add("rh-peripherals", w);
+        // RetroHatch: retain never-sleep reset/clock phases across exact-frame saves.
+        let mut w = W::default();
+        w.f64(m.idle_reset_at).u8(m.clock_minute.is_some() as u8).i64(m.clock_minute.unwrap_or(0)).u32(m.probe_wait);
+        add("rh-awake-clock", w);
         Snapshot { chunks }
     }
 
@@ -330,6 +334,17 @@ impl Snapshot {
                 return Err(SnapError::Format("invalid machine clock".into()));
             }
         }
+        if let Some(data) = self.get("rh-awake-clock") {
+            if data.len() != 17 && data.len() != 21 { return Err(SnapError::Format("invalid awake clock size".into())); }
+            let mut r = R(data, 0);
+            let reset_at = r.f64()?; let present = r.u8()?; let minute = r.i64()?;
+            if !reset_at.is_finite() || reset_at < 0.0 || reset_at > m.now() || present > 1 {
+                return Err(SnapError::Format("invalid awake clock phase".into()));
+            }
+            m.idle_reset_at = reset_at;
+            m.clock_minute = if present == 1 { Some(minute) } else { None };
+            if data.len() == 21 { m.probe_wait = r.u32()?; }
+        }
         m.hook_flash_write(); // SRAM code is already in place
         Ok(())
     }
@@ -379,4 +394,45 @@ impl Snapshot {
 /// Snapshot chunk names, for tools.
 pub fn chunk_names(s: &Snapshot) -> HashMap<String, usize> {
     s.chunks.iter().map(|c| (c.0.clone(), c.1.len())).collect()
+}
+
+#[cfg(test)]
+mod awake_clock_tests {
+    use super::*;
+    use std::sync::Arc;
+
+    #[test]
+    fn awake_clock_phase_roundtrips_and_legacy_snapshots_still_restore() {
+        let image = Arc::new(vec![0; FLASH_SIZE]);
+        let mut m = Machine::new(image.clone(), &image, 0.0);
+        m.executed = (2.75 * CPU_HZ) as u64;
+        m.idle_reset_at = 2.125;
+        m.clock_minute = Some(123);
+        m.never_sleep = true;
+        m.probe_wait = 17;
+        let mut snapshot = Snapshot::capture(&m);
+        let mut restored = Machine::new(image.clone(), &image, 0.0);
+        snapshot.restore(&mut restored).unwrap();
+        assert_eq!(restored.idle_reset_at, 2.125);
+        assert_eq!(restored.clock_minute, Some(123));
+        assert!(restored.never_sleep);
+        assert_eq!(restored.probe_wait, 17);
+        snapshot.chunks.retain(|(name, _)| name != "rh-awake-clock");
+        let mut legacy = Machine::new(image.clone(), &image, 0.0);
+        snapshot.restore(&mut legacy).unwrap();
+        assert_eq!(legacy.idle_reset_at, 0.0);
+        assert_eq!(legacy.clock_minute, None);
+        assert!(legacy.never_sleep);
+    }
+
+    #[test]
+    fn invalid_awake_phase_is_rejected() {
+        let image = Arc::new(vec![0; FLASH_SIZE]);
+        let m = Machine::new(image.clone(), &image, 0.0);
+        let mut snapshot = Snapshot::capture(&m);
+        let chunk = &mut snapshot.chunks.iter_mut().find(|c| c.0 == "rh-awake-clock").unwrap().1;
+        chunk[..8].copy_from_slice(&f64::NAN.to_le_bytes());
+        let mut fresh = Machine::new(image.clone(), &image, 0.0);
+        assert!(snapshot.restore(&mut fresh).is_err());
+    }
 }

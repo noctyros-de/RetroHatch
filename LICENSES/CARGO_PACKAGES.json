@@ -1,7 +1,7 @@
 {
   "target": "x86_64-pc-windows-msvc",
   "scope": "Locked default Windows normal/build dependencies; not other targets or toolchains",
-  "cargo_lock_sha256": "9bf73c74db455832b3dcc8b221a1ceac336f2f460829159453f58bcf5887fddd",
+  "cargo_lock_sha256": "977479626f9b282c053d49c4a14bbdd033f041a2d6b0f85ce3f20825313ee3b6",
   "packages": [
     {
       "name": "accesskit",
@@ -1978,6 +1978,7 @@
       "features": [],
       "notice_sections": {
         "LICENSE": "1c628d23320358877a93cf89431ca9b3ba80a1f0a1695a9ef58f4492228be4c3",
+        "src/machine.rs [source header]": "8d22012f5c4003681ffb11ed163213bad88944318a7a34ab54ebf3d490c99985",
         "src/snapshot.rs [source header]": "9c4da9beaa49f4063fb83e6625d8bb5e50a009cbb99977fd6af471d2d176ea40",
         "src/sound.rs [source header]": "99e52a3557c3417907f1a876e31a7e8b40783bd975d992919fc36cbf0e554d7a"
       }

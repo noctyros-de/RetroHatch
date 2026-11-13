@@ -188,3 +188,31 @@ pub fn thumb_bl_target(hi: u16, lo: u16, addr: u32) -> Option<u32> {
     let rel = if rel & (1 << 22) != 0 { rel.wrapping_sub(1 << 23) } else { rel };
     Some(addr.wrapping_add(4).wrapping_add(rel))
 }
+
+// RetroHatch policy integration Copyright (c) 2026 Noctyros; MIT.
+/// Firmware display SleepFlag, located through its diagnostic read and literal.
+/// This is separate from the idle-seconds counter: RTC wakes restore a pending
+/// display-sleep transition that can finish before the next periodic counter reset.
+pub fn find_display_sleep_flag(image: &[u8]) -> Option<u32> {
+    let marker = b"SleepOutCPU() 1 SleepFlag";
+    let mut found = Vec::new();
+    let end = CODE_END.min(image.len());
+    for i in (0..end.saturating_sub(6)).step_by(2) {
+        let load = u16_at(image,i);
+        let read = u16_at(image,i+2);
+        let text = u16_at(image,i+4);
+        if load >> 11 != 9 || read >> 11 != 0b01111 || read & 7 != 1
+            || (read >> 3) & 7 != (load >> 8) & 7 || text >> 8 != 0x48 { continue; }
+        let base_pool = ((i+4)&!3) + (load & 255) as usize * 4;
+        let text_pool = ((i+8)&!3) + (text & 255) as usize * 4;
+        if base_pool+4 > image.len() || text_pool+4 > image.len() { continue; }
+        let base = u32_at(image,base_pool);
+        let address = base.wrapping_add(((read >> 6)&31) as u32);
+        if !(crate::SRAM_BASE..crate::SRAM_BASE+crate::SRAM_SIZE as u32).contains(&address) { continue; }
+        let string = u32_at(image,text_pool).wrapping_sub(FLASH_BASE) as usize;
+        let Some(bytes) = image.get(string..string.saturating_add(80).min(image.len())) else { continue; };
+        let bytes = &bytes[..bytes.iter().position(|&b|b==0).unwrap_or(bytes.len())];
+        if bytes.windows(marker.len()).any(|s|s==marker) && !found.contains(&address) { found.push(address); }
+    }
+    if found.len()==1 { Some(found[0]) } else { None }
+}

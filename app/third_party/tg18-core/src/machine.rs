@@ -1,3 +1,4 @@
+// RetroHatch snapshot-field visibility additions Copyright (c) 2026 Noctyros; MIT.
 //! The whole toy: CPU + bus, the run loop with interrupts and idle skipping,
 //! the firmware shortcuts (HLE) and deep sleep.
 
@@ -61,10 +62,11 @@ pub struct Machine {
     pub idle_skip: bool,
     pub idle_skipped: u64,
     pub never_sleep: bool,
-    idle_reset_at: f64,
+    pub(crate) idle_reset_at: f64,
     pub idle_counter: Option<u32>,
+    display_sleep_flag: Option<u32>,
     clock_refresh: Option<u32>,
-    clock_minute: Option<i64>,
+    pub(crate) clock_minute: Option<i64>,
     pub stop_on_bluetooth: bool,
     /// Woken by the RTC alarm (the once-a-minute update while asleep), not
     /// by a button: the backlight stays off, though the game may draw and
@@ -80,7 +82,7 @@ pub struct Machine {
     save_loop: u32,
     pub flash_hle: Option<u32>,
     spin_skipped: u64,
-    probe_wait: u32,
+    pub(crate) probe_wait: u32,
     /// Idle probe statistics: [tried, no repeat, memory changed, hardware written, skipped].
     pub probe_stats: [u64; 5],
 }
@@ -118,6 +120,7 @@ impl Machine {
             never_sleep: false,
             idle_reset_at: 0.0,
             idle_counter: None,
+            display_sleep_flag: None,
             clock_refresh: None,
             clock_minute: None,
             stop_on_bluetooth: false,
@@ -137,6 +140,7 @@ impl Machine {
         };
         let img = &image[..];
         m.idle_counter = sigs::find_idle_counter(img);
+        m.display_sleep_flag = sigs::find_display_sleep_flag(img);
         m.clock_refresh = sigs::find_code(img, sigs::CLOCK_REFRESH_SIG, sigs::CODE_END);
         if let Some(a) = sigs::find_code(img, sigs::PRINTF_STUB, 0x200000) {
             m.add_hook(a, Hook::Printf);
@@ -430,6 +434,11 @@ impl Machine {
         while self.executed < limit {
             let now = self.now();
             self.sys.advance(now);
+            // An RTC cold boot restores SleepFlag=2/3 independently of the idle
+            // counter. Hold the firmware's display policy awake, not its pixels.
+            if self.never_sleep {
+                if let Some(address) = self.display_sleep_flag { self.sys.poke(address, &[0]); }
+            }
             if self.never_sleep && now - self.idle_reset_at >= 1.0 {
                 if let Some(a) = self.idle_counter {
                     self.sys.poke(a, &[0]); // the counter only rises once a second
@@ -798,4 +807,37 @@ fn c_printf(m: &mut Machine, fmt: &str, args: &[u32]) -> String {
 #[allow(dead_code)]
 fn _bus_check(s: &mut System) -> u8 {
     s.read8(0)
+}
+
+#[cfg(test)]
+mod keep_awake_tests {
+    use super::*;
+    #[test]
+    fn rtc_restored_display_sleep_request_is_cleared_without_changing_cpu_or_inputs() {
+        let mut image = vec![0; FLASH_SIZE];
+        let base = SRAM_BASE + 200;
+        for (offset, opcode) in [(0x1000,0x4e0bu16),(0x1002,0x7a31),(0x1004,0x480b)] {
+            image[offset..offset+2].copy_from_slice(&opcode.to_le_bytes());
+        }
+        image[0x1030..0x1034].copy_from_slice(&base.to_le_bytes());
+        image[0x1034..0x1038].copy_from_slice(&(FLASH_BASE+0x1100).to_le_bytes());
+        let marker=b"SleepOutCPU() 1 SleepFlag";
+        image[0x1100..0x1100+marker.len()].copy_from_slice(marker);
+        let image = std::sync::Arc::new(image);
+        for enabled in [false,true] {
+            let mut m=Machine::new(image.clone(),&image,0.0);
+            assert_eq!(m.display_sleep_flag,Some(base+8));
+            m.cpu.cpsr |= FLAG_T;
+            m.cpu.r[15]=FLASH_BASE+0x1002;
+            m.cpu.r[6]=base;
+            m.sys.poke(base+8,&[2]);
+            m.never_sleep=enabled;
+            assert_eq!(m.run(1),Outcome::Limit);
+            assert_eq!(m.cpu.r[1],if enabled {0}else{2});
+            assert_eq!(m.cpu.r[15],FLASH_BASE+0x1004);
+            assert_eq!(m.executed,1);
+            assert!(m.sys.key_script.is_empty());
+            assert_eq!(m.sys.live_keys,[false;3]);
+        }
+    }
 }

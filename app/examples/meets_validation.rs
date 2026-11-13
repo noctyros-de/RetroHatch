@@ -115,7 +115,9 @@ fn main() -> Result<(), String> {
     ] {
         fs::write(old.join(name), &legacy).map_err(|e| e.to_string())?;
     }
+    let keep_awake = args.iter().any(|v| v == "--keep-awake");
     let c = Controller::with_storage(true, root.clone(), policy.clone());
+    c.send(Command::KeepScreenAwake(keep_awake));
     c.send(Command::LoadProfile(internal.clone(), profile));
     wait(&c, |s| {
         s.loaded && !s.loading && s.ticks > 0 && s.restores > 0
@@ -169,6 +171,9 @@ fn main() -> Result<(), String> {
         paused.audio_drops
     );
     println!("Audio queue: {:?}", paused.audio_stats);
+    if keep_awake && paused.sleeping {
+        return Err("Keep Screen Awake lost the live display".into());
+    }
     if paused.audio_status != "Audio: Windows PCM output active" {
         return Err(format!(
             "Actual Windows playback failed: {}",
@@ -197,6 +202,7 @@ fn main() -> Result<(), String> {
     wait(&c, |s| s.exit_ready)?;
     drop(c);
     let again = Controller::with_storage(false, root.clone(), policy);
+    again.send(Command::KeepScreenAwake(keep_awake));
     again.send(Command::LoadProfile(internal, profile));
     let resumed = wait(&again, |s| s.restores > 0 && !s.loading)?;
     if resumed.ticks < paused.ticks {

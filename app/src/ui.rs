@@ -483,7 +483,7 @@ impl RetroHatchApp {
                 });
                 ui.add_enabled_ui(s.profile.supports_keep_screen_awake(),|ui| {
                     ui.checkbox(&mut self.settings.keep_screen_awake,"Keep screen awake")
-                      .on_hover_text("S1C33 devices: prevent the firmware display timeout. Disable for normal sleep behavior. If already asleep, press A, B or C once to wake.");
+                      .on_hover_text("Compatible firmware: prevent the display timeout. Disable for normal sleep behavior. On/Meets wakes when enabled; sleeping S1C33 devices may need one A/B/C press.");
                 });
                 ui.menu_button("Autosave Interval", |ui| {
                     for n in AUTOSAVES {

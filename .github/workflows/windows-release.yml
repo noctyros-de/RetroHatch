@@ -72,8 +72,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Formatting check failed' }
           cargo check --locked
           if ($LASTEXITCODE -ne 0) { throw 'Cargo check failed' }
-          cargo test --locked
+          cargo test --locked -- --test-threads=1
           if ($LASTEXITCODE -ne 0) { throw 'Rust tests failed' }
+          cargo test --locked -p tg18-core
+          if ($LASTEXITCODE -ne 0) { throw 'TG18 core tests failed' }
           cargo build --release --locked
           if ($LASTEXITCODE -ne 0) { throw 'Windows release build failed' }
           python -B tools/test_audit_licenses.py

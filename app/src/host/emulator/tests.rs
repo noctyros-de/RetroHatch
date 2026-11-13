@@ -631,3 +631,68 @@ fn v3_eeprom_has_separate_atomic_firmware_bound_storage() {
     assert!(fresh.load_nonvolatile(&tmp.0).is_err());
     assert_eq!(fresh.nonvolatile_image(), before);
 }
+
+#[test]
+fn tg18_keep_awake_uses_the_reference_counter_without_synthetic_inputs() {
+    for profile in std::iter::once(DeviceProfile::On).chain(DeviceProfile::MEETS) {
+        assert!(profile.supports_keep_screen_awake());
+        let mut d = Emulator::from_bytes(&image(), profile).unwrap();
+        let address = tg18::SRAM_BASE + 512;
+        on(&mut d).machine.idle_counter = Some(address);
+        on(&mut d).machine.sys.poke(address, &[17]);
+        let cpu = on(&mut d).machine.cpu.state();
+        let time = d.time();
+        d.set_keep_screen_awake(true);
+        assert!(on(&mut d).machine.never_sleep);
+        assert_eq!(on(&mut d).machine.sys.sram[512], 0);
+        assert_eq!(on(&mut d).machine.cpu.state(), cpu);
+        assert_eq!(d.time(), time);
+        assert!(on(&mut d).machine.sys.key_script.is_empty());
+        assert_eq!(on(&mut d).machine.sys.live_keys, [false; 3]);
+        on(&mut d).machine.sys.poke(address, &[9]);
+        d.set_keep_screen_awake(true); // Worker reapplication must not change the phase/counter.
+        assert_eq!(on(&mut d).machine.sys.sram[512], 9);
+        d.set_keep_screen_awake(false);
+        assert!(!on(&mut d).machine.never_sleep);
+        assert_eq!(on(&mut d).machine.sys.sram[512], 9);
+        let mut resumed = d.restored(&d.save_state().unwrap()).unwrap();
+        resumed.set_keep_screen_awake(true);
+        resumed.reset();
+        assert!(on(&mut resumed).machine.never_sleep);
+    }
+    for profile in [
+        DeviceProfile::P1,
+        DeviceProfile::ConnectionV3Eu,
+        DeviceProfile::TamaGo,
+    ] {
+        assert!(!profile.supports_keep_screen_awake());
+    }
+}
+
+#[test]
+fn tg18_enabling_awake_wakes_deep_sleep_once_and_preserves_rtc_flash_and_buttons() {
+    let mut d = Emulator::from_bytes(&image(), DeviceProfile::On).unwrap();
+    let m = &mut on(&mut d).machine;
+    m.sys.powered_off = true;
+    m.sys.ram[tg18::FLASH_SIZE - 1] = 0x5a;
+    let rtc = m.sys.rtc.ticks(m.sys.game_time);
+    let time = d.time();
+    d.set_keep_screen_awake(true);
+    assert!(!d.sleeping());
+    assert_eq!(d.time(), time);
+    let m = &mut on(&mut d).machine;
+    assert!(m.never_sleep);
+    assert_eq!(m.sys.rtc.ticks(m.sys.game_time), rtc);
+    assert_eq!(m.sys.ram[tg18::FLASH_SIZE - 1], 0x5a);
+    assert!(m.sys.key_script.is_empty());
+    assert_eq!(m.sys.live_keys, [false; 3]);
+    d.advance_to(MASTER_HZ / 10000).unwrap();
+    let cpu = on(&mut d).machine.cpu.state();
+    d.set_keep_screen_awake(true);
+    assert_eq!(on(&mut d).machine.cpu.state(), cpu);
+    d.set_keep_screen_awake(false);
+    on(&mut d).machine.alarm_wake = true;
+    d.set_keep_screen_awake(true);
+    assert!(!d.sleeping());
+    assert_eq!(on(&mut d).machine.cpu.state(), cpu);
+}

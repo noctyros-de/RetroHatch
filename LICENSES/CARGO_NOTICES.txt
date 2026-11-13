@@ -31361,6 +31361,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
+--- src/machine.rs [source header] ---
+// RetroHatch snapshot-field visibility additions Copyright (c) 2026 Noctyros; MIT.
+//! The whole toy: CPU + bus, the run loop with interrupts and idle skipping,
+//! the firmware shortcuts (HLE) and deep sleep.
+
+
+
 --- src/snapshot.rs [source header] ---
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 oreo-fox
