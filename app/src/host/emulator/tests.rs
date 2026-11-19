@@ -696,3 +696,60 @@ fn tg18_enabling_awake_wakes_deep_sleep_once_and_preserves_rtc_flash_and_buttons
     assert!(!d.sleeping());
     assert_eq!(on(&mut d).machine.cpu.state(), cpu);
 }
+
+#[test]
+fn automatic_clock_resume_preserves_execution_offset_legacy_saves_and_exact_manual_restores() {
+    use crate::host::resume_clock::ResumeClock;
+    let mut seed = Emulator::from_bytes(&image(), DeviceProfile::On).unwrap();
+    // Synthetic hardware tests explicitly opt in; unknown firmware stays disabled in production.
+    on(&mut seed).clock_resume_supported = true;
+    on(&mut seed).machine.sys.rtc.base_ticks = 123456 * 32768;
+    on(&mut seed).machine.sys.rtc_irq.tod_base = 21 * 3600;
+    let saved_at = 1_800_000_000_000;
+    let capture = seed.capture_save_at(Some(saved_at)).unwrap();
+    let bytes = capture().unwrap();
+    let now = saved_at + 17 * 3_600_000;
+    let mut exact = seed.restored(&bytes).unwrap();
+    let before = on(&mut exact).machine.cpu.state();
+    let mut expected_ticks = on(&mut exact).machine.sys.rtc.ticks(0.0);
+    let (mut shifted, result) = seed.restored_for_resume(&bytes, true, now).unwrap();
+    assert_eq!(result, ResumeClock::Adjusted(17 * 3_600_000));
+    expected_ticks += 17 * 3600 * 32768;
+    let m = &on(&mut shifted).machine;
+    assert_eq!(m.sys.rtc.ticks(0.0), expected_ticks);
+    assert_eq!(m.sys.rtc_irq.tod(0.0), 14 * 3600);
+    assert_eq!(m.cpu.state(), before);
+    assert_eq!(m.executed, 0);
+    assert_eq!(m.sys.game_time, 0.0);
+    assert_eq!(m.sys.ram, on(&mut exact).machine.sys.ram);
+    assert_eq!(m.sys.sram, on(&mut exact).machine.sys.sram);
+    let (mut again, _) = seed.restored_for_resume(&bytes, true, now).unwrap();
+    assert_eq!(on(&mut again).machine.sys.rtc.ticks(0.0), expected_ticks);
+    let (mut disabled, status) = seed.restored_for_resume(&bytes, false, now).unwrap();
+    assert_eq!(status, ResumeClock::Disabled);
+    assert_eq!(on(&mut disabled).machine.sys.rtc.ticks(0.0), 123456 * 32768);
+    let legacy = seed.save_state().unwrap();
+    assert_eq!(
+        seed.restored_for_resume(&legacy, true, now).unwrap().1,
+        ResumeClock::Legacy
+    );
+    on(&mut shifted).clock_resume_supported = true;
+    let recent = shifted.capture_save_at(Some(now)).unwrap()().unwrap();
+    let (mut reopened, status) = shifted.restored_for_resume(&recent, true, now).unwrap();
+    assert_eq!(status, ResumeClock::Adjusted(0));
+    assert_eq!(on(&mut reopened).machine.sys.rtc.ticks(0.0), expected_ticks);
+    let mut future = seed
+        .restored_for_resume(&bytes, true, saved_at - 1)
+        .unwrap();
+    assert_eq!(future.1, ResumeClock::Future);
+    assert_eq!(on(&mut future.0).machine.sys.rtc.ticks(0.0), 123456 * 32768);
+    assert_eq!(on(&mut exact).machine.sys.rtc.ticks(0.0), 123456 * 32768);
+    let mut corrupt = bytes.clone();
+    corrupt[90] ^= 1;
+    assert!(seed.restored_for_resume(&corrupt, true, now).is_err());
+    on(&mut seed).clock_resume_supported = false;
+    assert_eq!(
+        seed.restored_for_resume(&bytes, true, now).unwrap().1,
+        ResumeClock::Unsupported
+    );
+}

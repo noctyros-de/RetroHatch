@@ -464,6 +464,10 @@ impl Emulator {
     }
     /// Capture coherently on the emulation owner; compress/encode on the ordered I/O worker.
     pub fn capture_save(&self) -> Result<SaveCapture, String> {
+        self.capture_save_at(None)
+    }
+    /// Persistent host captures add an optional UTC anchor without changing native schemas.
+    pub fn capture_save_at(&self, timestamp_ms: Option<u64>) -> Result<SaveCapture, String> {
         if let Backend::ConnectionV3(d) = &self.backend {
             let machine = d.machine.clone();
             return Ok(Box::new(move || machine.save_state()));
@@ -484,7 +488,10 @@ impl Emulator {
             }
             unreachable!()
         };
-        let snapshot = ArmSnapshot::capture_delta(&on.machine);
+        let mut snapshot = ArmSnapshot::capture_delta(&on.machine);
+        if let Some(timestamp) = timestamp_ms.filter(|v| *v != 0) {
+            snapshot.set_resume_timestamp_ms(timestamp);
+        }
         let audio_samples = on.audio_samples;
         let tone = [on.synth.phase(), on.synth.freq, on.synth.duty];
         let hash = self.hash;
@@ -512,6 +519,46 @@ impl Emulator {
             out.bytes(&digest);
             Ok(out.0)
         }))
+    }
+    pub fn supports_clock_resume(&self) -> bool {
+        matches!(&self.backend, Backend::On(on) if on.clock_resume_supported)
+    }
+    /// Only automatic reopen uses this path; manual state restores remain exact.
+    pub fn restored_for_resume(
+        &self,
+        data: &[u8],
+        enabled: bool,
+        now_ms: u64,
+    ) -> Result<(Self, super::resume_clock::ResumeClock), String> {
+        use super::resume_clock::{ResumeClock, advance_tg18};
+        let mut restored = self.restored(data)?;
+        let result = if !enabled {
+            ResumeClock::Disabled
+        } else if !self.supports_clock_resume() {
+            ResumeClock::Unsupported
+        } else {
+            let snapshot =
+                ArmSnapshot::from_bytes(&data[81..data.len() - 32]).map_err(|e| e.to_string())?;
+            match snapshot.resume_timestamp_ms() {
+                Err(_) => ResumeClock::Invalid,
+                Ok(saved) => {
+                    let elapsed = ResumeClock::elapsed(saved, now_ms);
+                    if let ResumeClock::Adjusted(ms) = elapsed {
+                        let Backend::On(on) = &mut restored.backend else {
+                            unreachable!()
+                        };
+                        if advance_tg18(&mut on.machine, ms).is_err() {
+                            return Ok((restored, ResumeClock::Invalid));
+                        }
+                        if ms > 0 {
+                            on.machine.request_clock_refresh();
+                        }
+                    }
+                    elapsed
+                }
+            }
+        };
+        Ok((restored, result))
     }
     pub fn restored(&self, data: &[u8]) -> Result<Self, String> {
         if let Backend::TamaGo(d) = &self.backend {
@@ -634,6 +681,7 @@ impl Emulator {
 
 struct OnDevice {
     machine: Machine,
+    clock_resume_supported: bool,
     synth: ToneSynth,
     audio_samples: u64,
     pcm: Vec<i16>,
@@ -642,9 +690,12 @@ struct OnDevice {
 impl OnDevice {
     fn new(image: Arc<Vec<u8>>) -> Self {
         let mut machine = Machine::new(image.clone(), &image, tg18::rtc_seconds_now());
+        let clock_resume_supported = super::resume_clock::verified_tg18(tg18::code_hash(&image))
+            && machine.can_refresh_clock();
         machine.stop_on_bluetooth = true;
         Self {
             machine,
+            clock_resume_supported,
             synth: ToneSynth::new(44100, 1.0),
             audio_samples: 0,
             pcm: Vec::new(),

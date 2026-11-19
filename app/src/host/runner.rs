@@ -33,6 +33,7 @@ pub enum Command {
     Figure(Option<PathBuf>),
     Audio(bool),
     KeepScreenAwake(bool),
+    SyncClockOnResume(bool),
     Profiling(bool),
     Save(SaveTarget),
     LoadSave(SaveTarget),
@@ -59,6 +60,7 @@ pub struct Snapshot {
     pub tamago_icons: [u8; 10],
     pub arm_pc: Option<u32>,
     pub sleeping: bool,
+    pub clock_sync_available: bool,
     pub state: CpuState,
     pub loaded: bool,
     pub running: bool,
@@ -99,6 +101,7 @@ impl Default for Snapshot {
             tamago_icons: [0; 10],
             arm_pc: None,
             sleeping: false,
+            clock_sync_available: false,
             state: CpuState::default(),
             loaded: false,
             running: false,
@@ -205,6 +208,7 @@ fn publish(
         state.tamago_icons = p1.tamago_icons();
         state.arm_pc = p1.arm_pc();
         state.sleeping = p1.sleeping();
+        state.clock_sync_available = p1.supports_clock_resume();
         state.state = p1.classic_cpu_state().cloned().unwrap_or_default();
         state.ticks = p1.time();
         state.instructions = p1.instructions();
@@ -544,6 +548,11 @@ fn run(
                     };
                     if let Err(e) = result {
                         state.save_error = Some(e);
+                    }
+                }
+                Command::SyncClockOnResume(enabled) => {
+                    if let Some(store) = &mut saves {
+                        store.sync_clock_on_resume = enabled;
                     }
                 }
                 Command::SavePolicy(policy) => {

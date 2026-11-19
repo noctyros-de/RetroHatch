@@ -25,3 +25,5 @@ pub mod recording;
 
 pub mod connection_v3_lcd;
 pub mod figures;
+
+pub mod resume_clock;

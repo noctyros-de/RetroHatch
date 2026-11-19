@@ -185,6 +185,7 @@ impl Snapshot {
         let mut w = W::default();
         w.f64(m.idle_reset_at).u8(m.clock_minute.is_some() as u8).i64(m.clock_minute.unwrap_or(0)).u32(m.probe_wait);
         add("rh-awake-clock", w);
+        add("rh-resume-refresh", W(vec![m.resume_clock_refresh as u8]));
         Snapshot { chunks }
     }
 
@@ -209,6 +210,22 @@ impl Snapshot {
     /// When the snapshot was taken (Unix time).
     pub fn saved_at(&self) -> f64 {
         self.get("info").and_then(|d| R(d, 8).f64().ok()).unwrap_or(0.0)
+    }
+
+    /// Explicit host-resume UTC metadata. Absent in historical snapshots.
+    /// Unknown chunks are already ignored by earlier snapshot readers.
+    pub fn set_resume_timestamp_ms(&mut self, utc_ms: u64) {
+        self.chunks.retain(|(name, _)| name != "rh-resume-utc-v1");
+        self.chunks.push(("rh-resume-utc-v1".into(), utc_ms.to_le_bytes().to_vec()));
+    }
+
+    pub fn resume_timestamp_ms(&self) -> Result<Option<u64>, SnapError> {
+        let values: Vec<_> = self.chunks.iter().filter(|(name, _)| name == "rh-resume-utc-v1").collect();
+        match values.as_slice() {
+            [] => Ok(None),
+            [(_, data)] if data.len() == 8 => Ok(Some(u64::from_le_bytes(data[..].try_into().unwrap()))),
+            _ => Err(SnapError::Format("Invalid resume timestamp metadata".into())),
+        }
     }
 
     /// Restore into a machine made for the same ROM.
@@ -334,6 +351,11 @@ impl Snapshot {
                 return Err(SnapError::Format("invalid machine clock".into()));
             }
         }
+        m.resume_clock_refresh = match self.get("rh-resume-refresh") {
+            None | Some([0]) => false,
+            Some([1]) => true,
+            _ => return Err(SnapError::Format("Invalid pending clock refresh".into())),
+        };
         if let Some(data) = self.get("rh-awake-clock") {
             if data.len() != 17 && data.len() != 21 { return Err(SnapError::Format("invalid awake clock size".into())); }
             let mut r = R(data, 0);
@@ -434,5 +456,34 @@ mod awake_clock_tests {
         chunk[..8].copy_from_slice(&f64::NAN.to_le_bytes());
         let mut fresh = Machine::new(image.clone(), &image, 0.0);
         assert!(snapshot.restore(&mut fresh).is_err());
+    }
+}
+
+#[cfg(test)]
+mod resume_timestamp_tests {
+    use super::*;
+    #[test]
+    fn optional_resume_metadata_preserves_legacy_and_rejects_ambiguous_values() {
+        let image=std::sync::Arc::new(vec![0;FLASH_SIZE]);
+        let m=Machine::new(image.clone(),&image,0.0);
+        let mut s=Snapshot::capture_delta(&m);
+        assert_eq!(s.resume_timestamp_ms().unwrap(),None);
+        s.set_resume_timestamp_ms(123456);
+        let decoded=Snapshot::from_bytes(&s.to_bytes()).unwrap();
+        assert_eq!(decoded.resume_timestamp_ms().unwrap(),Some(123456));
+        let mut restored=Machine::new(image.clone(),&image,0.0);
+        decoded.restore(&mut restored).unwrap();
+        let mut legacy=Snapshot::capture(&m);
+        legacy.chunks.retain(|c|c.0!="rh-resume-refresh");
+        restored.resume_clock_refresh=true;
+        legacy.restore(&mut restored).unwrap();
+        assert!(!restored.resume_clock_refresh);
+        legacy.chunks.push(("rh-resume-refresh".into(),vec![2]));
+        assert!(legacy.restore(&mut restored).is_err());
+        s.chunks.push(("rh-resume-utc-v1".into(),vec![0;8]));
+        assert!(s.resume_timestamp_ms().is_err());
+        s.set_resume_timestamp_ms(1);
+        s.chunks.iter_mut().find(|c|c.0=="rh-resume-utc-v1").unwrap().1.pop();
+        assert!(s.resume_timestamp_ms().is_err());
     }
 }

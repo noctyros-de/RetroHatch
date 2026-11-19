@@ -114,6 +114,19 @@ status combines implemented/tested host integration with the project owner's
 reported working use. This documentation audit did not repeat a firmware boot
 or verify every On/Meets variant. See [TG18 integration](developer/TG18.md).
 
+### Clock synchronization on resume
+
+**Settings > Sync Clock on Resume** is enabled by default for verified
+**Tamagotchi On Magic EN v058** firmware. New autosaves preserve a UTC timestamp;
+reopening adds elapsed real time to your existing toy clock, without running
+missed gameplay. Manual slots/imports stay exact, and older saves without a
+clock timestamp stay frozen until a new save establishes one. Firmware may
+naturally react to the updated calendar during normal play.
+
+Other On firmware, Meets, P's and other devices are not enabled for this feature.
+Invalid/future timestamps and intervals over one year are skipped. See
+[clock compatibility and validation](developer/CLOCK_RESUME.md).
+
 ### Experimental Tama-Go
 
 Tama-Go runs through the existing interface with a native Generalplus/6502

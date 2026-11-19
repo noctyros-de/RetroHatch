@@ -58,6 +58,8 @@ enum Task {
     Exit,
 }
 pub struct Saves {
+    pub sync_clock_on_resume: bool,
+    wall_clock: std::sync::Arc<dyn Fn() -> u64 + Send + Sync>,
     pub root: PathBuf,
     pub policy: SavePolicy,
     writer: Writer,
@@ -70,7 +72,21 @@ pub struct Saves {
 }
 impl Saves {
     pub fn new(root: PathBuf, policy: SavePolicy) -> Self {
+        Self::with_clock(
+            root,
+            policy,
+            std::sync::Arc::new(super::resume_clock::unix_millis),
+        )
+    }
+    /// Inject UTC only for isolated tests; never change the system clock.
+    pub fn with_clock(
+        root: PathBuf,
+        policy: SavePolicy,
+        wall_clock: std::sync::Arc<dyn Fn() -> u64 + Send + Sync>,
+    ) -> Self {
         Self {
+            sync_clock_on_resume: true,
+            wall_clock,
             root,
             policy,
             writer: Writer::new(),
@@ -81,6 +97,9 @@ impl Saves {
             nv_next: Instant::now(),
             nv_last: None,
         }
+    }
+    fn capture(&self, d: &Emulator) -> Result<super::emulator::SaveCapture, String> {
+        d.capture_save_at(Some((self.wall_clock)()))
     }
     pub fn directory(&self, d: &Emulator) -> PathBuf {
         self.root.join("saves").join(d.identity())
@@ -130,7 +149,7 @@ impl Saves {
             return Err("Saved progress was not restored. Resume or Reset explicitly before saving a fresh device.".into());
         }
         self.persist_nonvolatile(d)?;
-        let data = d.capture_save()?;
+        let data = self.capture(d)?;
         let path = self.directory(d).join(target.filename()?);
         let id = self.writer.write_capture(path, data)?;
         self.tasks.insert(
@@ -148,7 +167,7 @@ impl Saves {
         Ok(())
     }
     pub fn export(&mut self, d: &Emulator, path: PathBuf) -> Result<(), String> {
-        let id = self.writer.write_capture(path, d.capture_save()?)?;
+        let id = self.writer.write_capture(path, self.capture(d)?)?;
         self.tasks.insert(
             id,
             Task::Write {
@@ -196,10 +215,8 @@ impl Saves {
         }
         let id = if self.policy.save_on_exit {
             if let Some(d) = d {
-                self.writer.write_capture(
-                    self.directory(d).join("autosave.rhstate"),
-                    d.capture_save()?,
-                )?
+                self.writer
+                    .write_capture(self.directory(d).join("autosave.rhstate"), self.capture(d)?)?
             } else {
                 self.writer.barrier()?
             }
@@ -289,7 +306,16 @@ impl Saves {
                             state.save_error =
                                 Some("This save slot is empty or the file no longer exists".into())
                         }
-                        Some(bytes) => match d.restored(&bytes) {
+                        Some(bytes) => match if automatic {
+                            d.restored_for_resume(
+                                &bytes,
+                                self.sync_clock_on_resume,
+                                (self.wall_clock)(),
+                            )
+                        } else {
+                            d.restored(&bytes)
+                                .map(|d| (d, super::resume_clock::ResumeClock::Disabled))
+                        } {
                             Err(e) => {
                                 state.save_error = Some(e);
                                 if automatic {
@@ -298,16 +324,16 @@ impl Saves {
                                     *running = false;
                                 }
                             }
-                            Ok(prepared) => {
+                            Ok((prepared, clock_result)) => {
                                 if automatic {
                                     *device = Some(prepared);
                                     *running = true;
                                     state.loading = false;
                                     state.restores += 1;
-                                    state.save_message = Some("Resumed saved progress".into());
+                                    state.save_message = Some(clock_result.message());
                                     rebased = true;
                                 } else {
-                                    match d.capture_save().and_then(|data| {
+                                    match self.capture(d).and_then(|data| {
                                         self.writer.write_capture(
                                             self.directory(d).join("recovery.rhstate"),
                                             data,

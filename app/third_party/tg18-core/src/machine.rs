@@ -2,7 +2,7 @@
 //! The whole toy: CPU + bus, the run loop with interrupts and idle skipping,
 //! the firmware shortcuts (HLE) and deep sleep.
 
-use crate::cpu::{Bus, Cpu, Fault, FLAG_I, FLAG_T, MODE_IRQ};
+use crate::cpu::{Bus, Cpu, Fault, FLAG_I, FLAG_T, MODE_IRQ, MODE_FIQ};
 use crate::sigs::{self, Pattern};
 use crate::sys::{Key, System, LCD_H, LCD_W};
 use crate::*;
@@ -38,6 +38,8 @@ pub enum Outcome {
     BleFail,
     Crash,
     Stuck,
+    /// The existing firmware time-refresh routine did not return.
+    ClockRefreshFailed,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -67,6 +69,7 @@ pub struct Machine {
     display_sleep_flag: Option<u32>,
     clock_refresh: Option<u32>,
     pub(crate) clock_minute: Option<i64>,
+    pub(crate) resume_clock_refresh: bool,
     pub stop_on_bluetooth: bool,
     /// Woken by the RTC alarm (the once-a-minute update while asleep), not
     /// by a button: the backlight stays off, though the game may draw and
@@ -123,6 +126,7 @@ impl Machine {
             display_sleep_flag: None,
             clock_refresh: None,
             clock_minute: None,
+            resume_clock_refresh: false,
             stop_on_bluetooth: false,
             alarm_wake: false,
             bluetooth_used: false,
@@ -460,7 +464,12 @@ impl Machine {
                     self.probe_wait -= 1;
                 } else if self.try_idle_skip(limit) {
                     window_since = self.executed;
-                    if self.never_sleep {
+                    // Use the same proven idle boundary as upstream's never-sleep
+                    // refresh, avoiding re-entry into an interrupted firmware routine.
+                    if self.resume_clock_refresh && !matches!(self.cpu.mode(), MODE_IRQ | MODE_FIQ) {
+                        self.resume_clock_refresh = false;
+                        if !self.refresh_clock() { return Outcome::ClockRefreshFailed; }
+                    } else if self.never_sleep {
                         self.refresh_clock();
                     }
                     continue;
@@ -617,17 +626,29 @@ impl Machine {
 
     /// With never-sleep, update the game's clock when the minute changes
     /// (on a real toy this happens at each wake-up, once a minute).
-    fn refresh_clock(&mut self) {
+    fn refresh_clock(&mut self) -> bool {
         let func = match self.clock_refresh {
             Some(f) => f,
-            None => return,
+            None => return false,
         };
         let minute = self.sys.rtc_irq.tod(self.sys.game_time) / 60;
-        if Some(minute) == self.clock_minute || self.cpu.mode() == MODE_IRQ {
-            return;
-        }
+        if Some(minute) == self.clock_minute { return true; }
+        if self.cpu.mode() == MODE_IRQ { return false; }
         if self.call_firmware(func, 0, 5_000_000) {
             self.clock_minute = Some(minute);
+            true
+        } else { false }
+    }
+
+    /// The already-used firmware RTC-reader signature must be present.
+    pub fn can_refresh_clock(&self) -> bool { self.clock_refresh.is_some() }
+
+    /// Re-read the corrected external calendar during the next ordinary run.
+    /// Sleeping firmware reads it on its normal cold wake instead.
+    pub fn request_clock_refresh(&mut self) {
+        if !self.sys.powered_off && self.can_refresh_clock() {
+            self.clock_minute = None;
+            self.resume_clock_refresh = true;
         }
     }
 
@@ -839,5 +860,40 @@ mod keep_awake_tests {
             assert!(m.sys.key_script.is_empty());
             assert_eq!(m.sys.live_keys,[false;3]);
         }
+    }
+}
+
+#[cfg(test)]
+mod resume_clock_tests {
+    use super::*;
+    #[test]
+    fn pending_clock_refresh_waits_for_main_idle_and_survives_exact_snapshots() {
+        let mut bytes=vec![0;FLASH_SIZE];
+        // Independent synthetic ARM idle loop and a Thumb function returning immediately.
+        bytes[0x48..0x4c].copy_from_slice(&0xeafffffeu32.to_le_bytes());
+        bytes[0x100..0x102].copy_from_slice(&0x4770u16.to_le_bytes());
+        let image=std::sync::Arc::new(bytes);
+        let mut m=Machine::new(image.clone(),&image,0.0);
+        m.clock_refresh=Some(FLASH_BASE+0x100);
+        m.cpu.set_mode(MODE_IRQ);
+        m.request_clock_refresh();
+        assert!(m.resume_clock_refresh);
+        assert_eq!(m.run(1000),Outcome::Limit);
+        assert!(m.resume_clock_refresh,"Do not call firmware on an interrupt stack");
+        let snapshot=crate::snapshot::Snapshot::capture_delta(&m);
+        let mut restored=Machine::new(image.clone(),&image,0.0);
+        snapshot.restore(&mut restored).unwrap();
+        assert!(restored.resume_clock_refresh);
+        restored.clock_refresh=Some(FLASH_BASE+0x100);
+        restored.cpu.set_mode(crate::cpu::MODE_SVC);
+        restored.cpu.r[15]=FLASH_BASE+0x48;
+        restored.cpu.r[0]=42;
+        let start=restored.executed;
+        assert_eq!(restored.run(start+100_000),Outcome::Limit);
+        assert!(!restored.resume_clock_refresh);
+        assert_eq!(restored.executed,start+100_000);
+        assert_eq!(restored.cpu.r[0],42);
+        assert!(restored.sys.game_time<1.0,"No elapsed offline time was executed");
+        assert_eq!(restored.clock_minute,Some(0));
     }
 }

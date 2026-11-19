@@ -167,6 +167,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         last_profile: DeviceProfile::Angel,
         rom_folder: Some(folder),
         keep_screen_awake: false,
+        sync_clock_on_resume: true,
     };
     config.store(&output)?;
     assert_eq!(Settings::load(&output)?, config);

@@ -148,6 +148,7 @@ impl RetroHatchApp {
             Controller::new(persistent && !settings.muted)
         };
         controller.send(Command::KeepScreenAwake(settings.keep_screen_awake));
+        controller.send(Command::SyncClockOnResume(settings.sync_clock_on_resume));
         let folder = settings
             .rom_folder
             .clone()
@@ -218,6 +219,11 @@ impl RetroHatchApp {
         if before.keep_screen_awake != self.settings.keep_screen_awake {
             self.controller
                 .send(Command::KeepScreenAwake(self.settings.keep_screen_awake));
+        }
+        if before.sync_clock_on_resume != self.settings.sync_clock_on_resume {
+            self.controller.send(Command::SyncClockOnResume(
+                self.settings.sync_clock_on_resume,
+            ));
         }
         if before.muted != self.settings.muted {
             self.controller.send(Command::Audio(!self.settings.muted));
@@ -484,6 +490,11 @@ impl RetroHatchApp {
                 ui.add_enabled_ui(s.profile.supports_keep_screen_awake(),|ui| {
                     ui.checkbox(&mut self.settings.keep_screen_awake,"Keep screen awake")
                       .on_hover_text("Compatible firmware: prevent the display timeout. Disable for normal sleep behavior. On/Meets wakes when enabled; sleeping S1C33 devices may need one A/B/C press.");
+                });
+                ui.add_enabled_ui(s.clock_sync_available, |ui| {
+                    ui.checkbox(&mut self.settings.sync_clock_on_resume, "Sync Clock on Resume")
+                        .on_hover_text("Verified On Magic EN v058: advance the clock by elapsed real time when reopening an autosave, preserving your clock offset. No missed gameplay is simulated. Manual slots/imports stay exact; legacy saves without a timestamp stay frozen. Intervals over one year or invalid timestamps are skipped. Firmware may naturally react to its updated calendar.")
+                        .on_disabled_hover_text("Clock sync is currently verified only for On Magic EN v058. This firmware keeps its previous resume behavior.");
                 });
                 ui.menu_button("Autosave Interval", |ui| {
                     for n in AUTOSAVES {
@@ -1799,6 +1810,105 @@ mod tests {
         }
         let out = frame(&ctx, &mut app, vec![]);
         assert!(position(&out, "Import ROM...").is_some());
+    }
+    #[test]
+    fn clock_sync_checkbox_follows_verified_firmware_and_persists_opt_out() {
+        fn find(shape: &egui::epaint::Shape, label: &str) -> Option<egui::Pos2> {
+            match shape {
+                egui::epaint::Shape::Text(t) if t.galley.text() == label => {
+                    Some(t.pos + t.galley.size() / 2.0)
+                }
+                egui::epaint::Shape::Vec(v) => v.iter().find_map(|s| find(s, label)),
+                _ => None,
+            }
+        }
+        fn center(out: &egui::FullOutput, label: &str) -> egui::Pos2 {
+            out.shapes
+                .iter()
+                .find_map(|s| find(&s.shape, label))
+                .expect("Clock setting is rendered")
+        }
+        fn frame(
+            ctx: &egui::Context,
+            app: &mut RetroHatchApp,
+            available: bool,
+            events: Vec<egui::Event>,
+        ) -> egui::FullOutput {
+            let mut output = ctx.run_ui(
+                egui::RawInput {
+                    focused: true,
+                    events,
+                    ..Default::default()
+                },
+                |ui| {
+                    app.menus(
+                        ui,
+                        &Snapshot {
+                            loaded: true,
+                            profile: DeviceProfile::On,
+                            clock_sync_available: available,
+                            ..Snapshot::default()
+                        },
+                    );
+                },
+            );
+            // Match the existing headless renderer: consume texture uploads explicitly.
+            output.textures_delta.clear();
+            output
+        }
+        fn click(
+            ctx: &egui::Context,
+            app: &mut RetroHatchApp,
+            available: bool,
+            pos: egui::Pos2,
+        ) -> egui::FullOutput {
+            frame(
+                ctx,
+                app,
+                available,
+                vec![
+                    egui::Event::PointerMoved(pos),
+                    egui::Event::PointerButton {
+                        pos,
+                        button: egui::PointerButton::Primary,
+                        pressed: true,
+                        modifiers: egui::Modifiers::NONE,
+                    },
+                ],
+            );
+            frame(
+                ctx,
+                app,
+                available,
+                vec![egui::Event::PointerButton {
+                    pos,
+                    button: egui::PointerButton::Primary,
+                    pressed: false,
+                    modifiers: egui::Modifiers::NONE,
+                }],
+            );
+            frame(ctx, app, available, vec![])
+        }
+        for available in [false, true] {
+            let ctx = egui::Context::default();
+            let mut app = RetroHatchApp::create(false);
+            assert!(app.settings.sync_clock_on_resume);
+            let first = frame(&ctx, &mut app, available, vec![]);
+            let menu = click(&ctx, &mut app, available, center(&first, "Settings"));
+            click(
+                &ctx,
+                &mut app,
+                available,
+                center(&menu, "Sync Clock on Resume"),
+            );
+            assert_eq!(app.settings.sync_clock_on_resume, !available);
+            assert_eq!(
+                Settings::decode(&app.settings.encode())
+                    .unwrap()
+                    .sync_clock_on_resume,
+                !available
+            );
+        }
     }
     #[test]
     fn settings_menu_checkboxes_and_theme_selection_persist_the_actual_user_actions() {

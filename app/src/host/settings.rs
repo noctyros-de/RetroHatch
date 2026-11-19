@@ -47,6 +47,7 @@ pub struct Settings {
     pub save_on_exit: bool,
     pub diagnostics: bool,
     pub keep_screen_awake: bool,
+    pub sync_clock_on_resume: bool,
     pub last_rom: Option<PathBuf>,
     pub last_profile: DeviceProfile,
     pub rom_folder: Option<PathBuf>,
@@ -63,6 +64,7 @@ impl Default for Settings {
             save_on_exit: true,
             diagnostics: false,
             keep_screen_awake: false,
+            sync_clock_on_resume: true,
             last_rom: None,
             last_profile: DeviceProfile::P1,
             rom_folder: None,
@@ -95,7 +97,7 @@ fn parse_path(v: &str) -> Result<Option<PathBuf>, String> {
 impl Settings {
     pub fn encode(&self) -> Vec<u8> {
         let body = format!(
-            "RETROHATCH_SETTINGS=1\ntheme={}\nlabels={}\ndisplay_scale={}\nmuted={}\nvolume={}\nautosave_minutes={}\nsave_on_exit={}\ndiagnostics={}\nkeep_screen_awake={}\nlast_profile={}\nlast_rom={}\nrom_folder={}\n",
+            "RETROHATCH_SETTINGS=1\ntheme={}\nlabels={}\ndisplay_scale={}\nmuted={}\nvolume={}\nautosave_minutes={}\nsave_on_exit={}\ndiagnostics={}\nkeep_screen_awake={}\nsync_clock_on_resume={}\nlast_profile={}\nlast_rom={}\nrom_folder={}\n",
             self.theme.name(),
             self.labels,
             self.display_scale,
@@ -105,6 +107,7 @@ impl Settings {
             self.save_on_exit,
             self.diagnostics,
             self.keep_screen_awake,
+            self.sync_clock_on_resume,
             self.last_profile.id(),
             path_text(&self.last_rom),
             path_text(&self.rom_folder)
@@ -150,6 +153,9 @@ impl Settings {
                 "keep_screen_awake" => {
                     s.keep_screen_awake = v.parse().map_err(|_| "Invalid display-sleep setting")?
                 }
+                "sync_clock_on_resume" => {
+                    s.sync_clock_on_resume = v.parse().map_err(|_| "Invalid clock-sync setting")?
+                }
                 "last_profile" => {
                     s.last_profile = DeviceProfile::parse(v).ok_or("Invalid saved profile")?
                 }
@@ -159,7 +165,8 @@ impl Settings {
             }
         }
         let optional = usize::from(seen.contains("keep_screen_awake"))
-            + usize::from(seen.contains("display_scale"));
+            + usize::from(seen.contains("display_scale"))
+            + usize::from(seen.contains("sync_clock_on_resume"));
         if seen.len() != 11 + optional
             || !DISPLAY_SCALES.contains(&s.display_scale)
             || s.volume > 100
@@ -281,6 +288,7 @@ mod tests {
                     save_on_exit: false,
                     diagnostics: true,
                     keep_screen_awake: true,
+                    sync_clock_on_resume: false,
                     last_rom: Some(PathBuf::from("C:/Pets/Angel Omega Ω.bin")),
                     last_profile: DeviceProfile::Angel,
                     rom_folder: Some(PathBuf::from("C:/Pets")),
@@ -318,5 +326,35 @@ mod tests {
         );
         assert_eq!(root.parent(), Some(std::env::temp_dir().as_path()));
         std::fs::remove_dir_all(root).unwrap();
+    }
+}
+
+#[cfg(test)]
+mod clock_sync_tests {
+    use super::*;
+    #[test]
+    fn sync_clock_defaults_on_for_new_and_legacy_settings_but_preserves_opt_out() {
+        assert!(Settings::default().sync_clock_on_resume);
+        let encoded = String::from_utf8(Settings::default().encode()).unwrap();
+        let body = encoded
+            .split("integrity=")
+            .next()
+            .unwrap()
+            .replace("sync_clock_on_resume=true\n", "");
+        let legacy = format!("{body}integrity={}\n", hex(&sha256(body.as_bytes())));
+        assert!(
+            Settings::decode(legacy.as_bytes())
+                .unwrap()
+                .sync_clock_on_resume
+        );
+        let off = Settings {
+            sync_clock_on_resume: false,
+            ..Settings::default()
+        };
+        assert!(
+            !Settings::decode(&off.encode())
+                .unwrap()
+                .sync_clock_on_resume
+        );
     }
 }
